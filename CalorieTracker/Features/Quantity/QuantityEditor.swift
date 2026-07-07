@@ -1,0 +1,183 @@
+import SwiftUI
+import SwiftData
+
+/// Prototype quantity sheet (spec §5), shared by the add and edit flows:
+/// custom header, live glass card, unit pills and a custom keypad.
+/// Works in canonical g / ml; oz / fl oz convert via `FoodUnit.toCanonical`
+/// at input time — commit always receives the canonical quantity.
+struct QuantityEditor: View {
+    let name: String
+    let basis: Basis
+    let per100Calories: Double
+    let per100Protein: Double
+    let per100Fat: Double
+    let per100Carbs: Double
+    let unitSystem: UnitSystem
+    let title: LocalizedStringKey
+    let ctaTitle: LocalizedStringKey
+    let onBack: () -> Void
+    let onClose: () -> Void
+    let onDelete: (() -> Void)?
+    let onCommit: (Double) -> Void   // receives canonical quantity (g / ml)
+
+    @State private var selectedUnit: FoodUnit
+    @State private var text: String
+
+    init(
+        name: String,
+        basis: Basis,
+        per100Calories: Double,
+        per100Protein: Double,
+        per100Fat: Double,
+        per100Carbs: Double,
+        unitSystem: UnitSystem,
+        initialCanonical: Double,
+        title: LocalizedStringKey,
+        ctaTitle: LocalizedStringKey,
+        onBack: @escaping () -> Void,
+        onClose: @escaping () -> Void,
+        onDelete: (() -> Void)? = nil,
+        onCommit: @escaping (Double) -> Void
+    ) {
+        self.name = name
+        self.basis = basis
+        self.per100Calories = per100Calories
+        self.per100Protein = per100Protein
+        self.per100Fat = per100Fat
+        self.per100Carbs = per100Carbs
+        self.unitSystem = unitSystem
+        self.title = title
+        self.ctaTitle = ctaTitle
+        self.onBack = onBack
+        self.onClose = onClose
+        self.onDelete = onDelete
+        self.onCommit = onCommit
+
+        let unit = unitSystem.defaultUnit(for: basis)
+        _selectedUnit = State(initialValue: unit)
+        _text = State(initialValue: Self.inputString(fromCanonical: initialCanonical, unit: unit))
+    }
+
+    private var availableUnits: [FoodUnit] { FoodUnit.units(for: basis) }
+
+    /// Quantity in canonical units (g / ml).
+    private var canonical: Double { (Format.parse(text) ?? 0) * selectedUnit.toCanonical }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            ScrollView {
+                VStack(spacing: 0) {
+                    Text(name)
+                        .font(.system(size: 26, weight: .bold))
+                        .foregroundStyle(Theme.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 12)
+                        .padding(.bottom, 20)
+
+                    QuantityLiveCard(
+                        quantityText: text,
+                        unitLabel: selectedUnit.label,
+                        calories: NutritionMath.scaled(per100: per100Calories, quantity: canonical),
+                        protein: NutritionMath.scaled(per100: per100Protein, quantity: canonical),
+                        fat: NutritionMath.scaled(per100: per100Fat, quantity: canonical),
+                        carbs: NutritionMath.scaled(per100: per100Carbs, quantity: canonical)
+                    )
+
+                    QuantityUnitPills(units: availableUnits, selectedUnit: selectedUnit,
+                                      onSelect: changeUnit)
+                        .padding(.top, 12)
+
+                    QuantityKeypad(onKey: handleKey)
+                        .padding(.top, 12)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+            }
+            QuantityActionBar(
+                ctaTitle: ctaTitle,
+                isEnabled: canonical > 0,
+                onDelete: onDelete,
+                onCommit: { onCommit(canonical) }
+            )
+        }
+    }
+
+    private var header: some View {
+        ZStack {
+            Text(title)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+            HStack {
+                Button(action: onBack) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "chevron.backward")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 16, weight: .medium))
+                    }
+                    .foregroundStyle(Theme.accentLabel)
+                }
+                Spacer()
+                Button(action: onClose) {
+                    Text("Close")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+        }
+        .padding(.top, 16)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Editing model (prototype key handling)
+
+    private func handleKey(_ key: QuantityKey) {
+        let separator = Locale.current.decimalSeparator ?? "."
+        var s = text
+        switch key {
+        case .backspace:
+            s = s.count > 1 ? String(s.dropLast()) : "0"
+        case .separator:
+            if !s.contains(separator) { s += separator }
+        case .digit(let digit):
+            s = (s == "0") ? "\(digit)" : s + "\(digit)"
+        }
+        if s.count > 6 { s = String(s.prefix(6)) }
+        text = s
+    }
+
+    /// Converting units keeps the same physical amount (existing behavior).
+    private func changeUnit(to newUnit: FoodUnit) {
+        guard newUnit != selectedUnit else { return }
+        let current = canonical
+        selectedUnit = newUnit
+        text = Self.inputString(fromCanonical: current, unit: newUnit)
+    }
+
+    /// Locale-aware keypad string for a canonical amount, clamped to 6 chars.
+    private static func inputString(fromCanonical canonical: Double, unit: FoodUnit) -> String {
+        var s = Format.editable(canonical / unit.toCanonical)
+        if s.count > 6 { s = String(s.prefix(6)) }
+        let separator = Locale.current.decimalSeparator ?? "."
+        if s.hasSuffix(separator) { s = String(s.dropLast()) }
+        return s.isEmpty ? "0" : s
+    }
+}
+
+#Preview("Add quantity") {
+    ZStack {
+        AppBackground()
+        QuantityEditor(
+            name: "Chicken breast", basis: .per100g,
+            per100Calories: 165, per100Protein: 31, per100Fat: 3.6, per100Carbs: 0,
+            unitSystem: .metric, initialCanonical: 150,
+            title: "Add quantity", ctaTitle: "Add to today",
+            onBack: {}, onClose: {}, onCommit: { _ in }
+        )
+    }
+    .modelContainer(PreviewData.container)
+}
