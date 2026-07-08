@@ -13,8 +13,7 @@ struct NutritionValuesCard: View {
         VStack(alignment: .leading, spacing: 0) {
             Text(basis.nutritionSectionTitle)
                 .textCase(.uppercase)
-                .font(.system(size: 13, weight: .semibold))
-                .kerning(0.5)
+                .font(.footnote)
                 .foregroundStyle(Theme.textSecondary)
                 .padding(EdgeInsets(top: 6, leading: 4, bottom: 10, trailing: 4))
 

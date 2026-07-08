@@ -45,7 +45,7 @@ struct SettingsAboutCard: View {
     private func rowLabel(_ title: LocalizedStringKey) -> some View {
         HStack {
             Text(title)
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
             Spacer(minLength: 12)
             SettingsRowChevron()

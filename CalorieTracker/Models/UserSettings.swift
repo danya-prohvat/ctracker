@@ -13,7 +13,8 @@ final class UserSettings {
     var fatGoal: Double? = 67
     var carbGoal: Double? = 200
 
-    /// Enabled micronutrient ids. Default: fiber + sugar (spec §4).
+    /// Enabled micronutrient ids. Default: the free set — fiber, sugar,
+    /// sodium, saturated fat.
     var enabledNutrients: [String] = Array(NutrientCatalog.defaultEnabled)
     /// Per-nutrient goal overrides (id → value). Missing → NutrientDef.defaultDV.
     var nutrientGoalOverrides: [String: Double] = [:]

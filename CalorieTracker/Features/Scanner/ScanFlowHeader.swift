@@ -8,15 +8,15 @@ struct ScanFlowHeader: View {
     var body: some View {
         ZStack {
             Text("Scan barcode")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(.white)
             HStack {
                 Button(action: onBack) {
                     HStack(spacing: 3) {
                         Image(systemName: "chevron.backward")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.subheadline.weight(.medium))
                         Text("Back")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.callout.weight(.medium))
                     }
                     .foregroundStyle(.white.opacity(0.9))
                 }

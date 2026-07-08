@@ -8,10 +8,10 @@ struct AddFoodSearchField: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 15, weight: .medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color(hex: 0x9A9AA0))
             TextField("Search my products", text: $text)
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
                 .autocorrectionDisabled()
         }

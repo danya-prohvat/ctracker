@@ -42,7 +42,7 @@ struct CalendarMonthCard: View {
             chevronButton("chevron.backward", label: "Previous month") { onChangeMonth(-1) }
             Spacer()
             Text(displayedMonth.formatted(.dateTime.month(.wide).year()))
-                .font(.system(size: 17, weight: .bold))
+                .font(.body.bold())
                 .foregroundStyle(Theme.textPrimary)
             Spacer()
             chevronButton("chevron.forward", label: "Next month") { onChangeMonth(1) }
@@ -56,7 +56,7 @@ struct CalendarMonthCard: View {
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Theme.chevron)
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
@@ -72,7 +72,7 @@ struct CalendarMonthCard: View {
             // Symbols can repeat (e.g. "T", "T" in English), so identify by column.
             ForEach(Array(Self.weekdaySymbols().enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(Theme.textTertiary)
                     .frame(maxWidth: .infinity)
             }

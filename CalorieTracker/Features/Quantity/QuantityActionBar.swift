@@ -13,7 +13,7 @@ struct QuantityActionBar: View {
             if let onDelete {
                 Button(action: onDelete) {
                     Image(systemName: "trash")
-                        .font(.system(size: 20, weight: .medium))
+                        .font(.title3.weight(.medium))
                         .foregroundStyle(Theme.destructive)
                         .frame(width: 54, height: 54)
                         .background(
@@ -26,7 +26,7 @@ struct QuantityActionBar: View {
 
             Button(action: onCommit) {
                 Text(ctaTitle)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.body.bold())
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)

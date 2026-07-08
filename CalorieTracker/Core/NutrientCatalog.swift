@@ -104,15 +104,8 @@ enum NutrientCatalog {
         all.filter { $0.group == group }
     }
 
-    /// Default enabled set at first launch (spec §4).
-    static let defaultEnabled: Set<String> = ["fiber", "sugar"]
-
-    // Presets (spec §4).
-    static let presetBasic: Set<String> = ["fiber", "sugar", "sodium", "saturatedFat"]
-    static let presetVitaminsMinerals: Set<String> = [
-        "vitaminD", "vitaminC", "vitaminB12", "vitaminB9", "iron",
-        "calcium", "magnesium", "potassium", "zinc", "iodine", "omega3",
-    ]
-    static var presetAll: Set<String> { Set(all.map { $0.id }) }
-    static let presetNone: Set<String> = []
+    /// Default enabled set at first launch. Deliberately wider than spec §4
+    /// (user decision 2026-07-08): the four label-staple nutrients everyone
+    /// tracks. Doubles as the free tier — see `PremiumGate.freeNutrientIDs`.
+    static let defaultEnabled: Set<String> = ["fiber", "sugar", "sodium", "saturatedFat"]
 }

@@ -36,23 +36,23 @@ private struct MacroRing: View {
             ZStack {
                 ProgressRing(progress: progress, lineWidth: 6, color: value.color)
                 Text(verbatim: Format.amount(value.consumed.rounded()))
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.stat(.subheadline))
                     .foregroundStyle(Theme.textPrimary)
             }
             .frame(width: 68, height: 68)
 
             Text(value.titleKey)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(Theme.textStrong)
 
             if let goal = value.goal {
                 Text("of \(Format.grams(goal))")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.textTertiary)
                     .lineLimit(1)
             } else {
                 Text(verbatim: Format.grams(value.consumed))
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.textTertiary)
                     .lineLimit(1)
             }

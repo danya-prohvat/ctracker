@@ -15,7 +15,7 @@ struct QuantityUnitPills: View {
                     onSelect(unit)
                 } label: {
                     Text(LocalizedStringKey(unit.label))
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(selected ? .white : Theme.textStrong)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 7)

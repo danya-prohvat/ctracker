@@ -74,19 +74,19 @@ struct MicroFieldsSection: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Vitamins & minerals")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
                 subtitle
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 0)
             HStack(spacing: 6) {
                 trailingLabel
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(Theme.textSecondary)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(Theme.accentLabel)
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
             }
@@ -102,9 +102,9 @@ struct MicroFieldsSection: View {
         } label: {
             HStack(spacing: 5) {
                 Text("Track more nutrients")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.subheadline.weight(.medium))
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption.weight(.semibold))
             }
             .foregroundStyle(Theme.accentLabel)
             .padding(.horizontal, 16)

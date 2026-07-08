@@ -31,7 +31,7 @@ struct SettingsUnitsPicker: View {
             try? context.save()
         } label: {
             Text(system.label)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)

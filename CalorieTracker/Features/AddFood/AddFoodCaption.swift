@@ -7,8 +7,7 @@ struct AddFoodCaption: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: 13, weight: .semibold))
-            .kerning(0.5)
+            .font(.footnote)
             .foregroundStyle(Theme.textSecondary)
             .textCase(.uppercase)
     }

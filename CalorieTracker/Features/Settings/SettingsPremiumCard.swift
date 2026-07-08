@@ -21,14 +21,14 @@ struct SettingsPremiumCard: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 22))
+                    .font(.title2)
                     .foregroundStyle(Theme.accent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Premium active")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.headline)
                         .foregroundStyle(Theme.textPrimary)
                     Text("Manages via App Store")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundStyle(Theme.textSecondary)
                 }
                 Spacer(minLength: 0)
@@ -40,7 +40,7 @@ struct SettingsPremiumCard: View {
             Link(destination: AppLinks.manageSubscriptionsURL) {
                 HStack {
                     Text("Manage subscription")
-                        .font(.system(size: 16))
+                        .font(.callout)
                         .foregroundStyle(Theme.accentLabel)
                     Spacer(minLength: 12)
                     SettingsRowChevron()
@@ -54,42 +54,46 @@ struct SettingsPremiumCard: View {
 
     // MARK: - Upgrade CTA
 
+    /// Native upsell row (iCloud+ pattern): white card, Settings-style icon
+    /// squircle, regular text colors and a soft tinted "Upgrade" capsule.
     private var upgradeCard: some View {
         Button(action: onUpgrade) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 26))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(.white)
-                VStack(alignment: .leading, spacing: 3) {
+                    .frame(width: 34, height: 34)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Theme.fabTop, Theme.fabBottom],
+                                    startPoint: .top, endPoint: .bottom
+                                )
+                            )
+                    )
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Try Premium")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .font(.headline)
+                        .foregroundStyle(Theme.textPrimary)
                     Text("All nutrients, scanner, iCloud sync & full history")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.white.opacity(0.9))
+                        .font(.footnote)
+                        .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
                 Text("Upgrade")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.accentDeep)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Capsule().fill(.white))
+                    .background(Capsule().fill(Theme.accentSoft))
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Theme.fabTop, Theme.fabBottom],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-            )
+            .settingsRowPadding()
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .glassCard(cornerRadius: Theme.cornerRadius)
     }
 }

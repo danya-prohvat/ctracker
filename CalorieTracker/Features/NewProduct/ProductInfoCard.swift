@@ -11,11 +11,11 @@ struct ProductInfoCard: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 Text("Name")
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .frame(width: 88, alignment: .leading)
                 TextField("e.g. Homemade soup", text: $name)
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(.horizontal, 16)
@@ -25,11 +25,11 @@ struct ProductInfoCard: View {
 
             HStack(spacing: 12) {
                 Text("Per")
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .frame(width: 88, alignment: .leading)
                 Text(Format.amount(100))
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 BasisSegmentControl(basis: $basis)
@@ -64,7 +64,7 @@ private struct BasisSegmentControl: View {
             basis = value
         } label: {
             Text(label)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(selected ? Theme.textPrimary : Theme.textSecondary)
                 .padding(.vertical, 5)
                 .padding(.horizontal, 13)

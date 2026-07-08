@@ -46,6 +46,9 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.22), value: tabBarHidden)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .tint(Theme.accent)
+        // The palette is light-only for now; without this, system materials
+        // and sheets would flip dark while cards/text stay light.
+        .preferredColorScheme(.light)
         .onAppear {
             let settings = UserSettings.current(in: context)
             Seeder.seedIfRequested(context)

@@ -9,10 +9,10 @@ struct SaveToggleCard: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Save to My products")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
                 Text("Off = log once without saving")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 0)

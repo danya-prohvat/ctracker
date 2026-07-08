@@ -20,12 +20,12 @@ struct NutrientGoalRow: View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(def.nameKey)
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
                 stepperLine
                 if let hint = def.hint {
                     Text(hint)
-                        .font(.system(size: 11))
+                        .font(.caption2)
                         .foregroundStyle(Theme.textTertiary)
                 }
             }
@@ -46,7 +46,7 @@ struct NutrientGoalRow: View {
                 adjustGoal(by: -step)
             }
             normLabel
-                .font(.system(size: 13, weight: .semibold))
+                .font(.stat(.footnote, .semibold))
                 .foregroundStyle(Color(hex: 0x6B6B70))
                 .frame(minWidth: 58)
             GoalsStepperCircle(.increment, size: 24, glyphSize: 16) {

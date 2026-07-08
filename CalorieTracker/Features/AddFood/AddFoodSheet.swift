@@ -110,12 +110,11 @@ struct AddFoodSheet: View {
     private var header: some View {
         HStack {
             Text("Add food")
-                .font(.system(size: 22, weight: .bold))
-                .kerning(-0.4)
+                .font(.title2.bold())
                 .foregroundStyle(Theme.textPrimary)
             Spacer()
             Button("Cancel") { dismiss() }
-                .font(.system(size: 16, weight: .medium))
+                .font(.callout.weight(.medium))
                 .foregroundStyle(Theme.accentLabel)
         }
         .padding(.horizontal, 20)

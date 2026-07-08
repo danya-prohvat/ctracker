@@ -15,7 +15,13 @@ struct DaySummaryCard: View {
     private var protein: Double { entries.reduce(0) { $0 + $1.protein } }
     private var fat: Double { entries.reduce(0) { $0 + $1.fat } }
     private var carbs: Double { entries.reduce(0) { $0 + $1.carbs } }
-    private var fiber: Double { entries.reduce(0) { $0 + $1.micro("fiber") } }
+    /// Fiber total for net carbs. Nil = no entry has fiber data (missing ≠ 0 —
+    /// net carbs would silently equal total carbs); an empty day is a real 0.
+    private var fiber: Double? {
+        if entries.isEmpty { return 0 }
+        let values = entries.compactMap { $0.microValue("fiber") }
+        return values.isEmpty ? nil : values.reduce(0, +)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -48,15 +54,21 @@ struct DaySummaryCard: View {
                 let p = NutritionMath.macroCaloriePercents(
                     protein: protein, fat: fat, carbs: carbs)
                 Text("P \(p.p)% · F \(p.f)% · C \(p.c)% of calories")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity)
             }
             if settings?.netCarbsEnabled == true {
-                Text("Net carbs: \(Format.grams(NutritionMath.netCarbs(carbs: carbs, fiber: fiber)))")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Theme.textSecondary)
-                    .frame(maxWidth: .infinity)
+                Group {
+                    if let fiber {
+                        Text("Net carbs: \(Format.grams(NutritionMath.netCarbs(carbs: carbs, fiber: fiber)))")
+                    } else {
+                        Text("Net carbs: —")
+                    }
+                }
+                .font(.caption.weight(.medium))
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity)
             }
 
             if let settings, !settings.enabledNutrients.isEmpty {
@@ -71,12 +83,12 @@ struct DaySummaryCard: View {
     private var remainingColumn: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text("Calories")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(Theme.textSecondary)
             if let goal = settings?.calorieGoal {
                 let remaining = goal - calories
                 Text(Format.kcal(abs(remaining)))
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.stat(.title))
                     .foregroundStyle(remaining >= 0 ? Theme.textPrimary : Theme.destructive)
                     .contentTransition(.numericText())
                 Group {
@@ -94,19 +106,19 @@ struct DaySummaryCard: View {
                         }
                     }
                 }
-                .font(.system(size: 13, weight: .medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(Theme.textSecondary)
             } else {
                 Text(Format.kcal(calories))
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.stat(.title))
                     .foregroundStyle(Theme.textPrimary)
                 if isToday {
                     Text("eaten today")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(Theme.textSecondary)
                 } else {
                     Text("eaten that day")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(Theme.textSecondary)
                 }
             }

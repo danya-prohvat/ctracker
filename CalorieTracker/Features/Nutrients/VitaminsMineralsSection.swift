@@ -45,10 +45,10 @@ struct VitaminsMineralsSection: View {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Vitamins & minerals")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.textPrimary)
                     Text("\(defs.count) tracked")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(Theme.textTertiary)
                 }
                 Spacer(minLength: 8)
@@ -59,10 +59,10 @@ struct VitaminsMineralsSection: View {
                         Text("Show")
                     }
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundStyle(Theme.textSecondary)
             }
             .contentShape(Rectangle())
@@ -94,12 +94,12 @@ private struct NutrientProgressRow: View {
         VStack(alignment: .leading, spacing: 7) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text(def.nameKey)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.textStrong)
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 trailingText
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.stat(.footnote, .medium))
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

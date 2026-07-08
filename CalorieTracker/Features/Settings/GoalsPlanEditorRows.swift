@@ -20,7 +20,7 @@ extension PlanEditor {
                 VStack(spacing: 2) {
                     kcalValue
                     Text("kcal / day")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(Theme.textSecondary)
                 }
             }
@@ -41,13 +41,12 @@ extension PlanEditor {
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.center)
                 .focused($focused, equals: .calories)
-                .font(.system(size: 34, weight: .bold))
+                .font(.stat(.largeTitle))
                 .foregroundStyle(Theme.textPrimary)
                 .frame(width: 104)
         } else {
             Text(Format.kcal(calories))
-                .font(.system(size: 34, weight: .bold))
-                .kerning(-1)
+                .font(.stat(.largeTitle))
                 .foregroundStyle(Theme.textPrimary)
                 .contentTransition(.numericText())
                 .animation(.easeOut(duration: 0.2), value: calories)
@@ -76,7 +75,7 @@ extension PlanEditor {
     private func macroRow(_ title: LocalizedStringKey, field: Field) -> some View {
         HStack {
             Text(title)
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
             Spacer(minLength: 8)
             HStack(spacing: 14) {
@@ -101,16 +100,16 @@ extension PlanEditor {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .focused($focused, equals: field)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.stat(.callout))
                     .foregroundStyle(Theme.textPrimary)
                     .frame(width: 48)
                 Text("g")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.callout.bold())
                     .foregroundStyle(Theme.textPrimary)
             }
         } else {
             Text("\(Format.amount(value(for: field))) g")
-                .font(.system(size: 16, weight: .bold))
+                .font(.stat(.callout))
                 .monospacedDigit()
                 .foregroundStyle(Theme.textPrimary)
                 .frame(minWidth: 52, alignment: .trailing)

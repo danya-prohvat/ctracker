@@ -5,7 +5,7 @@ import SwiftUI
 struct SettingsRowChevron: View {
     var body: some View {
         Image(systemName: "chevron.forward")
-            .font(.system(size: 14, weight: .semibold))
+            .font(.footnote.weight(.semibold))
             .foregroundStyle(Theme.chevron)
     }
 }

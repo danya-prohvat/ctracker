@@ -85,7 +85,7 @@ struct PaywallView: View {
         }
         .background(Theme.background)
         .safeAreaInset(edge: .bottom) { footer }
-        .overlay(alignment: .topLeading) { closeButton }
+        .overlay(alignment: .topTrailing) { closeButton }
         .task {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             withAnimation(.easeInOut(duration: 0.3)) { closeVisible = true }
@@ -115,13 +115,13 @@ struct PaywallView: View {
             dismiss()
         } label: {
             Image(systemName: "xmark")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Theme.textSecondary)
                 .frame(width: 32, height: 32)
                 .background(Circle().fill(Theme.card))
                 .overlay(Circle().stroke(Theme.separator, lineWidth: 1))
         }
-        .padding(.leading, 20)
+        .padding(.trailing, 20)
         .padding(.top, 14)
         .opacity(closeVisible ? 1 : 0)
         .disabled(!closeVisible)
@@ -130,9 +130,14 @@ struct PaywallView: View {
 
     private var header: some View {
         VStack(spacing: 12) {
-            Image(systemName: "crown.fill")
-                .font(.system(size: 40))
-                .foregroundStyle(Theme.accent)
+            Image(systemName: "sparkles")
+                .font(.largeTitle)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Theme.fabTop, Theme.fabBottom],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                )
                 .frame(width: 74, height: 74)
                 .background(Circle().fill(Theme.accentSoft))
             Text("Unlock the full nutrition picture")
@@ -271,7 +276,7 @@ private struct PaywallFeatureRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(Theme.accent)
                 .frame(width: 36, height: 36)
                 .background(RoundedRectangle(cornerRadius: 10).fill(Theme.accentSoft))
@@ -298,7 +303,7 @@ private struct PaywallPlanRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.title2)
                     .foregroundStyle(isSelected ? Theme.accent : Theme.textTertiary)
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -326,7 +331,7 @@ private struct PaywallPlanRow: View {
 
                 VStack(alignment: .trailing, spacing: 3) {
                     Text(verbatim: plan.pricing.price)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.stat(.subheadline, .semibold))
                         .foregroundStyle(Theme.textPrimary)
                     if let detail = plan.pricing.priceDetail {
                         Text(detail)

@@ -69,7 +69,7 @@ struct QuantityEditor: View {
             ScrollView {
                 VStack(spacing: 0) {
                     Text(name)
-                        .font(.system(size: 26, weight: .bold))
+                        .font(.title.bold())
                         .foregroundStyle(Theme.textPrimary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
@@ -108,22 +108,22 @@ struct QuantityEditor: View {
     private var header: some View {
         ZStack {
             Text(title)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(Theme.textPrimary)
             HStack {
                 Button(action: onBack) {
                     HStack(spacing: 3) {
                         Image(systemName: "chevron.backward")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                         Text("Back")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.callout.weight(.medium))
                     }
                     .foregroundStyle(Theme.accentLabel)
                 }
                 Spacer()
                 Button(action: onClose) {
                     Text("Close")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.callout.weight(.medium))
                         .foregroundStyle(Theme.textSecondary)
                 }
             }

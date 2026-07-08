@@ -87,7 +87,7 @@ struct ScanFlowView: View {
             if showsAttribution {
                 // ODbL attribution — required whenever OFF data is shown or fetched.
                 Text("Data from Open Food Facts")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(.white.opacity(0.4))
             }
         }

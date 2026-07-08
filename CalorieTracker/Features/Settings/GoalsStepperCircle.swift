@@ -26,8 +26,8 @@ struct GoalsStepperCircle: View {
 
     var body: some View {
         Button(action: action) {
-            Text(verbatim: direction == .decrement ? "−" : "+")
-                .font(.system(size: glyphSize))
+            Image(systemName: direction == .decrement ? "minus" : "plus")
+                .font(glyphFont)
                 .foregroundStyle(glyphColor)
                 .frame(width: size, height: size)
                 .background(Circle().fill(fill))
@@ -35,6 +35,15 @@ struct GoalsStepperCircle: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(direction == .decrement ? Text("Decrease") : Text("Increase"))
+    }
+
+    /// Dynamic Type equivalent of the prototype's fixed glyph sizes (26/20/16).
+    private var glyphFont: Font {
+        switch glyphSize {
+        case ..<18: return .callout
+        case ..<24: return .title3
+        default: return .title
+        }
     }
 
     private var fill: Color {

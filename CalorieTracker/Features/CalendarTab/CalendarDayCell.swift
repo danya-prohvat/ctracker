@@ -34,7 +34,7 @@ struct CalendarDayCell: View {
                     )
                 }
                 Text(date, format: .dateTime.day())
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(hasData ? Theme.textPrimary : Theme.calendarDayMuted)
             }
             .frame(width: 40, height: 40)

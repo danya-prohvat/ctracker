@@ -16,18 +16,18 @@ struct CalorieRingView: View {
             ProgressRing(progress: progress, lineWidth: 12)
             VStack(spacing: 1) {
                 Text(Format.kcal(consumed))
-                    .font(.system(size: 30, weight: .bold))
+                    .font(.stat(.title))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                     .contentTransition(.numericText())
                 if let goal {
                     Text(verbatim: "/ \(Format.kcal(goal))")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(Theme.textSecondary)
                 } else {
                     Text("kcal")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(Theme.textSecondary)
                 }
             }

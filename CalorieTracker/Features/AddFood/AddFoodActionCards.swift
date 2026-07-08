@@ -25,17 +25,17 @@ struct AddFoodActionCards: View {
                 Circle()
                     .fill(Theme.accentSoftAlt)
                     .frame(width: 34, height: 34)
-                Text(verbatim: "+")
-                    .font(.system(size: 24, weight: .light))
+                Image(systemName: "plus")
+                    .font(.title2.weight(.light))
                     .foregroundStyle(Theme.accentIcon)
                     .offset(y: -1)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text("New product")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
                 Text("Create a food with your own values")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
             }
@@ -51,7 +51,7 @@ struct AddFoodActionCards: View {
             BarcodeViewfinderGlyph()
                 .frame(width: 26, height: 22)
             Text("Scan")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(Theme.accentDeep)
         }
         .frame(width: 84)

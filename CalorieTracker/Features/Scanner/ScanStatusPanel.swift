@@ -29,10 +29,10 @@ struct ScanStatusPanel: View {
     private var hint: some View {
         VStack(spacing: 4) {
             Text("Point at a barcode")
-                .font(.system(size: 17, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(.white)
             Text("Align the code inside the frame")
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.55))
         }
         .multilineTextAlignment(.center)
@@ -43,10 +43,10 @@ struct ScanStatusPanel: View {
             ScanSpinner()
             VStack(spacing: 4) {
                 Text("Looking up product…")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(.white)
                 Text("Barcode \(code)")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.5))
             }
@@ -58,11 +58,11 @@ struct ScanStatusPanel: View {
         VStack(spacing: 16) {
             statusCircle {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 30, weight: .bold))
+                    .font(.largeTitle.bold())
                     .foregroundStyle(Theme.scanLine)
             }
             Text("Product found")
-                .font(.system(size: 19, weight: .bold))
+                .font(.title3.bold())
                 .foregroundStyle(.white)
         }
     }
@@ -71,7 +71,7 @@ struct ScanStatusPanel: View {
         VStack(spacing: 16) {
             statusCircle {
                 Text(verbatim: "?")
-                    .font(.system(size: 34))
+                    .font(.largeTitle)
                     .foregroundStyle(.white.opacity(0.7))
             }
             message(
@@ -87,7 +87,7 @@ struct ScanStatusPanel: View {
         VStack(spacing: 16) {
             statusCircle {
                 Image(systemName: "camera")
-                    .font(.system(size: 26, weight: .medium))
+                    .font(.title.weight(.medium))
                     .foregroundStyle(.white.opacity(0.7))
             }
             .overlay {
@@ -108,7 +108,7 @@ struct ScanStatusPanel: View {
         VStack(spacing: 16) {
             statusCircle {
                 Image(systemName: "wifi.slash")
-                    .font(.system(size: 28, weight: .medium))
+                    .font(.title.weight(.medium))
                     .foregroundStyle(.white.opacity(0.7))
             }
             message(
@@ -126,10 +126,10 @@ struct ScanStatusPanel: View {
     ) -> some View {
         VStack(spacing: 5) {
             Text(title)
-                .font(.system(size: 19, weight: .bold))
+                .font(.title3.bold())
                 .foregroundStyle(.white)
             Text(body)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.55))
                 .lineSpacing(3)
                 .frame(maxWidth: maxWidth)
@@ -151,7 +151,7 @@ struct ScanStatusPanel: View {
             ScanBarcodeGlyph(barWidths: [2, 3, 1, 3, 2, 1], spacing: 2)
                 .frame(height: 16)
             Text(verbatim: code)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(.white)
         }

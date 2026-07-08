@@ -99,15 +99,15 @@ struct DayView: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(dayDate.formatted(.dateTime.weekday(.wide)))
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(Theme.textSecondary)
                 Text("Today")
-                    .font(.system(size: 30, weight: .bold))
+                    .font(.largeTitle.bold())
                     .foregroundStyle(Theme.textPrimary)
             }
             Spacer()
             Text(dayDate.formatted(.dateTime.month(.abbreviated).day()))
-                .font(.system(size: 16, weight: .semibold))
+                .font(.callout.weight(.semibold))
                 .foregroundStyle(Theme.textSecondary)
         }
     }
@@ -115,15 +115,15 @@ struct DayView: View {
     private var detailHeader: some View {
         ZStack {
             Text(dayLabel)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(Theme.textPrimary)
             HStack {
                 Button { dismiss() } label: {
                     HStack(spacing: 3) {
                         Image(systemName: "chevron.backward")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.body.weight(.semibold))
                         Text(dayDate.formatted(.dateTime.month(.wide)))
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.body)
                     }
                     .foregroundStyle(Theme.accentLabel)
                 }
@@ -142,11 +142,11 @@ struct DayView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("Logged")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.title3.bold())
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("^[\(entries.count) item](inflect: true) · \(Format.kcal(totalCalories)) kcal")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
             }
             .padding(.horizontal, 4)
@@ -168,7 +168,7 @@ struct DayView: View {
                 )
                 if isPresented {
                     Text("Swipe a row to delete · tap to edit quantity.")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundStyle(Theme.textTertiary)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 14)

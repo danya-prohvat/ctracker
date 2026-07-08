@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Prototype-style sheet header: "‹ Back" in accentLabel, centered title,
-/// empty right slot of matching width. The system navigation bar is hidden
-/// by the hosting screen.
+/// Sheet header in native nav-bar style: SF chevron + "Back" in accentLabel,
+/// centered title, empty right slot of matching width. The system navigation
+/// bar is hidden by the hosting screen.
 struct ProductFormHeader: View {
     let title: LocalizedStringKey
     let onBack: () -> Void
@@ -10,9 +10,13 @@ struct ProductFormHeader: View {
     var body: some View {
         HStack {
             Button(action: onBack) {
-                Text("‹ Back")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Theme.accentLabel)
+                HStack(spacing: 3) {
+                    Image(systemName: "chevron.backward")
+                        .font(.body.weight(.semibold))
+                    Text("Back")
+                        .font(.body)
+                }
+                .foregroundStyle(Theme.accentLabel)
             }
             .buttonStyle(.plain)
             Spacer()
@@ -21,7 +25,7 @@ struct ProductFormHeader: View {
         }
         .overlay {
             Text(title)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(Theme.textPrimary)
         }
         .padding(.top, 16)

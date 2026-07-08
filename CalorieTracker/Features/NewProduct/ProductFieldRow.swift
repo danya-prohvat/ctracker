@@ -11,16 +11,16 @@ struct ProductFieldRow: View {
     var body: some View {
         HStack(spacing: 12) {
             label
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundStyle(Theme.textPrimary)
                 .frame(width: labelWidth, alignment: .leading)
             TextField("0", text: $text)
                 .keyboardType(.decimalPad)
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
                 .frame(maxWidth: .infinity)
             unit
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundStyle(Theme.textQuaternary)
         }
         .padding(.horizontal, 16)

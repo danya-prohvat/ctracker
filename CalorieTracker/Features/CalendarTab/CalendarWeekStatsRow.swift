@@ -15,17 +15,17 @@ struct CalendarWeekStatsRow: View {
         HStack(spacing: 12) {
             statCard(caption: "Avg calories") {
                 Text(verbatim: Format.kcal(stats?.avgCalories ?? 0))
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.stat(.title))
                     .foregroundStyle(Theme.textPrimary)
             }
             statCard(caption: "Avg protein") {
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     // Prototype shows the weekly average as whole grams.
                     Text(verbatim: Format.amount((stats?.avgProtein ?? 0).rounded()))
-                        .font(.system(size: 26, weight: .bold))
+                        .font(.stat(.title))
                         .foregroundStyle(Theme.textPrimary)
                     Text("g")
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundStyle(Theme.textTertiary)
                 }
             }
@@ -38,14 +38,13 @@ struct CalendarWeekStatsRow: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(caption)
-                .kerning(0.4)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.footnote)
                 .textCase(.uppercase)
                 .foregroundStyle(Theme.textSecondary)
             value()
                 .padding(.top, 4)
             Text("this week")
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

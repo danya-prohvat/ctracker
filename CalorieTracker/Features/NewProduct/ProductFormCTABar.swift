@@ -12,7 +12,7 @@ struct ProductFormCTABar: View {
             ProductFormHairline()
             Button(action: action) {
                 Text(title)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.body.bold())
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)

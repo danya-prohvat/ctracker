@@ -64,7 +64,7 @@ struct GoalsView: View {
     private var header: some View {
         ZStack {
             Text("Goals & nutrients")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(Theme.textPrimary)
             HStack {
                 Button {
@@ -72,9 +72,9 @@ struct GoalsView: View {
                 } label: {
                     HStack(spacing: 3) {
                         Image(systemName: "chevron.backward")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                         Text("Settings")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.callout.weight(.medium))
                     }
                     .foregroundStyle(Theme.accentLabel)
                 }

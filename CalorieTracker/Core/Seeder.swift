@@ -8,8 +8,19 @@ enum Seeder {
     static func seedIfRequested(_ context: ModelContext) {
         #if DEBUG
         guard UserDefaults.standard.bool(forKey: "seedSample") else { return }
+        seedSampleData(context)
+        #endif
+    }
+
+    #if DEBUG
+    /// Seeds the sample set into an empty store (also reachable from the
+    /// debug "Test" card in Settings). Returns false when the store already
+    /// has products and nothing was inserted.
+    @MainActor
+    @discardableResult
+    static func seedSampleData(_ context: ModelContext) -> Bool {
         let existing = (try? context.fetchCount(FetchDescriptor<Product>())) ?? 0
-        guard existing == 0 else { return }
+        guard existing == 0 else { return false }
 
         let oatmeal = Product(name: "Oatmeal", basis: .per100g,
                               calories: 380, protein: 13, fat: 7, carbs: 67,
@@ -41,6 +52,7 @@ enum Seeder {
         ]
         entries.forEach { context.insert($0) }
         try? context.save()
-        #endif
+        return true
     }
+    #endif
 }

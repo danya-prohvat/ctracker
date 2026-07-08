@@ -21,7 +21,7 @@ struct DiaryRow: View {
             deleteButton
                 .opacity(offset == 0 ? 0 : 1)
             rowContent
-                .background(Color.white.opacity(0.7))
+                .background(Theme.card)
                 .offset(x: offset)
                 .onTapGesture {
                     if isOpen { setOpen(false) } else { onTap() }
@@ -35,21 +35,21 @@ struct DiaryRow: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.productName)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                 Text("\(Format.amount(entry.quantity)) \(entry.basis.canonicalUnit.label) · P\(Format.amount(entry.protein.rounded())) F\(Format.amount(entry.fat.rounded())) C\(Format.amount(entry.carbs.rounded()))")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 1) {
                 Text(Format.kcal(entry.calories))
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.stat(.body, .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Text("kcal")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.textQuaternary)
             }
         }
@@ -61,7 +61,7 @@ struct DiaryRow: View {
     private var deleteButton: some View {
         Button(action: onDelete) {
             Text("Delete")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
                 .frame(width: revealWidth)
                 .frame(maxHeight: .infinity)

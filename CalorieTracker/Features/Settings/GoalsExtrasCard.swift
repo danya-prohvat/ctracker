@@ -18,8 +18,8 @@ struct GoalsExtrasCard: View {
             }
             .glassCard(cornerRadius: 14)
 
-            Text("Shows carbs minus fiber on Today.")
-                .font(.system(size: 12))
+            Text("Adds a net carbs line (carbs − fiber) to the day summary. Useful for keto and low-carb diets.")
+                .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
                 .padding(.horizontal, 6)
         }
@@ -31,11 +31,11 @@ struct GoalsExtrasCard: View {
         } label: {
             HStack {
                 Text("Calculate for me")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(Theme.accentLabel)
                 Spacer(minLength: 8)
                 Image(systemName: "wand.and.stars")
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(Theme.accentLabel)
             }
             .padding(.vertical, 12)
@@ -48,7 +48,7 @@ struct GoalsExtrasCard: View {
     private var netCarbsRow: some View {
         Toggle(isOn: $netCarbs) {
             Text("Net carbs")
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
         }
         .tint(Theme.accent)

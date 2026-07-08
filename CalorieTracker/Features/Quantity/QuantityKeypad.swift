@@ -46,15 +46,15 @@ struct QuantityKeypad: View {
         switch key {
         case .digit(let value):
             Text(verbatim: "\(value)")
-                .font(.system(size: 24, weight: .semibold))
+                .font(.stat(.title2, .regular))
                 .foregroundStyle(Theme.textPrimary)
         case .separator:
             Text(verbatim: separator)
-                .font(.system(size: 24, weight: .semibold))
+                .font(.stat(.title2, .regular))
                 .foregroundStyle(Theme.textPrimary)
         case .backspace:
             Image(systemName: "delete.left")
-                .font(.system(size: 20, weight: .medium))
+                .font(.stat(.title2, .regular))
                 .foregroundStyle(Theme.textPrimary)
         }
     }

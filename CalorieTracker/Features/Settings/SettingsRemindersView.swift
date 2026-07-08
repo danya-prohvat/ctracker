@@ -17,7 +17,7 @@ struct SettingsRemindersView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     card
                     Text("We'll remind you to log your meals at these times.")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundStyle(Theme.textSecondary)
                         .padding(.horizontal, 6)
                         .padding(.top, 8)
@@ -34,7 +34,7 @@ struct SettingsRemindersView: View {
     private var header: some View {
         ZStack {
             Text("Reminders")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(Theme.textPrimary)
             HStack {
                 Button {
@@ -42,9 +42,9 @@ struct SettingsRemindersView: View {
                 } label: {
                     HStack(spacing: 3) {
                         Image(systemName: "chevron.backward")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                         Text("Back")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.callout.weight(.medium))
                     }
                     .foregroundStyle(Theme.accentLabel)
                 }
@@ -69,7 +69,7 @@ struct SettingsRemindersView: View {
     private func reminderRow(_ index: Int) -> some View {
         HStack(spacing: 12) {
             Text("Reminder")
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
             Spacer(minLength: 0)
             DatePicker(
@@ -82,7 +82,7 @@ struct SettingsRemindersView: View {
                 remove(index)
             } label: {
                 Image(systemName: "minus.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .foregroundStyle(Theme.destructive)
             }
             .buttonStyle(.plain)
@@ -98,9 +98,9 @@ struct SettingsRemindersView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 18))
+                    .font(.body)
                 Text("Add reminder")
-                    .font(.system(size: 16))
+                    .font(.callout)
                 Spacer(minLength: 0)
             }
             .foregroundStyle(Theme.accentLabel)

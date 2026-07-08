@@ -17,15 +17,32 @@ enum SettingsLanguage: String, CaseIterable, Identifiable {
         self = code.flatMap { SettingsLanguage(rawValue: $0) } ?? .system
     }
 
-    /// Display name. Endonyms are verbatim on purpose — a language's own
-    /// name never translates.
+    /// Display name shown in settings rows. Endonyms are verbatim on
+    /// purpose — a language's own name never translates.
     var title: Text {
+        self == .system ? Text("System") : Text(verbatim: endonym)
+    }
+
+    /// English exonym, verbatim by design: the picker lists every language
+    /// as "English name + endonym" regardless of the UI language.
+    var englishName: String {
         switch self {
-        case .system: Text("System")
-        case .english: Text(verbatim: "English")
-        case .ukrainian: Text(verbatim: "Українська")
-        case .russian: Text(verbatim: "Русский")
-        case .arabic: Text(verbatim: "العربية")
+        case .system: ""
+        case .english: "English"
+        case .ukrainian: "Ukrainian"
+        case .russian: "Russian"
+        case .arabic: "Arabic"
+        }
+    }
+
+    /// The language's name in itself.
+    var endonym: String {
+        switch self {
+        case .system: ""
+        case .english: "English"
+        case .ukrainian: "Українська"
+        case .russian: "Русский"
+        case .arabic: "العربية"
         }
     }
 }

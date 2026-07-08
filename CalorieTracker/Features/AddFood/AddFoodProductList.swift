@@ -24,7 +24,7 @@ struct AddFoodProductList: View {
             Spacer()
             Button(action: onCreate) {
                 Image(systemName: "plus")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(Theme.accentLabel)
             }
         }
@@ -73,7 +73,7 @@ struct AddFoodProductList: View {
                 Text("No products match “\(searchQuery)”.")
             }
         }
-        .font(.system(size: 14))
+        .font(.subheadline)
         .foregroundStyle(Theme.textSecondary)
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
@@ -90,21 +90,21 @@ private struct AddFoodProductRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(product.name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                 // Prototype rounds macros to whole grams in list rows.
                 Text("P \(Format.amount(product.protein.rounded())) · F \(Format.amount(product.fat.rounded())) · C \(Format.amount(product.carbs.rounded()))")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 12)
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(Format.kcal(product.calories)) kcal")
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.stat(.subheadline))
                     .foregroundStyle(Theme.textPrimary)
                 Text(product.basis.per100Label)
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundStyle(Theme.textQuaternary)
             }
         }

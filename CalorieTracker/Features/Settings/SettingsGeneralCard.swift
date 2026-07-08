@@ -20,20 +20,11 @@ struct SettingsGeneralCard: View {
             iCloudRow
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
-        .confirmationDialog(
-            "Language",
-            isPresented: $showLanguagePicker,
-            titleVisibility: .visible
-        ) {
-            ForEach(SettingsLanguage.allCases) { language in
-                Button {
-                    apply(language)
-                } label: {
-                    language.title
-                }
-            }
-        } message: {
-            Text("Restart the app to apply the language.")
+        .sheet(isPresented: $showLanguagePicker) {
+            LanguagePickerSheet(
+                selected: SettingsLanguage(code: settings.languageCode),
+                onSelect: apply
+            )
         }
     }
 
@@ -45,11 +36,11 @@ struct SettingsGeneralCard: View {
         } label: {
             HStack(spacing: 5) {
                 Text("Language")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
                 Spacer(minLength: 12)
                 SettingsLanguage(code: settings.languageCode).title
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(Theme.textTertiary)
                 SettingsRowChevron()
             }
@@ -67,7 +58,7 @@ struct SettingsGeneralCard: View {
                 } label: {
                     HStack(spacing: 5) {
                         Text("Reminders")
-                            .font(.system(size: 16))
+                            .font(.callout)
                             .foregroundStyle(Theme.textPrimary)
                         SettingsRowChevron()
                         Spacer(minLength: 0)
@@ -77,7 +68,7 @@ struct SettingsGeneralCard: View {
                 .buttonStyle(.plain)
             } else {
                 Text("Reminders")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
                 Spacer(minLength: 0)
             }
@@ -91,7 +82,7 @@ struct SettingsGeneralCard: View {
     private var iCloudRow: some View {
         HStack(spacing: 12) {
             Text("iCloud sync")
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
             Spacer(minLength: 0)
             Toggle(isOn: iCloudBinding) { Text("iCloud sync") }

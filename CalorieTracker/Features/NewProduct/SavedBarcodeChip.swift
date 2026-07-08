@@ -13,12 +13,11 @@ struct SavedBarcodeChip: View {
             glyph
             VStack(alignment: .leading, spacing: 1) {
                 Text("Barcode saved")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .textCase(.uppercase)
-                    .kerning(0.4)
                     .foregroundStyle(Theme.accentDeep)
                 Text(verbatim: code)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(Theme.textPrimary)
             }

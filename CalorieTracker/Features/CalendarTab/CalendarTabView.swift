@@ -36,7 +36,7 @@ struct CalendarTabView: View {
                     CalendarWeekStatsRow(stats: weekStats)
                         .padding(.top, 18)
                     Text("Tap a day with a ring to view details.")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundStyle(Theme.textTertiary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
@@ -67,7 +67,7 @@ struct CalendarTabView: View {
 
     private var header: some View {
         Text("Calendar")
-            .font(.system(size: 30, weight: .bold))
+            .font(.largeTitle.bold())
             .foregroundStyle(Theme.textPrimary)
             .padding(.top, 6)
             .padding(.horizontal, 2)

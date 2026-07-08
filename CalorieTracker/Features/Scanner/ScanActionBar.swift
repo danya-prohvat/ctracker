@@ -52,7 +52,7 @@ struct ScanActionBar: View {
 
     private func primaryLabel(_ title: LocalizedStringKey) -> some View {
         Text(title)
-            .font(.system(size: 17, weight: .bold))
+            .font(.body.bold())
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 54)
@@ -68,7 +68,7 @@ struct ScanActionBar: View {
     ) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.callout.weight(.semibold))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
@@ -85,7 +85,7 @@ struct ScanActionBar: View {
     private var manualLookupBar: some View {
         VStack(spacing: 10) {
             TextField("Barcode", text: $manualCode)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundStyle(.white)
                 .tint(Theme.scanLine)
                 .autocorrectionDisabled()
@@ -106,7 +106,7 @@ struct ScanActionBar: View {
                 onManualLookup(manualCode)
             } label: {
                 Text("Look up code")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
             }
             .disabled(manualCode.trimmingCharacters(in: .whitespaces).isEmpty)

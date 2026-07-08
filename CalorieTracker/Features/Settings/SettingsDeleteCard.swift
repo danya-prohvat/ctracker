@@ -15,7 +15,7 @@ struct SettingsDeleteCard: View {
             showConfirm = true
         } label: {
             Text("Delete all data")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(Theme.destructive)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

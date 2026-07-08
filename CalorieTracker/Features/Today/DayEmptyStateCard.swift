@@ -14,29 +14,26 @@ struct DayEmptyStateCard: View {
                 Circle()
                     .fill(isToday ? Theme.emptyCircleFill : Color(hex: 0xF4F4F6))
                     .frame(width: 76, height: 76)
-                Circle()
-                    .strokeBorder(
-                        isToday ? Theme.emptyCircleRing : Color(hex: 0xD0D0D5),
-                        lineWidth: 2.5
-                    )
-                    .frame(width: isToday ? 42 : 40, height: isToday ? 42 : 40)
+                Image(systemName: "fork.knife")
+                    .font(.title2)
+                    .foregroundStyle(isToday ? Theme.emptyCircleRing : Color(hex: 0xD0D0D5))
             }
 
             if isToday {
                 Text("Nothing logged yet")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
                 Text("Tap the + button to add your first meal of the day.")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 220)
             } else {
                 Text("Nothing logged this day")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
                 Text("There are no entries for \(dateLabel).")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 220)

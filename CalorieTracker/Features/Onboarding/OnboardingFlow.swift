@@ -561,7 +561,7 @@ fileprivate struct OnboardingBigCard: View {
         Button(action: action) {
             VStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(size: 40))
+                    .font(.largeTitle)
                     .foregroundStyle(selected ? Theme.accent : Theme.textSecondary)
                 Text(title)
                     .font(.headline)

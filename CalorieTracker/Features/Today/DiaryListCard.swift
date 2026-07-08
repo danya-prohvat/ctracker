@@ -44,22 +44,17 @@ struct DiaryListCard: View {
     }
 }
 
-/// Shared "+ Add food to this day" label: green icon circle + accent text.
-/// Used by the logged card footer and the empty-day card.
+/// Shared "+ Add food to this day" label: SF plus glyph + accent text,
+/// the Health-style "Add Data" affordance. Used by the logged card footer
+/// and the empty-day card.
 struct AddFoodInlineLabel: View {
     var body: some View {
-        HStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(Theme.accentSoftAlt)
-                    .frame(width: 26, height: 26)
-                Text(verbatim: "+")
-                    .font(.system(size: 19, weight: .light))
-                    .foregroundStyle(Theme.accentIcon)
-                    .offset(y: -1)
-            }
+        HStack(spacing: 8) {
+            Image(systemName: "plus.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Theme.accentIcon)
             Text("Add food to this day")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Theme.accentIcon)
         }
     }

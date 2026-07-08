@@ -1,25 +1,23 @@
 import SwiftUI
 
-/// Frosted-glass card from the prototype: rgba(255,255,255,.5) + blur,
-/// hairline white border and a soft shadow.
+/// Plain white card on the grouped-gray background — the native inset-grouped
+/// look (Health/Fitness). Name kept from the earlier glass styling so call
+/// sites stay a single point of change.
 struct GlassCardModifier: ViewModifier {
     var cornerRadius: CGFloat
 
     func body(content: Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         content
             .background {
-                shape
-                    .fill(.ultraThinMaterial)
-                    .overlay(shape.fill(Color.white.opacity(0.38)))
-                    .overlay(shape.strokeBorder(Color.white.opacity(0.6), lineWidth: 0.5))
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(Theme.card)
                     .shadow(color: Theme.cardShadow, radius: 2, y: 1)
             }
     }
 }
 
 extension View {
-    /// Wraps the view in a prototype-style glass card.
+    /// Wraps the view in a standard app card.
     func glassCard(cornerRadius: CGFloat = Theme.radiusCard) -> some View {
         modifier(GlassCardModifier(cornerRadius: cornerRadius))
     }

@@ -49,7 +49,7 @@ struct SettingsHomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Settings")
-                    .font(.system(size: 30, weight: .bold))
+                    .font(.largeTitle.bold())
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.horizontal, 2)
                     .padding(.top, 6)
@@ -74,13 +74,19 @@ struct SettingsHomeView: View {
                     .padding(.top, 14)
                 SettingsAboutCard()
                 Text("Data from Open Food Facts")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(Theme.textQuaternary)
                     .padding(.horizontal, 6)
                     .padding(.top, 8)
 
                 SettingsDeleteCard(settings: settings)
                     .padding(.top, 14)
+
+                #if DEBUG
+                caption("Test")
+                    .padding(.top, 14)
+                SettingsTestCard(settings: settings)
+                #endif
 
                 footer
             }
@@ -97,8 +103,7 @@ struct SettingsHomeView: View {
 
     private func caption(_ title: LocalizedStringKey) -> some View {
         Text(title)
-            .kerning(0.5)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.footnote)
             .textCase(.uppercase)
             .foregroundStyle(Theme.textSecondary)
             .padding(.horizontal, 6)
@@ -107,7 +112,7 @@ struct SettingsHomeView: View {
 
     private var footer: some View {
         Text("Calorie Tracker · v\(appVersion)")
-            .font(.system(size: 12))
+            .font(.caption)
             .foregroundStyle(Theme.textQuaternary)
             .frame(maxWidth: .infinity)
             .padding(.top, 14)

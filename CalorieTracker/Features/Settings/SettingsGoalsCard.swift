@@ -20,10 +20,10 @@ struct SettingsGoalsCard: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Goals & nutrients")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
                 summary
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
                     .truncationMode(.tail)

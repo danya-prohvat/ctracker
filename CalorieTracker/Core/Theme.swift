@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Palette and metrics derived from the approved HTML prototype.
-/// All accent values are the prototype's oklch colors converted to sRGB.
+/// App palette: the prototype's green accent family over a native iOS
+/// (Health-style) neutral base — flat grouped background and plain white cards.
 enum Theme {
-    // Base background is a pastel gradient — see `AppBackground`.
-    static let background = Color(hex: 0xEEF2F4)
+    // Flat light-gray base, matches systemGroupedBackground (light).
+    static let background = Color(hex: 0xF2F2F7)
     static let card = Color.white
 
     // Greens (hue 156 family from the prototype).
@@ -65,6 +65,14 @@ enum Theme {
     static let radiusButton: CGFloat = 14             // CTA buttons, keypad keys
 
     static let cardShadow = Color.black.opacity(0.04)
+}
+
+extension Font {
+    /// SF Rounded numerals for stat values (calories, macros) — the
+    /// Health/Fitness treatment. Text styles keep Dynamic Type scaling.
+    static func stat(_ style: Font.TextStyle, _ weight: Font.Weight = .bold) -> Font {
+        .system(style, design: .rounded).weight(weight)
+    }
 }
 
 extension Color {

@@ -12,8 +12,7 @@ struct GoalsSectionCaption: View {
     var body: some View {
         Text(title)
             .textCase(.uppercase)
-            .font(.system(size: 13, weight: .semibold))
-            .kerning(0.5)
+            .font(.footnote)
             .foregroundStyle(Theme.textSecondary)
             .padding(.horizontal, 6)
     }

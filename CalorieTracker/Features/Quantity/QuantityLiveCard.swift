@@ -13,16 +13,15 @@ struct QuantityLiveCard: View {
     var body: some View {
         VStack(spacing: 0) {
             Text("Quantity")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Theme.textSecondary)
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(verbatim: quantityText)
-                    .font(.system(size: 52, weight: .bold))
-                    .tracking(-1.5)
+                    .font(.stat(.largeTitle))
                     .foregroundStyle(Theme.textPrimary)
                 Text(LocalizedStringKey(unitLabel))
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                     .foregroundStyle(Theme.textSecondary)
             }
             .padding(.top, 6)
@@ -49,10 +48,10 @@ struct QuantityLiveCard: View {
     private func totalColumn(value: String, caption: LocalizedStringKey, color: Color) -> some View {
         VStack(spacing: 2) {
             Text(verbatim: value)
-                .font(.system(size: 24, weight: .bold))
+                .font(.stat(.title2))
                 .foregroundStyle(color)
             Text(caption)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
