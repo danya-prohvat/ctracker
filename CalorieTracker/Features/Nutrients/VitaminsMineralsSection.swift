@@ -101,10 +101,15 @@ private struct NutrientProgressRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(def.nameKey)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.textStrong)
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(def.nameKey)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.textStrong)
+                        .lineLimit(1)
+                    Text(def.kind == .limit ? "Limit" : "Goal")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textTertiary)
+                }
                 Spacer(minLength: 8)
                 HStack(spacing: 5) {
                     if def.kind == .goal, let ratio, ratio >= 1 {
