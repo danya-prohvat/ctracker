@@ -155,7 +155,8 @@ struct NewProductForm: View {
                     productID: nil, name: trimmedName, basis: basis,
                     per100Calories: v.cals, per100Protein: v.p,
                     per100Fat: v.f, per100Carbs: v.c,
-                    per100Micros: micros, lastQuantity: nil
+                    per100Micros: micros, lastQuantity: nil,
+                    wasScanned: barcode?.isEmpty == false
                 )
                 onContinue(food)
             }

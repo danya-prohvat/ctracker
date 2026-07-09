@@ -16,7 +16,7 @@ enum PreviewData {
 
         let oatmeal = Product(name: "Oatmeal", basis: .per100g,
                               calories: 380, protein: 13, fat: 7, carbs: 67,
-                              micros: ["fiber": 10, "sugar": 1],
+                              micros: ["fiber": 10, "sugar": 1], barcode: "4820000000017",
                               lastQuantity: 60, lastLoggedAt: Date())
         let milk = Product(name: "Milk 2%", basis: .per100ml,
                            calories: 50, protein: 3.4, fat: 2, carbs: 4.8,
@@ -32,7 +32,7 @@ enum PreviewData {
             dayKey: DayKey.today, productName: "Oatmeal", basis: .per100g,
             quantity: 60, per100Calories: 380, per100Protein: 13,
             per100Fat: 7, per100Carbs: 67, per100Micros: ["fiber": 10, "sugar": 1],
-            productID: oatmeal.id
+            productID: oatmeal.id, wasScanned: oatmeal.wasScanned
         )
         context.insert(entry)
 

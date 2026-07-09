@@ -33,6 +33,10 @@ final class DiaryEntry {
     /// convenience such as reopening the product.
     var productID: UUID? = nil
 
+    /// Frozen at log time: whether the source came from the barcode scanner.
+    /// Snapshot (not looked up) so it survives the product being edited/deleted.
+    var wasScanned: Bool = false
+
     var basis: Basis {
         get { Basis(rawValue: basisRaw) ?? .per100g }
         set { basisRaw = newValue.rawValue }
@@ -50,7 +54,8 @@ final class DiaryEntry {
         per100Fat: Double,
         per100Carbs: Double,
         per100Micros: [String: Double] = [:],
-        productID: UUID? = nil
+        productID: UUID? = nil,
+        wasScanned: Bool = false
     ) {
         self.id = id
         self.loggedAt = loggedAt
@@ -64,6 +69,7 @@ final class DiaryEntry {
         self.per100Carbs = per100Carbs
         self.per100Micros = per100Micros
         self.productID = productID
+        self.wasScanned = wasScanned
     }
 }
 

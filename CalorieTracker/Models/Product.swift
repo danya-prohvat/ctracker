@@ -32,6 +32,11 @@ final class Product {
         set { basisRaw = newValue.rawValue }
     }
 
+    /// True when the product came from the barcode scanner. A barcode is only
+    /// ever attached by the scan flow (the manual form has no barcode field),
+    /// so its presence is the source-of-truth for "scanned vs. manual".
+    var wasScanned: Bool { barcode?.isEmpty == false }
+
     init(
         id: UUID = UUID(),
         name: String = "",
@@ -74,7 +79,8 @@ extension Product {
             per100Fat: fat,
             per100Carbs: carbs,
             per100Micros: micros,
-            lastQuantity: lastQuantity
+            lastQuantity: lastQuantity,
+            wasScanned: wasScanned
         )
     }
 }

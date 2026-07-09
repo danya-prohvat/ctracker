@@ -38,7 +38,7 @@ struct RootView: View {
 
             if !tabBarHidden {
                 FloatingTabBar(selection: $selectedTab)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 32)
                     .padding(.bottom, 8)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }

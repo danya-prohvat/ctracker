@@ -14,6 +14,7 @@ struct QuantityEditSheet: View {
     var body: some View {
         QuantityEditor(
             name: entry.productName,
+            wasScanned: entry.wasScanned,
             basis: entry.basis,
             per100Calories: entry.per100Calories,
             per100Protein: entry.per100Protein,

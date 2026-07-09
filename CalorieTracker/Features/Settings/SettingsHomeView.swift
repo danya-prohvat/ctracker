@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Settings tab root (spec §5, §9) restyled to the prototype: pastel
-/// background, custom 30pt header, section captions and glass cards.
+/// Settings tab root (spec §5, §9): flat background, native collapsing large
+/// title, section captions and cards.
 /// All behavior (gating, scheduling, delete flow) lives in the section cards.
 struct SettingsHomeView: View {
     @Environment(\.modelContext) private var context
@@ -26,7 +26,7 @@ struct SettingsHomeView: View {
                 }
             }
             .background(AppBackground())
-            .toolbar(.hidden, for: .navigationBar)
+            .largeTitleScreen("Settings")
             .navigationDestination(isPresented: $debugShowGoals) { GoalsView() }
         }
         .task {
@@ -48,13 +48,6 @@ struct SettingsHomeView: View {
     private func content(_ settings: UserSettings) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Settings")
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(Theme.textPrimary)
-                    .padding(.horizontal, 2)
-                    .padding(.top, 6)
-                    .padding(.bottom, 18)
-
                 SettingsPremiumCard(settings: settings) { showPaywall = true }
                     .padding(.bottom, 12)
 

@@ -32,10 +32,13 @@ private struct AddFoodRecentChip: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(product.name)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Theme.textPrimary)
-                .lineLimit(1)
+            HStack(spacing: 4) {
+                Text(product.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                if product.wasScanned { ScannedBadge() }
+            }
             Text("\(Format.kcal(product.calories)) kcal / 100\(product.basis.canonicalUnit.label)")
                 .font(.caption)
                 .foregroundStyle(Theme.textSecondary)

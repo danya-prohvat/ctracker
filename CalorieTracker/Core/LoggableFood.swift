@@ -15,4 +15,7 @@ struct LoggableFood: Hashable {
     var per100Micros: [String: Double]
     /// Last logged canonical quantity (g / ml) for prefill, if any.
     var lastQuantity: Double?
+    /// Whether the source came from the barcode scanner (frozen into the diary
+    /// snapshot at log time). Defaults to false so existing call sites compile.
+    var wasScanned: Bool = false
 }

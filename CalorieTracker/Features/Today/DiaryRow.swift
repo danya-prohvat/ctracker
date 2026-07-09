@@ -34,10 +34,13 @@ struct DiaryRow: View {
     private var rowContent: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.productName)
-                    .font(.headline)
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    Text(entry.productName)
+                        .font(.headline)
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                    if entry.wasScanned { ScannedBadge() }
+                }
                 Text("\(Format.amount(entry.quantity)) \(entry.basis.canonicalUnit.label) · P\(Format.amount(entry.protein.rounded())) F\(Format.amount(entry.fat.rounded())) C\(Format.amount(entry.carbs.rounded()))")
                     .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)

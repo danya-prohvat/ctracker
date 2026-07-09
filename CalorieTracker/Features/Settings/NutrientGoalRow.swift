@@ -23,6 +23,7 @@ struct NutrientGoalRow: View {
                     .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
                 stepperLine
+                targetKindCaption
                 if let hint = def.hint {
                     Text(hint)
                         .font(.caption2)
@@ -60,6 +61,20 @@ struct NutrientGoalRow: View {
             return Text(verbatim: Format.nutrient(goal, unit: def.unit))
         }
         return Text(verbatim: "—")
+    }
+
+    /// Target semantics under the value ("reach it" vs "stay under it") —
+    /// fixed per nutrient in the catalog, not user-editable.
+    private var targetKindCaption: some View {
+        Group {
+            if def.kind == .limit {
+                Text("daily limit")
+            } else {
+                Text("daily goal")
+            }
+        }
+        .font(.caption2)
+        .foregroundStyle(Theme.textTertiary)
     }
 
     // MARK: - Goal stepping

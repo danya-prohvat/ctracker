@@ -15,6 +15,7 @@ struct QuantityLogView: View {
     var body: some View {
         QuantityEditor(
             name: food.name,
+            wasScanned: food.wasScanned,
             basis: food.basis,
             per100Calories: food.per100Calories,
             per100Protein: food.per100Protein,
@@ -47,7 +48,8 @@ struct QuantityLogView: View {
             per100Fat: food.per100Fat,
             per100Carbs: food.per100Carbs,
             per100Micros: food.per100Micros,
-            productID: food.productID
+            productID: food.productID,
+            wasScanned: food.wasScanned
         )
         context.insert(entry)
 

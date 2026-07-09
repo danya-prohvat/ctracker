@@ -31,6 +31,7 @@ enum Theme {
     static let stepperFill = Color(hex: 0xF0F0F2)                // "−" stepper circles
     static let toggleOff = Color(hex: 0xD8D8DC)
     static let destructive = Color(hex: 0xFF3B30)
+    static let warning = Color(hex: 0xFF9500)                    // near-limit amber (systemOrange)
     static let destructiveSoft = Color(hex: 0xFFE0DA)            // trash button bg
 
     // Macro accent colors (protein / fat / carbs) + micronutrient bars.

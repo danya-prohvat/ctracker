@@ -33,6 +33,15 @@ enum NutrientGroup: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// How a nutrient target is interpreted. Fixed per nutrient in the catalog —
+/// never user-editable.
+enum NutrientTargetKind: String, Codable {
+    /// "Reach 100%": exceeding is success (vitamins, minerals, fiber…).
+    case goal
+    /// "Do not exceed": exceeding is a warning (sodium, sugar, sat fat…).
+    case limit
+}
+
 /// A tracked nutrient definition. Static catalog — values logged into diary entries
 /// are snapshotted, so changing a definition never rewrites history (spec §2.1).
 struct NutrientDef: Identifiable, Hashable {
@@ -42,6 +51,7 @@ struct NutrientDef: Identifiable, Hashable {
     let defaultDV: Double?         // default Daily Value; nil = no default norm (e.g. trans fat)
     let group: NutrientGroup
     let hint: LocalizedStringKey?  // optional helper text shown under the goal field
+    var kind: NutrientTargetKind = .goal
 
     static func == (lhs: NutrientDef, rhs: NutrientDef) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
@@ -54,7 +64,7 @@ enum NutrientCatalog {
         NutrientDef(id: "calcium", nameKey: "Calcium", unit: .mg, defaultDV: 1300, group: .macromineral, hint: nil),
         NutrientDef(id: "phosphorus", nameKey: "Phosphorus", unit: .mg, defaultDV: 1250, group: .macromineral, hint: nil),
         NutrientDef(id: "magnesium", nameKey: "Magnesium", unit: .mg, defaultDV: 420, group: .macromineral, hint: nil),
-        NutrientDef(id: "sodium", nameKey: "Sodium", unit: .mg, defaultDV: 2300, group: .macromineral, hint: "salt × 0.4 = sodium"),
+        NutrientDef(id: "sodium", nameKey: "Sodium", unit: .mg, defaultDV: 2300, group: .macromineral, hint: "salt × 0.4 = sodium", kind: .limit),
         NutrientDef(id: "potassium", nameKey: "Potassium", unit: .mg, defaultDV: 4700, group: .macromineral, hint: nil),
         NutrientDef(id: "chloride", nameKey: "Chloride", unit: .mg, defaultDV: 2300, group: .macromineral, hint: nil),
 
@@ -86,14 +96,14 @@ enum NutrientCatalog {
 
         // Other
         NutrientDef(id: "fiber", nameKey: "Fiber", unit: .g, defaultDV: 28, group: .other, hint: nil),
-        NutrientDef(id: "sugar", nameKey: "Sugar", unit: .g, defaultDV: 50, group: .other, hint: nil),
-        NutrientDef(id: "saturatedFat", nameKey: "Saturated fat", unit: .g, defaultDV: 20, group: .other, hint: nil),
-        NutrientDef(id: "transFat", nameKey: "Trans fat", unit: .g, defaultDV: nil, group: .other, hint: nil),
-        NutrientDef(id: "cholesterol", nameKey: "Cholesterol", unit: .mg, defaultDV: 300, group: .other, hint: nil),
+        NutrientDef(id: "sugar", nameKey: "Sugar", unit: .g, defaultDV: 50, group: .other, hint: nil, kind: .limit),
+        NutrientDef(id: "saturatedFat", nameKey: "Saturated fat", unit: .g, defaultDV: 20, group: .other, hint: nil, kind: .limit),
+        NutrientDef(id: "transFat", nameKey: "Trans fat", unit: .g, defaultDV: nil, group: .other, hint: nil, kind: .limit),
+        NutrientDef(id: "cholesterol", nameKey: "Cholesterol", unit: .mg, defaultDV: 300, group: .other, hint: nil, kind: .limit),
         NutrientDef(id: "omega3", nameKey: "Omega-3", unit: .g, defaultDV: 1.6, group: .other, hint: nil),
         NutrientDef(id: "omega6", nameKey: "Omega-6", unit: .g, defaultDV: 17, group: .other, hint: nil),
         NutrientDef(id: "choline", nameKey: "Choline", unit: .mg, defaultDV: 550, group: .other, hint: nil),
-        NutrientDef(id: "caffeine", nameKey: "Caffeine", unit: .mg, defaultDV: 400, group: .other, hint: nil),
+        NutrientDef(id: "caffeine", nameKey: "Caffeine", unit: .mg, defaultDV: 400, group: .other, hint: nil, kind: .limit),
     ]
 
     static let byID: [String: NutrientDef] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })

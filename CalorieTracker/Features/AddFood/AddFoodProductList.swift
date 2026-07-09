@@ -89,10 +89,13 @@ private struct AddFoodProductRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(product.name)
-                    .font(.headline)
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    Text(product.name)
+                        .font(.headline)
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                    if product.wasScanned { ScannedBadge() }
+                }
                 // Prototype rounds macros to whole grams in list rows.
                 Text("P \(Format.amount(product.protein.rounded())) · F \(Format.amount(product.fat.rounded())) · C \(Format.amount(product.carbs.rounded()))")
                     .font(.footnote)

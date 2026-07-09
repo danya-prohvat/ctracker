@@ -18,7 +18,8 @@ struct SettingsTestCard: View {
             premiumRow
             SettingsRowDivider()
             actionRow("Seed sample data", note: seedNote) {
-                seedNote = Seeder.seedSampleData(context) ? "Done" : "Store not empty"
+                let count = Seeder.seedSampleData(context)
+                seedNote = count > 0 ? "Seeded \(count) entries" : "Store not empty"
             }
             SettingsRowDivider()
             actionRow("Reset free scans", note: "Used: \(settings.scanCount)") {

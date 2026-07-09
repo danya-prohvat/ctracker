@@ -83,12 +83,20 @@ struct VitaminsMineralsSection: View {
     }
 }
 
-/// One expanded row: name, "consumed / goal unit" (or value only when no goal,
-/// or "—" when no entry has data). Never divides by a nil/zero goal.
+/// One expanded row: name, "consumed / target unit" (or value only when no
+/// target, or "—" when no entry has data). Never divides by a nil/zero target.
+/// Goal-kind targets stay brand-colored and get a checkmark at ≥100%;
+/// limit-kind targets turn amber near the cap and red + "+X over" above it.
 private struct NutrientProgressRow: View {
     let def: NutrientDef
     let consumed: Double?
     let goal: Double?
+
+    /// Consumed-to-target ratio; nil without data or a positive target.
+    private var ratio: Double? {
+        guard let consumed, let goal, goal > 0 else { return nil }
+        return consumed / goal
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
@@ -98,11 +106,18 @@ private struct NutrientProgressRow: View {
                     .foregroundStyle(Theme.textStrong)
                     .lineLimit(1)
                 Spacer(minLength: 8)
-                trailingText
-                    .font(.stat(.footnote, .medium))
-                    .foregroundStyle(Theme.textSecondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                HStack(spacing: 5) {
+                    if def.kind == .goal, let ratio, ratio >= 1 {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.accent)
+                            .accessibilityLabel("Goal reached")
+                    }
+                    trailingText
+                        .font(.stat(.footnote, .medium))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
             }
 
             if let consumed, let goal, goal > 0 {
@@ -111,7 +126,7 @@ private struct NutrientProgressRow: View {
                         Capsule()
                             .fill(Color(hex: 0x3C3C43).opacity(0.1))
                         Capsule()
-                            .fill(Theme.microBar)
+                            .fill(barColor)
                             .frame(width: max(3, geo.size.width * min(consumed / goal, 1)))
                             .animation(.easeOut(duration: 0.35), value: consumed)
                     }
@@ -121,12 +136,32 @@ private struct NutrientProgressRow: View {
         }
     }
 
+    /// Goals never warn — exceeding one is success. Limits go amber from 90%
+    /// and red over 100% (exceeding a limit must not read as completion).
+    private var barColor: Color {
+        guard def.kind == .limit, let ratio else { return Theme.microBar }
+        if ratio > 1 { return Theme.destructive }
+        if ratio >= 0.9 { return Theme.warning }
+        return Theme.microBar
+    }
+
     private var trailingText: Text {
-        guard let consumed else { return Text(verbatim: "—") }
-        if let goal, goal > 0 {
-            return Text(verbatim: "\(Format.amount(consumed)) / \(Format.nutrient(goal, unit: def.unit))")
+        guard let consumed else {
+            return Text(verbatim: "—").foregroundStyle(Theme.textSecondary)
         }
-        return Text(verbatim: Format.nutrient(consumed, unit: def.unit))
+        guard let goal, goal > 0 else {
+            return Text(verbatim: Format.nutrient(consumed, unit: def.unit))
+                .foregroundStyle(Theme.textSecondary)
+        }
+        let base = Text(verbatim: "\(Format.amount(consumed)) / \(Format.nutrient(goal, unit: def.unit))")
+            .foregroundStyle(Theme.textSecondary)
+        guard def.kind == .limit, consumed > goal else { return base }
+        // Accessibility: the overage is spelled out, never color alone.
+        return base
+            + Text(verbatim: " · ").foregroundStyle(Theme.textSecondary)
+            + Text("+\(Format.amount(consumed - goal)) over")
+                .foregroundStyle(Theme.destructive)
+                .fontWeight(.semibold)
     }
 }
 

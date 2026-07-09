@@ -7,6 +7,7 @@ import SwiftData
 /// at input time — commit always receives the canonical quantity.
 struct QuantityEditor: View {
     let name: String
+    let wasScanned: Bool
     let basis: Basis
     let per100Calories: Double
     let per100Protein: Double
@@ -25,6 +26,7 @@ struct QuantityEditor: View {
 
     init(
         name: String,
+        wasScanned: Bool = false,
         basis: Basis,
         per100Calories: Double,
         per100Protein: Double,
@@ -40,6 +42,7 @@ struct QuantityEditor: View {
         onCommit: @escaping (Double) -> Void
     ) {
         self.name = name
+        self.wasScanned = wasScanned
         self.basis = basis
         self.per100Calories = per100Calories
         self.per100Protein = per100Protein
@@ -68,13 +71,18 @@ struct QuantityEditor: View {
             header
             ScrollView {
                 VStack(spacing: 0) {
-                    Text(name)
-                        .font(.title.bold())
-                        .foregroundStyle(Theme.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 12)
-                        .padding(.bottom, 20)
+                    HStack(spacing: 8) {
+                        Text(name)
+                            .font(.title.bold())
+                            .foregroundStyle(Theme.textPrimary)
+                            .multilineTextAlignment(.center)
+                        if wasScanned {
+                            ScannedBadge(font: .title3.weight(.semibold))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 12)
+                    .padding(.bottom, 20)
 
                     QuantityLiveCard(
                         quantityText: text,

@@ -12,13 +12,7 @@ struct FloatingTabBar: View {
             tab(.settings, label: "Settings", symbol: "gearshape")
         }
         .frame(height: 64)
-        .background {
-            let shape = Capsule()
-            shape
-                .fill(.ultraThinMaterial)
-                .overlay(shape.strokeBorder(Theme.separator, lineWidth: 0.5))
-                .shadow(color: Color.black.opacity(0.12), radius: 16, y: 8)
-        }
+        .glassCapsuleBackground()
     }
 
     private func tab(_ tab: AppTab, label: LocalizedStringKey, symbol: String) -> some View {
@@ -42,11 +36,31 @@ struct FloatingTabBar: View {
     }
 }
 
+private extension View {
+    /// Liquid Glass capsule on iOS 26+, `.ultraThinMaterial` fallback below.
+    @ViewBuilder
+    func glassCapsuleBackground() -> some View {
+        if #available(iOS 26.0, *) {
+            self
+                .glassEffect(.regular.interactive(), in: .capsule)
+                .shadow(color: Color.black.opacity(0.10), radius: 14, y: 6)
+        } else {
+            self.background {
+                let shape = Capsule()
+                shape
+                    .fill(.ultraThinMaterial)
+                    .overlay(shape.strokeBorder(Theme.separator, lineWidth: 0.5))
+                    .shadow(color: Color.black.opacity(0.12), radius: 16, y: 8)
+            }
+        }
+    }
+}
+
 #Preview {
     ZStack(alignment: .bottom) {
         AppBackground()
         FloatingTabBar(selection: .constant(.today))
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 32)
             .padding(.bottom, 8)
     }
 }

@@ -1,15 +1,9 @@
 import SwiftUI
 import SwiftData
 
-enum AddRoute: Hashable {
-    case quantity(LoggableFood)
-    case newProduct
-    case scanPrefill(LoggableFood, String)   // prefilled from a scan + barcode
-    case manualBarcode(String)               // scan not found → empty form with barcode
-}
-
-/// "Add food" bottom sheet (spec §5): pinned search, Recent chips, New product /
-/// Scan cards and the "My products" list — styled after the approved prototype.
+/// "Add food" page (spec §5): pinned search, Recent chips, New product /
+/// Scan cards and the "My products" list. Pushed from the day screen; the
+/// quantity and new-product steps are presented modally (see AddFoodRoutes).
 struct AddFoodSheet: View {
     // Internal (not private): AddFoodScanFlow.swift extends this type.
     @Environment(\.modelContext) var context
@@ -22,12 +16,15 @@ struct AddFoodSheet: View {
     private var products: [Product]
     @Query private var settingsList: [UserSettings]
 
-    @State var path: [AddRoute] = []
     @State private var search = ""
     @State private var editingProduct: Product?
     @State private var creatingProduct = false
     @State var showScanner = false
     @State var showPaywall = false
+    // Set by the scanner, presented once its cover finishes dismissing.
+    @State var pendingScan: AddSheet.Kind?
+    @State private var addSheet: AddSheet?
+    @State private var popAfterSheet = false
 
     var settings: UserSettings? { settingsList.first }
     private var unitSystem: UnitSystem { settings?.unitSystem ?? .metric }
@@ -44,33 +41,32 @@ struct AddFoodSheet: View {
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            content
-                .toolbar(.hidden, for: .navigationBar)
-                .navigationDestination(for: AddRoute.self) { destination(for: $0) }
-                .sheet(item: $editingProduct) { product in
-                    NavigationStack { NewProductForm(mode: .editing(product)) }
-                }
-                .sheet(isPresented: $creatingProduct) {
-                    NavigationStack { NewProductForm(mode: .saving) }
-                }
-                .sheet(isPresented: $showPaywall) { PaywallView() }
-                .fullScreenCover(isPresented: $showScanner) { scanFlow }
-        }
-        .presentationDetents([.large])
-        .presentationCornerRadius(26)
-        .presentationBackground(.thinMaterial)
-        .presentationDragIndicator(.visible)
-        .task {
-            #if DEBUG
-            // Launch with `-initialAddRoute new|scan|qty` to jump into a subscreen.
-            switch UserDefaults.standard.string(forKey: "initialAddRoute") {
-            case "new": path.append(.newProduct)
-            case "scan": showScanner = true
-            case "qty": if let product = products.first { path.append(.quantity(product.loggable)) }
-            default: break
+        content
+            .background(AppBackground())
+            .hidesFloatingTabBar()
+            .sheet(item: $addSheet, onDismiss: popIfNeeded) { addStep($0.kind) }
+            .sheet(item: $editingProduct) { product in
+                NavigationStack { NewProductForm(mode: .editing(product)) }
             }
-            #endif
+            .sheet(isPresented: $creatingProduct) {
+                NavigationStack { NewProductForm(mode: .saving) }
+            }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
+            .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) { scanFlow }
+            .task { applyDebugRoute() }
+    }
+
+    @ViewBuilder
+    private func addStep(_ kind: AddSheet.Kind) -> some View {
+        switch kind {
+        case .quantity(let food):
+            NavigationStack {
+                QuantityLogView(food: food, dayKey: dayKey,
+                                unitSystem: unitSystem, onLogged: logFinished)
+            }
+        case .newProduct(let route):
+            NewProductLogSheet(route: route, dayKey: dayKey,
+                               unitSystem: unitSystem, onLogged: logFinished)
         }
     }
 
@@ -88,7 +84,7 @@ struct AddFoodSheet: View {
                             .padding(.bottom, 16)
                     }
                     AddFoodActionCards(
-                        onNewProduct: { path.append(.newProduct) },
+                        onNewProduct: { addSheet = AddSheet(kind: .newProduct(NewProductRoute())) },
                         onScan: startScan
                     )
                     .padding(.bottom, 16)
@@ -122,28 +118,31 @@ struct AddFoodSheet: View {
         .padding(.bottom, 12)
     }
 
-    @ViewBuilder
-    private func destination(for route: AddRoute) -> some View {
-        switch route {
-        case .quantity(let food):
-            QuantityLogView(food: food, dayKey: dayKey, unitSystem: unitSystem,
-                            onLogged: { dismiss() })
-        case .newProduct:
-            NewProductForm(mode: .logging,
-                           onContinue: { food in path.append(.quantity(food)) })
-        case .scanPrefill(let food, let barcode):
-            NewProductForm(mode: .logging, prefill: food, prefillBarcode: barcode,
-                           onContinue: { food in path.append(.quantity(food)) })
-        case .manualBarcode(let barcode):
-            NewProductForm(mode: .logging, prefillBarcode: barcode,
-                           onContinue: { food in path.append(.quantity(food)) })
-        }
-    }
-
     // MARK: - Actions (scan wiring lives in AddFoodScanFlow.swift)
 
     private func log(_ product: Product) {
-        path.append(.quantity(product.loggable))
+        addSheet = AddSheet(kind: .quantity(product.loggable))
+    }
+
+    /// A completed log (or "Close") dismisses the modal, then pops the page.
+    private func logFinished() {
+        popAfterSheet = true
+        addSheet = nil
+    }
+
+    private func popIfNeeded() {
+        if popAfterSheet {
+            popAfterSheet = false
+            dismiss()
+        }
+    }
+
+    /// Present the scan result only after the scanner cover has dismissed, so
+    /// the cover→sheet transition doesn't collide.
+    private func presentPendingScan() {
+        guard let kind = pendingScan else { return }
+        pendingScan = nil
+        addSheet = AddSheet(kind: kind)
     }
 
     private func delete(_ product: Product) {
@@ -152,12 +151,23 @@ struct AddFoodSheet: View {
         context.delete(product)
         try? context.save()
     }
+
+    private func applyDebugRoute() {
+        #if DEBUG
+        // Launch with `-initialAddRoute new|scan|qty` to jump into a substep.
+        switch UserDefaults.standard.string(forKey: "initialAddRoute") {
+        case "new": addSheet = AddSheet(kind: .newProduct(NewProductRoute()))
+        case "scan": showScanner = true
+        case "qty": if let product = products.first { addSheet = AddSheet(kind: .quantity(product.loggable)) }
+        default: break
+        }
+        #endif
+    }
 }
 
 #Preview {
-    Color.clear
-        .sheet(isPresented: .constant(true)) {
-            AddFoodSheet(dayKey: DayKey.today)
-        }
-        .modelContainer(PreviewData.container)
+    NavigationStack {
+        AddFoodSheet(dayKey: DayKey.today)
+    }
+    .modelContainer(PreviewData.container)
 }

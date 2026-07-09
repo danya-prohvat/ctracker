@@ -33,6 +33,16 @@ struct DayView: View {
     private var totalCalories: Double { entries.reduce(0) { $0 + $1.calories } }
     private var dayDate: Date { DayKey.date(from: dayKey) ?? Date() }
     private var dayLabel: String { dayDate.formatted(.dateTime.month(.wide).day()) }
+    /// Native large-title subtitle for the Today root, e.g. "Wednesday, 8 July".
+    private var daySubtitle: String {
+        dayDate.formatted(.dateTime.weekday(.wide).month(.wide).day())
+    }
+
+    /// The Today root shows the floating "+"; the pushed day-detail doesn't.
+    private var showsAddButton: Bool { isToday && !isPresented }
+    /// Bottom scroll inset. With the FAB (62pt at bottom 88) present, keep the
+    /// last card clear of it; otherwise just clear the floating tab bar.
+    private var scrollBottomInset: CGFloat { showsAddButton ? 164 : 110 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,22 +52,26 @@ struct DayView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
             }
-            .contentMargins(.bottom, 110, for: .scrollContent)
+            .contentMargins(.bottom, scrollBottomInset, for: .scrollContent)
         }
         .background(AppBackground())
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(isPresented ? .hidden : .automatic, for: .navigationBar)
+        .largeTitleScreen("Today", subtitle: isPresented ? nil : daySubtitle)
         .hidesFloatingTabBar(isPresented)
         .overlay(alignment: .bottomTrailing) {
             // Day details keep an in-card add footer instead of the FAB, so
             // any day stays fully editable from the Calendar too (spec §5).
-            if isToday && !isPresented {
+            if showsAddButton {
                 FloatingAddButton { showingAdd = true }
                     .padding(.trailing, 26)
                     .padding(.bottom, 88)
             }
         }
-        .sheet(isPresented: $showingAdd) {
+        .navigationDestination(isPresented: $showingAdd) {
+            // Pushed as a full page; hide the day screen's nav bar so only the
+            // Add-food header shows (its own inner stack drives the sub-routes).
             AddFoodSheet(dayKey: dayKey)
+                .toolbar(.hidden, for: .navigationBar)
         }
         .task {
             #if DEBUG
@@ -81,11 +95,6 @@ struct DayView: View {
                 .padding(.top, 40)
         } else {
             VStack(alignment: .leading, spacing: 0) {
-                if isToday && !isPresented {
-                    todayHeader
-                        .padding(.top, 6)
-                        .padding(.bottom, 18)
-                }
                 DaySummaryCard(entries: entries, settings: settings, isToday: isToday)
                 loggedSection
                     .padding(.top, 26)
@@ -94,23 +103,6 @@ struct DayView: View {
     }
 
     // MARK: - Headers
-
-    private var todayHeader: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(dayDate.formatted(.dateTime.weekday(.wide)))
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Theme.textSecondary)
-                Text("Today")
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(Theme.textPrimary)
-            }
-            Spacer()
-            Text(dayDate.formatted(.dateTime.month(.abbreviated).day()))
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(Theme.textSecondary)
-        }
-    }
 
     private var detailHeader: some View {
         ZStack {

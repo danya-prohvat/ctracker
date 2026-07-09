@@ -25,7 +25,6 @@ struct CalendarTabView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    header
                     CalendarMonthCard(
                         displayedMonth: displayedMonth,
                         kcalByDay: kcalByDay,
@@ -46,7 +45,7 @@ struct CalendarTabView: View {
             }
             .contentMargins(.bottom, 110, for: .scrollContent)
             .background(AppBackground())
-            .toolbar(.hidden, for: .navigationBar)
+            .largeTitleScreen("Calendar")
             .navigationDestination(item: $selectedDayKey) { key in
                 DayView(dayKey: key, isToday: key == DayKey.today)
             }
@@ -61,17 +60,6 @@ struct CalendarTabView: View {
                 refetchMonth()
             }
         }
-    }
-
-    // MARK: - Header (prototype: 30px bold, margins 6/2/20)
-
-    private var header: some View {
-        Text("Calendar")
-            .font(.largeTitle.bold())
-            .foregroundStyle(Theme.textPrimary)
-            .padding(.top, 6)
-            .padding(.horizontal, 2)
-            .padding(.bottom, 20)
     }
 
     // MARK: - Actions
