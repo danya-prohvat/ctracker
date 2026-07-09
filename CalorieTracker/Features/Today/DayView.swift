@@ -46,7 +46,13 @@ struct DayView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if isPresented { detailHeader }
+            if isPresented {
+                DetailNavHeader(
+                    backLabel: Text(dayDate.formatted(.dateTime.month(.wide))),
+                    title: Text(dayLabel),
+                    onBack: { dismiss() }
+                )
+            }
             ScrollView {
                 content
                     .padding(.horizontal, 20)
@@ -100,32 +106,6 @@ struct DayView: View {
                     .padding(.top, 26)
             }
         }
-    }
-
-    // MARK: - Headers
-
-    private var detailHeader: some View {
-        ZStack {
-            Text(dayLabel)
-                .font(.headline)
-                .foregroundStyle(Theme.textPrimary)
-            HStack {
-                Button { dismiss() } label: {
-                    HStack(spacing: 3) {
-                        Image(systemName: "chevron.backward")
-                            .font(.body.weight(.semibold))
-                        Text(dayDate.formatted(.dateTime.month(.wide)))
-                            .font(.body)
-                    }
-                    .foregroundStyle(Theme.accentLabel)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Back")
-                Spacer()
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 8)
     }
 
     // MARK: - Logged

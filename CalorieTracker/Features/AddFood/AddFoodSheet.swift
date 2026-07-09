@@ -103,18 +103,17 @@ struct AddFoodSheet: View {
         }
     }
 
+    /// Back label = the day this page was pushed from, e.g. "9 July".
+    private var dayLabel: String {
+        (DayKey.date(from: dayKey) ?? Date()).formatted(.dateTime.month(.wide).day())
+    }
+
     private var header: some View {
-        HStack {
-            Text("Add food")
-                .font(.title2.bold())
-                .foregroundStyle(Theme.textPrimary)
-            Spacer()
-            Button("Cancel") { dismiss() }
-                .font(.callout.weight(.medium))
-                .foregroundStyle(Theme.accentLabel)
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 18)
+        DetailNavHeader(
+            backLabel: Text(dayLabel),
+            title: Text("Add food"),
+            onBack: { dismiss() }
+        )
         .padding(.bottom, 12)
     }
 

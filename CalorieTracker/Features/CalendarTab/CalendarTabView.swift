@@ -48,6 +48,7 @@ struct CalendarTabView: View {
 
                     CalendarStatsRow(
                         stats: periodStats,
+                        goals: statGoals,
                         caption: periodCaption,
                         onToggle: toggleMode
                     )
@@ -82,6 +83,16 @@ struct CalendarTabView: View {
                 refetch()
             }
         }
+    }
+
+    /// Daily targets the stat cards compare their averages against.
+    private var statGoals: CalendarStatGoals {
+        CalendarStatGoals(
+            calories: settings?.calorieGoal,
+            protein: settings?.proteinGoal,
+            fat: settings?.fatGoal,
+            carbs: settings?.carbGoal
+        )
     }
 
     /// Sub-caption for the stat cards: the period being averaged.
@@ -145,16 +156,24 @@ struct CalendarTabView: View {
     /// Averages entries over the distinct days they cover (nil when empty).
     private static func averages(of entries: [DiaryEntry]) -> CalendarPeriodStats? {
         guard !entries.isEmpty else { return nil }
-        var kcalPerDay: [String: Double] = [:]
+        var days: Set<String> = []
+        var totalCalories: Double = 0
         var totalProtein: Double = 0
+        var totalFat: Double = 0
+        var totalCarbs: Double = 0
         for entry in entries {
-            kcalPerDay[entry.dayKey, default: 0] += entry.calories
+            days.insert(entry.dayKey)
+            totalCalories += entry.calories
             totalProtein += entry.protein
+            totalFat += entry.fat
+            totalCarbs += entry.carbs
         }
-        let dayCount = Double(kcalPerDay.count)
+        let dayCount = Double(days.count)
         return CalendarPeriodStats(
-            avgCalories: kcalPerDay.values.reduce(0, +) / dayCount,
-            avgProtein: totalProtein / dayCount
+            avgCalories: totalCalories / dayCount,
+            avgProtein: totalProtein / dayCount,
+            avgFat: totalFat / dayCount,
+            avgCarbs: totalCarbs / dayCount
         )
     }
 
