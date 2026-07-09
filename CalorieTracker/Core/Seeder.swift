@@ -79,6 +79,14 @@ enum Seeder {
         (19, 45, [12, 4, 11]),  // dinner side
     ]
 
+    /// Each day's total as a fraction of the calorie goal, cycled by day so the
+    /// calendar shows every ring state: under (<80% → neutral gray), on target
+    /// (80–105% → green) and over (>105% → amber). Roughly balanced across the
+    /// three so all colors are visible in any visible week/month.
+    private static let dayRatios: [Double] = [
+        0.95, 0.68, 1.18, 0.88, 0.72, 1.30, 1.02, 0.60, 1.10, 0.83,
+    ]
+
     /// Seeds the sample set into an empty store (also reachable from the debug
     /// "Test" card in Settings). Returns the number of diary entries inserted,
     /// or 0 when the store already has products and nothing was seeded.
@@ -90,6 +98,8 @@ enum Seeder {
 
         let now = Date()
         let cal = Calendar.current
+        // Daily totals are scaled toward this so ring states are deterministic.
+        let goal = UserSettings.current(in: context).calorieGoal ?? 2000
 
         // One Product per sample food; recency staggered so "My products" sorts nicely.
         let products = sampleFoods.enumerated().map { index, food -> Product in
@@ -107,22 +117,34 @@ enum Seeder {
         for dayOffset in 0..<historyDays {
             guard let dayStart = cal.date(byAdding: .day, value: -dayOffset,
                                           to: cal.startOfDay(for: now)) else { continue }
+            // Scale the whole day's portions so its total lands on the target
+            // fraction of the goal — this is what fixes each day's ring state.
+            let ratio = dayRatios[dayOffset % dayRatios.count]
+            let dayScale = ratio * goal / dayBaseCalories(dayOffset: dayOffset)
             for (slotIndex, slot) in slots.enumerated() {
                 let foodIndex = slot.options[(dayOffset + slotIndex) % slot.options.count]
                 let food = sampleFoods[foodIndex]
                 let date = cal.date(bySettingHour: slot.hour, minute: slot.minute,
                                     second: 0, of: dayStart) ?? dayStart
                 guard date <= now else { continue }   // skip future slots for today
-                // Vary the portion ±15% so daily totals differ across the month.
-                let scale = 0.85 + Double((dayOffset + slotIndex) % 4) * 0.1
                 context.insert(entry(from: products[foodIndex],
-                                     food: food, quantity: food.portion * scale, at: date))
+                                     food: food, quantity: food.portion * dayScale, at: date))
                 inserted += 1
             }
         }
 
         try? context.save()
         return inserted
+    }
+
+    /// Unscaled calories a full day of slots contributes at nominal portions.
+    /// Used to derive the per-day scale that hits the target ring state.
+    private static func dayBaseCalories(dayOffset: Int) -> Double {
+        slots.enumerated().reduce(0) { total, pair in
+            let (slotIndex, slot) = pair
+            let food = sampleFoods[slot.options[(dayOffset + slotIndex) % slot.options.count]]
+            return total + food.calories * food.portion / 100
+        }
     }
 
     /// Builds an immutable per-100 snapshot entry from a product (spec §2.1).

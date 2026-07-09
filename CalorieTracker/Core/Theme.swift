@@ -45,9 +45,10 @@ enum Theme {
     static let fabBottom = Color(hex: 0x15985B)       // oklch(0.6 0.14 156)
     static let fabShadow = Color(hex: 0x14653D)       // oklch(0.45 0.1 156)
 
-    // Calendar day rings.
-    static let calendarRingToday = Color(hex: 0x39A36A)
-    static let calendarRingPast = Color(hex: 0x93C5A5) // oklch(0.78 0.07 156)
+    // Calendar day rings — colored by the day's calories vs. calorie target.
+    static let calendarRingOnTarget = Color(hex: 0x39A36A) // 80–105% of target (brand green)
+    static let calendarRingUnder = Color(hex: 0xC4C4C9)    // under 80% or no target (muted neutral)
+    // Over 105% of target uses `warning` (amber). Empty days draw no ring.
     static let calendarDayMuted = Color(hex: 0xC4C4C9)
 
     // Barcode scanner (dark screen).
