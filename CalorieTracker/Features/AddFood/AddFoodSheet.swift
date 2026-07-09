@@ -43,6 +43,16 @@ struct AddFoodSheet: View {
     var body: some View {
         content
             .background(AppBackground())
+            .searchable(
+                text: $search,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: Text("Search my products")
+            )
+            .detailNavBar(
+                backLabel: Text(dayLabel),
+                title: Text("Add food"),
+                onBack: { dismiss() }
+            )
             .hidesFloatingTabBar()
             .sheet(item: $addSheet, onDismiss: popIfNeeded) { addStep($0.kind) }
             .sheet(item: $editingProduct) { product in
@@ -71,50 +81,35 @@ struct AddFoodSheet: View {
     }
 
     private var content: some View {
-        VStack(spacing: 0) {
-            header
-            AddFoodSearchField(text: $search)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 12)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    if !recentProducts.isEmpty && search.isEmpty {
-                        AddFoodRecentsRow(products: recentProducts) { log($0) }
-                            .padding(.top, 4)
-                            .padding(.bottom, 16)
-                    }
-                    AddFoodActionCards(
-                        onNewProduct: { addSheet = AddSheet(kind: .newProduct(NewProductRoute())) },
-                        onScan: startScan
-                    )
-                    .padding(.bottom, 16)
-                    AddFoodProductList(
-                        products: filteredProducts,
-                        searchQuery: search.trimmingCharacters(in: .whitespaces),
-                        onSelect: { log($0) },
-                        onEdit: { editingProduct = $0 },
-                        onDelete: { delete($0) },
-                        onCreate: { creatingProduct = true }
-                    )
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                if !recentProducts.isEmpty && search.isEmpty {
+                    AddFoodRecentsRow(products: recentProducts) { log($0) }
+                        .padding(.bottom, 16)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
+                AddFoodActionCards(
+                    onNewProduct: { addSheet = AddSheet(kind: .newProduct(NewProductRoute())) },
+                    onScan: startScan
+                )
+                .padding(.bottom, 16)
+                AddFoodProductList(
+                    products: filteredProducts,
+                    searchQuery: search.trimmingCharacters(in: .whitespaces),
+                    onSelect: { log($0) },
+                    onEdit: { editingProduct = $0 },
+                    onDelete: { delete($0) },
+                    onCreate: { creatingProduct = true }
+                )
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 40)
         }
     }
 
     /// Back label = the day this page was pushed from, e.g. "9 July".
     private var dayLabel: String {
         (DayKey.date(from: dayKey) ?? Date()).formatted(.dateTime.month(.wide).day())
-    }
-
-    private var header: some View {
-        DetailNavHeader(
-            backLabel: Text(dayLabel),
-            title: Text("Add food"),
-            onBack: { dismiss() }
-        )
-        .padding(.bottom, 12)
     }
 
     // MARK: - Actions (scan wiring lives in AddFoodScanFlow.swift)

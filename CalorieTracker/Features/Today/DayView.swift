@@ -44,25 +44,28 @@ struct DayView: View {
     /// last card clear of it; otherwise just clear the floating tab bar.
     private var scrollBottomInset: CGFloat { showsAddButton ? 164 : 110 }
 
+    /// Tab-root large title vs. pushed-detail inline bar. Both use the native
+    /// nav bar so the title pins and the top blurs on scroll; the detail adds
+    /// the green back button.
+    private var navigationChrome: DayNavigationChrome {
+        DayNavigationChrome(
+            isPresented: isPresented,
+            monthLabel: dayDate.formatted(.dateTime.month(.wide)),
+            dayLabel: dayLabel,
+            subtitle: daySubtitle,
+            onBack: { dismiss() }
+        )
+    }
+
     var body: some View {
-        VStack(spacing: 0) {
-            if isPresented {
-                DetailNavHeader(
-                    backLabel: Text(dayDate.formatted(.dateTime.month(.wide))),
-                    title: Text(dayLabel),
-                    onBack: { dismiss() }
-                )
-            }
-            ScrollView {
-                content
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-            }
-            .contentMargins(.bottom, scrollBottomInset, for: .scrollContent)
+        ScrollView {
+            content
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
         }
+        .contentMargins(.bottom, scrollBottomInset, for: .scrollContent)
         .background(AppBackground())
-        .toolbar(isPresented ? .hidden : .automatic, for: .navigationBar)
-        .largeTitleScreen("Today", subtitle: isPresented ? nil : daySubtitle)
+        .modifier(navigationChrome)
         .hidesFloatingTabBar(isPresented)
         .overlay(alignment: .bottomTrailing) {
             // Day details keep an in-card add footer instead of the FAB, so
@@ -74,10 +77,9 @@ struct DayView: View {
             }
         }
         .navigationDestination(isPresented: $showingAdd) {
-            // Pushed as a full page; hide the day screen's nav bar so only the
-            // Add-food header shows (its own inner stack drives the sub-routes).
+            // Pushed as a full page; it owns its own inline nav bar (title +
+            // back + search) via `.detailNavBar`, so the top blurs on scroll.
             AddFoodSheet(dayKey: dayKey)
-                .toolbar(.hidden, for: .navigationBar)
         }
         .task {
             #if DEBUG
@@ -152,6 +154,29 @@ struct DayView: View {
     private func delete(_ entry: DiaryEntry) {
         context.delete(entry)
         try? context.save()
+    }
+}
+
+/// Applies the tab-root large title or the pushed-detail nav bar depending on
+/// how `DayView` is shown. Date labels are verbatim `Text` (never localized as
+/// keys); "Today" is the localized root title.
+private struct DayNavigationChrome: ViewModifier {
+    let isPresented: Bool
+    let monthLabel: String
+    let dayLabel: String
+    let subtitle: String
+    let onBack: () -> Void
+
+    func body(content: Content) -> some View {
+        if isPresented {
+            content.detailNavBar(
+                backLabel: Text(monthLabel),
+                title: Text(dayLabel),
+                onBack: onBack
+            )
+        } else {
+            content.largeTitleScreen("Today", subtitle: subtitle)
+        }
     }
 }
 
