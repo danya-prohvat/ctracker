@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Pinned bottom bar of the quantity sheet: hairline + thin material,
-/// an optional trash button (edit mode) and the primary CTA.
+/// Pinned bottom action row of the quantity sheet: an optional trash button
+/// (edit mode) and the primary CTA, sitting directly on the page background —
+/// no separating bar or hairline.
 struct QuantityActionBar: View {
     let ctaTitle: LocalizedStringKey
     let isEnabled: Bool
@@ -42,16 +43,6 @@ struct QuantityActionBar: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background {
-            Rectangle()
-                .fill(.thinMaterial)
-                .ignoresSafeArea(edges: .bottom)
-        }
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(Theme.separator)
-                .frame(height: 1)
-        }
     }
 }
 

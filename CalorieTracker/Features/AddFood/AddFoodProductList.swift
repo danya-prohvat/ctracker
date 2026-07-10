@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// "MY PRODUCTS" caption + one glass card listing the user's products.
-/// Rows keep the existing edit/delete context menu; the trailing "+" saves a
-/// product without logging it (spec §5).
+/// Rows support swipe-to-delete (like the diary) and keep an edit/delete
+/// context menu; the trailing "+" saves a product without logging it (spec §5).
 struct AddFoodProductList: View {
     let products: [Product]
     let searchQuery: String
@@ -36,12 +36,13 @@ struct AddFoodProductList: View {
                 emptyRow
             } else {
                 ForEach(products) { product in
-                    Button {
-                        onSelect(product)
-                    } label: {
+                    SwipeToDeleteRow(
+                        onTap: { onSelect(product) },
+                        onDelete: { onDelete(product) },
+                        deleteAccessibilityLabel: "Delete product"
+                    ) {
                         AddFoodProductRow(product: product)
                     }
-                    .buttonStyle(.plain)
                     .contextMenu {
                         Button {
                             onEdit(product)
@@ -62,6 +63,7 @@ struct AddFoodProductList: View {
                 }
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .glassCard(cornerRadius: 14)
     }
 

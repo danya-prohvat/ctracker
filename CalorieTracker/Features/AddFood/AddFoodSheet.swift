@@ -18,6 +18,7 @@ struct AddFoodSheet: View {
 
     @State private var search = ""
     @State private var editingProduct: Product?
+    @State private var productToDelete: Product?
     @State private var creatingProduct = false
     @State var showScanner = false
     @State var showPaywall = false
@@ -63,6 +64,21 @@ struct AddFoodSheet: View {
             }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) { scanFlow }
+            .alert(
+                "Delete product?",
+                isPresented: Binding(
+                    get: { productToDelete != nil },
+                    set: { if !$0 { productToDelete = nil } }
+                ),
+                presenting: productToDelete
+            ) { product in
+                Button("Delete", role: .destructive) { delete(product) }
+                Button("Cancel", role: .cancel) {}
+            } message: { product in
+                // Deleting only removes it from My products; past diary entries
+                // keep their own snapshot (spec §2.1), so history is untouched.
+                Text("“\(product.name)” will be removed from your products. Your logged entries stay.")
+            }
             .task { applyDebugRoute() }
     }
 
@@ -97,7 +113,7 @@ struct AddFoodSheet: View {
                     searchQuery: search.trimmingCharacters(in: .whitespaces),
                     onSelect: { log($0) },
                     onEdit: { editingProduct = $0 },
-                    onDelete: { delete($0) },
+                    onDelete: { productToDelete = $0 },
                     onCreate: { creatingProduct = true }
                 )
             }

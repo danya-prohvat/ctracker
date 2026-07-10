@@ -26,9 +26,6 @@ struct QuantityLogView: View {
             title: "Add quantity",
             ctaTitle: "Add to today",
             onBack: { dismiss() },      // pop back to the add list
-            // "Close" ends the whole add flow. The caller's onLogged closure just
-            // dismisses the sheet, so invoking it here writes nothing to the diary.
-            onClose: { onLogged() },
             onCommit: log
         )
         .background(AppBackground())

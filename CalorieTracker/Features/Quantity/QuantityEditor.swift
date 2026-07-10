@@ -17,7 +17,7 @@ struct QuantityEditor: View {
     let title: LocalizedStringKey
     let ctaTitle: LocalizedStringKey
     let onBack: () -> Void
-    let onClose: () -> Void
+    let onClose: (() -> Void)?   // trailing "Close"; hidden when nil
     let onDelete: (() -> Void)?
     let onCommit: (Double) -> Void   // receives canonical quantity (g / ml)
 
@@ -37,7 +37,7 @@ struct QuantityEditor: View {
         title: LocalizedStringKey,
         ctaTitle: LocalizedStringKey,
         onBack: @escaping () -> Void,
-        onClose: @escaping () -> Void,
+        onClose: (() -> Void)? = nil,
         onDelete: (() -> Void)? = nil,
         onCommit: @escaping (Double) -> Void
     ) {
@@ -125,10 +125,12 @@ struct QuantityEditor: View {
                 }
                 .accessibilityLabel("Back")
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: onClose) {
-                    Text("Close")
-                        .foregroundStyle(Theme.textSecondary)
+            if let onClose {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: onClose) {
+                        Text("Close")
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
             }
         }
@@ -187,7 +189,7 @@ struct QuantityEditor: View {
             per100Calories: 165, per100Protein: 31, per100Fat: 3.6, per100Carbs: 0,
             unitSystem: .metric, initialCanonical: 150,
             title: "Add quantity", ctaTitle: "Add to today",
-            onBack: {}, onClose: {}, onCommit: { _ in }
+            onBack: {}, onCommit: { _ in }
         )
         .background(AppBackground())
     }
