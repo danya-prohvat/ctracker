@@ -12,23 +12,25 @@ struct QuantityEditSheet: View {
     let entry: DiaryEntry
 
     var body: some View {
-        QuantityEditor(
-            name: entry.productName,
-            wasScanned: entry.wasScanned,
-            basis: entry.basis,
-            per100Calories: entry.per100Calories,
-            per100Protein: entry.per100Protein,
-            per100Fat: entry.per100Fat,
-            per100Carbs: entry.per100Carbs,
-            unitSystem: settingsList.first?.unitSystem ?? .metric,
-            initialCanonical: entry.quantity,
-            title: "Edit entry",
-            ctaTitle: "Save changes",
-            onBack: { dismiss() },     // prototype: Back closes the sheet in edit mode
-            onClose: { dismiss() },
-            onDelete: deleteEntry,
-            onCommit: save
-        )
+        NavigationStack {
+            QuantityEditor(
+                name: entry.productName,
+                wasScanned: entry.wasScanned,
+                basis: entry.basis,
+                per100Calories: entry.per100Calories,
+                per100Protein: entry.per100Protein,
+                per100Fat: entry.per100Fat,
+                per100Carbs: entry.per100Carbs,
+                unitSystem: settingsList.first?.unitSystem ?? .metric,
+                initialCanonical: entry.quantity,
+                title: "Edit entry",
+                ctaTitle: "Save changes",
+                onBack: { dismiss() },     // prototype: Back closes the sheet in edit mode
+                onClose: { dismiss() },
+                onDelete: deleteEntry,
+                onCommit: save
+            )
+        }
         .presentationCornerRadius(26)
         .presentationBackground(.thinMaterial)
     }

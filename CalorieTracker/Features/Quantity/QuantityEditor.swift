@@ -67,83 +67,86 @@ struct QuantityEditor: View {
     private var canonical: Double { (Format.parse(text) ?? 0) * selectedUnit.toCanonical }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(spacing: 0) {
-                    HStack(spacing: 8) {
-                        Text(name)
-                            .font(.title.bold())
-                            .foregroundStyle(Theme.textPrimary)
-                            .multilineTextAlignment(.center)
-                        if wasScanned {
-                            ScannedBadge(font: .title3.weight(.semibold))
-                        }
+        ScrollView {
+            VStack(spacing: 0) {
+                HStack(spacing: 8) {
+                    Text(name)
+                        .font(.title.bold())
+                        .foregroundStyle(Theme.textPrimary)
+                        .multilineTextAlignment(.center)
+                    if wasScanned {
+                        ScannedBadge(font: .title3.weight(.semibold))
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 12)
-                    .padding(.bottom, 20)
-
-                    QuantityLiveCard(
-                        quantityText: text,
-                        unitLabel: selectedUnit.label,
-                        calories: NutritionMath.scaled(per100: per100Calories, quantity: canonical),
-                        protein: NutritionMath.scaled(per100: per100Protein, quantity: canonical),
-                        fat: NutritionMath.scaled(per100: per100Fat, quantity: canonical),
-                        carbs: NutritionMath.scaled(per100: per100Carbs, quantity: canonical)
-                    )
-
-                    QuantityUnitPills(units: availableUnits, selectedUnit: selectedUnit,
-                                      onSelect: changeUnit)
-                        .padding(.top, 12)
-
-                    QuantityKeypad(onKey: handleKey)
-                        .padding(.top, 12)
                 }
-                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity)
                 .padding(.top, 8)
-                .padding(.bottom, 12)
+                .padding(.bottom, 20)
+
+                QuantityLiveCard(
+                    quantityText: text,
+                    unitLabel: selectedUnit.label,
+                    calories: NutritionMath.scaled(per100: per100Calories, quantity: canonical),
+                    protein: NutritionMath.scaled(per100: per100Protein, quantity: canonical),
+                    fat: NutritionMath.scaled(per100: per100Fat, quantity: canonical),
+                    carbs: NutritionMath.scaled(per100: per100Carbs, quantity: canonical)
+                )
+
+                QuantityUnitPills(units: availableUnits, selectedUnit: selectedUnit,
+                                  onSelect: changeUnit)
+                    .padding(.top, 12)
+
+                QuantityKeypad(onKey: handleKey)
+                    .padding(.top, 12)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             QuantityActionBar(
                 ctaTitle: ctaTitle,
                 isEnabled: canonical > 0,
                 onDelete: onDelete,
-                onCommit: { onCommit(canonical) }
+                onCommit: commit
             )
         }
-    }
-
-    private var header: some View {
-        ZStack {
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(Theme.textPrimary)
-            HStack {
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
                 Button(action: onBack) {
                     HStack(spacing: 3) {
                         Image(systemName: "chevron.backward")
-                            .font(.subheadline.weight(.semibold))
+                            .font(.body.weight(.semibold))
                         Text("Back")
-                            .font(.callout.weight(.medium))
+                            .font(.body)
                     }
-                    .foregroundStyle(Theme.accentLabel)
                 }
-                Spacer()
+                .accessibilityLabel("Back")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onClose) {
                     Text("Close")
-                        .font(.callout.weight(.medium))
                         .foregroundStyle(Theme.textSecondary)
                 }
             }
         }
-        .padding(.top, 16)
-        .padding(.horizontal, 20)
-        .padding(.bottom, 8)
+        .tint(Theme.accentLabel)
+    }
+
+    // MARK: - Commit
+
+    /// Writes the canonical quantity, with a success haptic on confirm.
+    private func commit() {
+        Haptics.success()
+        onCommit(canonical)
     }
 
     // MARK: - Editing model (prototype key handling)
 
     private func handleKey(_ key: QuantityKey) {
+        Haptics.tap()
         let separator = Locale.current.decimalSeparator ?? "."
         var s = text
         switch key {
@@ -161,6 +164,7 @@ struct QuantityEditor: View {
     /// Converting units keeps the same physical amount (existing behavior).
     private func changeUnit(to newUnit: FoodUnit) {
         guard newUnit != selectedUnit else { return }
+        Haptics.selection()
         let current = canonical
         selectedUnit = newUnit
         text = Self.inputString(fromCanonical: current, unit: newUnit)
@@ -177,8 +181,7 @@ struct QuantityEditor: View {
 }
 
 #Preview("Add quantity") {
-    ZStack {
-        AppBackground()
+    NavigationStack {
         QuantityEditor(
             name: "Chicken breast", basis: .per100g,
             per100Calories: 165, per100Protein: 31, per100Fat: 3.6, per100Carbs: 0,
@@ -186,6 +189,7 @@ struct QuantityEditor: View {
             title: "Add quantity", ctaTitle: "Add to today",
             onBack: {}, onClose: {}, onCommit: { _ in }
         )
+        .background(AppBackground())
     }
     .modelContainer(PreviewData.container)
 }

@@ -49,31 +49,30 @@ struct NewProductForm: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ProductFormHeader(title: isEditing ? "Edit product" : "New product") {
-                if isDirty { showDiscard = true } else { cancel() }
+        ProductFormContent(name: $name,
+                           basis: $basis,
+                           caloriesText: $caloriesText,
+                           proteinText: $proteinText,
+                           fatText: $fatText,
+                           carbsText: $carbsText,
+                           microTexts: $microTexts,
+                           saveToMyProducts: $saveToMyProducts,
+                           barcode: barcode,
+                           showsSaveToggle: isLogging)
+            .background(AppBackground())
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                ProductFormCTABar(title: primaryTitle, enabled: canSubmit) { submit() }
             }
-            ProductFormContent(name: $name,
-                               basis: $basis,
-                               caloriesText: $caloriesText,
-                               proteinText: $proteinText,
-                               fatText: $fatText,
-                               carbsText: $carbsText,
-                               microTexts: $microTexts,
-                               saveToMyProducts: $saveToMyProducts,
-                               barcode: barcode,
-                               showsSaveToggle: isLogging)
-        }
-        .background(AppBackground())
-        .toolbar(.hidden, for: .navigationBar)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            ProductFormCTABar(title: primaryTitle, enabled: canSubmit) { submit() }
-        }
-        .confirmationDialog("Discard changes?", isPresented: $showDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { cancel() }
-            Button("Keep editing", role: .cancel) {}
-        }
-        .onAppear(perform: loadOnce)
+            .detailNavBar(
+                backLabel: Text("Back"),
+                title: isEditing ? Text("Edit product") : Text("New product"),
+                onBack: { if isDirty { showDiscard = true } else { cancel() } }
+            )
+            .confirmationDialog("Discard changes?", isPresented: $showDiscard, titleVisibility: .visible) {
+                Button("Discard", role: .destructive) { cancel() }
+                Button("Keep editing", role: .cancel) {}
+            }
+            .onAppear(perform: loadOnce)
     }
 
     private func loadOnce() {

@@ -32,7 +32,6 @@ struct QuantityLogView: View {
             onCommit: log
         )
         .background(AppBackground())
-        .toolbar(.hidden, for: .navigationBar)
     }
 
     private func log(_ canonical: Double) {
