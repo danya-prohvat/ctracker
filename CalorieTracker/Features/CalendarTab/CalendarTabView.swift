@@ -49,8 +49,7 @@ struct CalendarTabView: View {
                     CalendarStatsRow(
                         stats: periodStats,
                         goals: statGoals,
-                        caption: periodCaption,
-                        onToggle: toggleMode
+                        caption: periodCaption
                     )
                     .padding(.top, 18)
 
@@ -116,10 +115,6 @@ struct CalendarTabView: View {
     private func isDayUnlocked(_ dayKey: String) -> Bool {
         guard let settings else { return true }
         return PremiumGate.isDayUnlocked(dayKey: dayKey, settings: settings)
-    }
-
-    private func toggleMode() {
-        mode = mode.toggled
     }
 
     /// Step one period (week or month) forward/back, respecting the mode.

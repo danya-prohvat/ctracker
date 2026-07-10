@@ -22,8 +22,6 @@ enum CalendarViewMode: CaseIterable {
         }
     }
 
-    var toggled: CalendarViewMode { self == .week ? .month : .week }
-
     /// Localized "Jul 6 – 12" range for the week starting at `weekStart`.
     static func weekRangeLabel(_ weekStart: Date) -> String {
         let end = Calendar.current.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart

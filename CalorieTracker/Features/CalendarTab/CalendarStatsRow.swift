@@ -22,13 +22,13 @@ struct CalendarStatGoals {
 /// card reads "avg / goal" and tints the average with the *same*
 /// `CalendarRingState` color as that day's ring (green on target, gray under,
 /// amber over) so the cards and the grid share one visual language. The period
-/// is the sub-caption; tapping any card toggles week/month (same as the picker).
+/// is the sub-caption. Cards are read-only — the segmented picker above (not a
+/// card tap) switches week/month.
 struct CalendarStatsRow: View {
     let stats: CalendarPeriodStats?
     let goals: CalendarStatGoals
     /// Localized label of the averaged period, e.g. "July" or "Jul 6 – 12".
     let caption: Text
-    let onToggle: () -> Void
 
     /// One rendered card: pre-formatted strings plus its calendar-matching color.
     private struct StatValue {
@@ -84,24 +84,20 @@ struct CalendarStatsRow: View {
     }
 
     private func statCard(_ item: StatValue) -> some View {
-        Button(action: onToggle) {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(item.title)
-                    .font(.footnote)
-                    .textCase(.uppercase)
-                    .foregroundStyle(Theme.textSecondary)
-                valueLine(item)
-                    .padding(.top, 4)
-                caption
-                    .font(.caption)
-                    .foregroundStyle(Theme.textTertiary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 18)
-            .contentShape(Rectangle())
+        VStack(alignment: .leading, spacing: 0) {
+            Text(item.title)
+                .font(.footnote)
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.textSecondary)
+            valueLine(item)
+                .padding(.top, 4)
+            caption
+                .font(.caption)
+                .foregroundStyle(Theme.textTertiary)
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 18)
         .glassCard(cornerRadius: 18)
     }
 
@@ -139,15 +135,13 @@ struct CalendarStatsRow: View {
                 stats: CalendarPeriodStats(avgCalories: 1728, avgProtein: 138,
                                            avgFat: 74, avgCarbs: 190),
                 goals: CalendarStatGoals(calories: 2000, protein: 150, fat: 67, carbs: 200),
-                caption: Text(verbatim: "July"),
-                onToggle: {}
+                caption: Text(verbatim: "July")
             )
             CalendarStatsRow(
                 stats: CalendarPeriodStats(avgCalories: 1840, avgProtein: 96,
                                            avgFat: 60, avgCarbs: 210),
                 goals: CalendarStatGoals(calories: 2000, protein: 150, fat: 67, carbs: nil),
-                caption: Text(verbatim: "Jul 6 – 12"),
-                onToggle: {}
+                caption: Text(verbatim: "Jul 6 – 12")
             )
         }
         .padding(16)
