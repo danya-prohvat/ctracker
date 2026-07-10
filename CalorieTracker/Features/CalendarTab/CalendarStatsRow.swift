@@ -9,7 +9,7 @@ struct CalendarPeriodStats {
 }
 
 /// Daily targets the averages are compared against — drives the "avg / goal"
-/// line and the calendar-matching value color. Any goal may be absent.
+/// line and the progress bar. Any goal may be absent.
 struct CalendarStatGoals {
     var calories: Double?
     var protein: Double?
@@ -17,26 +17,30 @@ struct CalendarStatGoals {
     var carbs: Double?
 }
 
-/// A 2×2 grid of stat cards under the grid (prototype: radius 18, padding
-/// 16/18): average calories, protein, fat and carbs for the shown period. Each
-/// card reads "avg / goal" and tints the average with the *same*
-/// `CalendarRingState` color as that day's ring (green on target, gray under,
-/// amber over) so the cards and the grid share one visual language. The period
-/// is the sub-caption. Cards are read-only — the segmented picker above (not a
-/// card tap) switches week/month.
+/// A 2×2 grid of stat cards under the grid: average calories, protein, fat and
+/// carbs for the shown period. Each card has a macro-colored icon (identity), a
+/// neutral "avg / goal" value and a progress bar toward the goal. The *bar*
+/// carries the status color via the same `CalendarRingState` as the grid rings
+/// (neutral under, green on target, amber over) so cards and grid share one
+/// visual language. Cards are read-only — the segmented picker switches week/month.
 struct CalendarStatsRow: View {
     let stats: CalendarPeriodStats?
     let goals: CalendarStatGoals
     /// Localized label of the averaged period, e.g. "July" or "Jul 6 – 12".
     let caption: Text
 
-    /// One rendered card: pre-formatted strings plus its calendar-matching color.
+    /// One rendered card: macro identity (icon + tint), pre-formatted strings,
+    /// and the goal progress with its `CalendarRingState` bar color.
     private struct StatValue {
         let title: LocalizedStringKey
+        let icon: String
+        let tint: Color
         let value: String
         let goal: String?
         let unit: LocalizedStringKey?
-        let color: Color
+        /// avg / goal clamped to 0…1; `nil` when no goal (bar hidden).
+        let progress: Double?
+        let barColor: Color
     }
 
     var body: some View {
@@ -54,16 +58,21 @@ struct CalendarStatsRow: View {
 
     private var values: [StatValue] {
         [
-            makeValue("Avg calories", avg: stats?.avgCalories, goal: goals.calories,
-                      unit: nil, isCalorie: true),
-            makeValue("Avg protein", avg: stats?.avgProtein, goal: goals.protein, unit: "g"),
-            makeValue("Avg fat", avg: stats?.avgFat, goal: goals.fat, unit: "g"),
-            makeValue("Avg carbs", avg: stats?.avgCarbs, goal: goals.carbs, unit: "g"),
+            makeValue("Avg calories", icon: "flame.fill", tint: Theme.accent,
+                      avg: stats?.avgCalories, goal: goals.calories, unit: nil, isCalorie: true),
+            makeValue("Avg protein", icon: "fork.knife", tint: Theme.protein,
+                      avg: stats?.avgProtein, goal: goals.protein, unit: "g"),
+            makeValue("Avg fat", icon: "drop.fill", tint: Theme.fat,
+                      avg: stats?.avgFat, goal: goals.fat, unit: "g"),
+            makeValue("Avg carbs", icon: "leaf.fill", tint: Theme.carbs,
+                      avg: stats?.avgCarbs, goal: goals.carbs, unit: "g"),
         ]
     }
 
     private func makeValue(
         _ title: LocalizedStringKey,
+        icon: String,
+        tint: Color,
         avg: Double?,
         goal: Double?,
         unit: LocalizedStringKey?,
@@ -74,26 +83,33 @@ struct CalendarStatsRow: View {
         let format: (Double) -> String = isCalorie
             ? Format.kcal
             : { Format.amount($0.rounded()) }
+        let progress: Double?
+        if let goal, goal > 0 { progress = min(1, consumed / goal) } else { progress = nil }
         return StatValue(
             title: title,
+            icon: icon,
+            tint: tint,
             value: format(consumed),
             goal: goal.map(format),
             unit: unit,
-            color: CalendarRingState(consumed: consumed, target: goal).color
+            progress: progress,
+            barColor: CalendarRingState(consumed: consumed, target: goal).color
         )
     }
 
     private func statCard(_ item: StatValue) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(item.title)
-                .font(.footnote)
-                .textCase(.uppercase)
-                .foregroundStyle(Theme.textSecondary)
+            header(item)
             valueLine(item)
-                .padding(.top, 4)
+                .padding(.top, 10)
+            if let progress = item.progress {
+                progressBar(fraction: progress, color: item.barColor)
+                    .padding(.top, 12)
+            }
             caption
                 .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
+                .padding(.top, 10)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 16)
@@ -101,13 +117,29 @@ struct CalendarStatsRow: View {
         .glassCard(cornerRadius: 18)
     }
 
-    /// "1 728 / 2 000 g" — big colored average, muted "/ goal" and unit. Shrinks
-    /// to fit the half-width card rather than truncating.
+    private func header(_ item: StatValue) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: item.icon)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(item.tint)
+                .frame(width: 26, height: 26)
+                .background(item.tint.opacity(0.15),
+                            in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            Text(item.title)
+                .font(.footnote)
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.textSecondary)
+            Spacer(minLength: 0)
+        }
+    }
+
+    /// "1 728 / 2 000 g" — neutral average, muted "/ goal" and unit. Shrinks to
+    /// fit the half-width card rather than truncating.
     private func valueLine(_ item: StatValue) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
             Text(verbatim: item.value)
                 .font(.stat(.title))
-                .foregroundStyle(item.color)
+                .foregroundStyle(Theme.textPrimary)
                 .contentTransition(.numericText())
             if let goal = item.goal {
                 Text(verbatim: "/ \(goal)")
@@ -125,6 +157,21 @@ struct CalendarStatsRow: View {
         .lineLimit(1)
         .minimumScaleFactor(0.6)
     }
+
+    /// Thin capsule filled to `fraction` in the status color; fills from the
+    /// leading edge (RTL-aware). Track matches the grid rings.
+    private func progressBar(fraction: Double, color: Color) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Theme.ringTrack)
+                Capsule()
+                    .fill(color)
+                    .frame(width: min(1, max(0, fraction)) * geo.size.width)
+            }
+        }
+        .frame(height: 6)
+        .animation(.snappy, value: fraction)
+    }
 }
 
 #Preview {
@@ -138,7 +185,7 @@ struct CalendarStatsRow: View {
                 caption: Text(verbatim: "July")
             )
             CalendarStatsRow(
-                stats: CalendarPeriodStats(avgCalories: 1840, avgProtein: 96,
+                stats: CalendarPeriodStats(avgCalories: 2450, avgProtein: 96,
                                            avgFat: 60, avgCarbs: 210),
                 goals: CalendarStatGoals(calories: 2000, protein: 150, fat: 67, carbs: nil),
                 caption: Text(verbatim: "Jul 6 – 12")

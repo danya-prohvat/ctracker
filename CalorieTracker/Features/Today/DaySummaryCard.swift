@@ -37,11 +37,11 @@ struct DaySummaryCard: View {
 
             MacroRingsView(
                 protein: MacroValue(titleKey: "Protein", consumed: protein,
-                                    goal: settings?.proteinGoal, color: Theme.protein),
+                                    goal: settings?.proteinGoal),
                 fat: MacroValue(titleKey: "Fat", consumed: fat,
-                                goal: settings?.fatGoal, color: Theme.fat),
+                                goal: settings?.fatGoal),
                 carbs: MacroValue(titleKey: "Carbs", consumed: carbs,
-                                  goal: settings?.carbGoal, color: Theme.carbs)
+                                  goal: settings?.carbGoal)
             )
             .contentShape(Rectangle())
             .onTapGesture {

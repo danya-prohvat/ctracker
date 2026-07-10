@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// A macro (protein / fat / carbs) consumed-vs-goal value with its accent color.
+/// A macro (protein / fat / carbs) consumed-vs-goal value. The ring color is
+/// derived from the goal progress, not stored — see `MacroRing.ringColor`.
 struct MacroValue {
     let titleKey: LocalizedStringKey
     let consumed: Double
     let goal: Double?
-    let color: Color
 }
 
 /// Three macro mini-rings (prototype variant B), spread space-around.
@@ -31,10 +31,16 @@ private struct MacroRing: View {
         return min(value.consumed / goal, 1)
     }
 
+    /// Same goal-progress semantics as the calendar rings: neutral when under,
+    /// green on target, amber over — never the fixed macro accent.
+    private var ringColor: Color {
+        CalendarRingState(consumed: value.consumed, target: value.goal).color
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
-                ProgressRing(progress: progress, lineWidth: 6, color: value.color)
+                ProgressRing(progress: progress, lineWidth: 6, color: ringColor)
                 Text(verbatim: Format.amount(value.consumed.rounded()))
                     .font(.stat(.subheadline))
                     .foregroundStyle(Theme.textPrimary)
@@ -65,9 +71,9 @@ private struct MacroRing: View {
     ZStack {
         AppBackground()
         MacroRingsView(
-            protein: MacroValue(titleKey: "Protein", consumed: 62, goal: 150, color: Theme.protein),
-            fat: MacroValue(titleKey: "Fat", consumed: 40, goal: 67, color: Theme.fat),
-            carbs: MacroValue(titleKey: "Carbs", consumed: 180, goal: 200, color: Theme.carbs)
+            protein: MacroValue(titleKey: "Protein", consumed: 138, goal: 150),
+            fat: MacroValue(titleKey: "Fat", consumed: 40, goal: 67),
+            carbs: MacroValue(titleKey: "Carbs", consumed: 240, goal: 200)
         )
         .padding(22)
         .glassCard()
