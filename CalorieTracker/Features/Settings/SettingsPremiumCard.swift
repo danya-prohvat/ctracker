@@ -59,7 +59,7 @@ struct SettingsPremiumCard: View {
     private var upgradeCard: some View {
         Button(action: onUpgrade) {
             HStack(spacing: 12) {
-                Image(systemName: "sparkles")
+                Image(systemName: "chart.pie.fill")
                     .font(.body.weight(.medium))
                     .foregroundStyle(.white)
                     .frame(width: 34, height: 34)

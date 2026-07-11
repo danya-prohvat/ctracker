@@ -115,9 +115,9 @@ struct PaywallView: View {
             dismiss()
         } label: {
             Image(systemName: "xmark")
-                .font(.subheadline.weight(.semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(Theme.textSecondary)
-                .frame(width: 32, height: 32)
+                .frame(width: 34, height: 34)
                 .background(Circle().fill(Theme.card))
                 .overlay(Circle().stroke(Theme.separator, lineWidth: 1))
         }
@@ -130,7 +130,7 @@ struct PaywallView: View {
 
     private var header: some View {
         VStack(spacing: 12) {
-            Image(systemName: "sparkles")
+            Image(systemName: "chart.pie.fill")
                 .font(.largeTitle)
                 .foregroundStyle(
                     LinearGradient(

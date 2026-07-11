@@ -29,11 +29,11 @@ struct CalendarTabView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Picker("Calendar view", selection: $mode) {
-                        Text("Week").tag(CalendarViewMode.week)
-                        Text("Month").tag(CalendarViewMode.month)
-                    }
-                    .pickerStyle(.segmented)
+                    PillSegmentedControl(
+                        options: CalendarViewMode.allCases,
+                        label: { $0.label },
+                        selection: $mode
+                    )
                     .padding(.bottom, 16)
 
                     CalendarGridCard(

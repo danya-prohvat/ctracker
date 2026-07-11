@@ -43,7 +43,7 @@ enum BarcodeLookupService {
 
         var request = URLRequest(url: url)
         // OFF asks API consumers to identify themselves.
-        request.setValue("CalorieTracker/1.0 (ua.utr.calorietracker; contact@utr.ua)", forHTTPHeaderField: "User-Agent")
+        request.setValue("CalorieTracker/1.0 (com.prxfitness.calorietracker; contact@utr.ua)", forHTTPHeaderField: "User-Agent")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }

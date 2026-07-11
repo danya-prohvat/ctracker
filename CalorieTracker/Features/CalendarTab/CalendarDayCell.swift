@@ -9,11 +9,12 @@ import SwiftUI
 /// target), amber when over. The fill is the actual percentage, except an
 /// over day is fully filled. See `CalendarRingLegend` for the key.
 ///
-/// Today is the deliberate exception: a day in progress can't be scored at
-/// noon, so it never shows a judgmental color. It draws a full contour ring in
-/// faded brand green with a bold number — a *state*, not a verdict — and earns
-/// a real `CalendarRingState` color only once it's a past day. This look is
-/// kept out of the legend for the same reason.
+/// Today is marked with a soft brand-tinted disc behind a bold green number,
+/// wrapped in a progress ring that fills with the calories logged so far. The
+/// ring is scored live by the same `CalendarRingState` logic as past days —
+/// neutral under, green on target, amber over — so it reflects how the day is
+/// going. The soft disc and green number keep it identifiable as the current
+/// day.
 struct CalendarDayCell: View {
     let date: Date
     /// Total kcal logged that day; `nil` when nothing was logged.
@@ -25,10 +26,6 @@ struct CalendarDayCell: View {
 
     /// Ring track from the prototype day cells (#EEEEF0).
     private static let ringTrack = Color(hex: 0xEEEEF0)
-
-    /// Today's in-progress contour ring: brand green, faded so it reads as a
-    /// state marker rather than a filled or achieved goal.
-    private static let todayRingOpacity: Double = 0.4
 
     private var hasData: Bool { kcal != nil }
 
@@ -44,10 +41,10 @@ struct CalendarDayCell: View {
         return min(1, kcal / goal)
     }
 
-    /// Today stays identifiable via the brand-green, bold number and its faded
-    /// contour ring — never via a scored ring color.
+    /// Today's number is brand green on its soft tinted disc; other days use
+    /// primary (with data) or muted (empty) — never a scored ring color.
     private var numberColor: Color {
-        if isToday { return Theme.accentLabel }
+        if isToday { return Theme.accentDeep }
         return hasData ? Theme.textPrimary : Theme.calendarDayMuted
     }
 
@@ -55,15 +52,17 @@ struct CalendarDayCell: View {
         Button(action: onTap) {
             ZStack {
                 if isToday {
-                    // Day in progress: a full contour ring in faded brand green,
-                    // never a scored color — today can't be judged mid-day.
-                    ProgressRing(
-                        progress: 1,
-                        lineWidth: 4,
-                        color: Theme.accent.opacity(Self.todayRingOpacity),
-                        trackColor: .clear
-                    )
-                } else if hasData {
+                    // Soft brand-tinted disc marks the current day behind its
+                    // ring and bold green number.
+                    Circle()
+                        .fill(Theme.accentSoft)
+                        .padding(4)
+                }
+                if isToday || hasData {
+                    // Progress ring: fill = calories vs target, colored live by
+                    // CalendarRingState (neutral under, green on target, amber
+                    // over). Today is scored the same way as past days as it
+                    // fills through the day.
                     ProgressRing(
                         progress: progress,
                         lineWidth: 4,
@@ -72,7 +71,7 @@ struct CalendarDayCell: View {
                     )
                 }
                 Text(date, format: .dateTime.day())
-                    .font(.subheadline.weight(isToday ? .bold : .semibold))
+                    .font(isToday ? .headline.weight(.bold) : .subheadline.weight(.semibold))
                     .foregroundStyle(numberColor)
             }
             .frame(width: 40, height: 40)
@@ -87,13 +86,16 @@ struct CalendarDayCell: View {
 
     /// VoiceOver label: date, calories vs. target, and the state word so color
     /// is never the only signal — e.g. "July 8, 1,489 of 2,000 calories, on target".
-    /// Today is unscored: it reports progress so far, never a verdict word.
+    /// Today wraps the same state word with "so far" and "in progress".
     private var accessibilityLabel: Text {
         let day = Text(date, format: .dateTime.month(.wide).day())
         if isToday {
             let today = String(localized: "today, in progress")
             guard let kcal else { return Text("\(day), \(today)") }
-            return Text("\(day), \(Format.kcal(kcal)) calories so far, \(today)")
+            guard let goal = calorieGoal, goal > 0 else {
+                return Text("\(day), \(Format.kcal(kcal)) calories so far, \(today)")
+            }
+            return Text("\(day), \(Format.kcal(kcal)) of \(Format.kcal(goal)) calories so far, \(ringState.name), \(today)")
         }
         guard let kcal else { return day }
         guard let goal = calorieGoal, goal > 0 else {
@@ -107,9 +109,9 @@ struct CalendarDayCell: View {
     ZStack {
         AppBackground()
         HStack(spacing: 0) {
-            // Today, in progress: faded green contour ring + bold number, no
-            // verdict — however much is logged so far.
-            CalendarDayCell(date: Date(), kcal: 1200, calorieGoal: 2000,
+            // Today, in progress: soft tinted disc + bold green number, with a
+            // ring scored live (here 85% → green) as the day fills.
+            CalendarDayCell(date: Date(), kcal: 1700, calorieGoal: 2000,
                             isToday: true, isFuture: false) {}
             // On target (80–105%): green, filled to actual percentage.
             CalendarDayCell(date: Date(), kcal: 1900, calorieGoal: 2000,

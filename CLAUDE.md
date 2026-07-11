@@ -1,4 +1,4 @@
-# CLAUDE.md — Calorie Tracker (ua.utr.calorietracker)
+# CLAUDE.md — Calorie Tracker (com.prxfitness.calorietracker)
 
 ## Проєкт
 - Нативний iOS-трекер калорій/макро/мікронутрієнтів. Джерело правди — спека `~/Downloads/tz-claude-code-ua.md` (укр.) + затверджений HTML-прототип; при конфлікті перемагає спека.
@@ -68,7 +68,7 @@
 - На симуляторі камери немає — зберігати debug-панель ручного вводу коду.
 
 ## Мережа (Open Food Facts / USDA)
-- OFF вимагає кастомний `User-Agent` виду `CalorieTracker/1.0 (ua.utr.calorietracker; contact@utr.ua)` — без нього можливий бан.
+- OFF вимагає кастомний `User-Agent` виду `CalorieTracker/1.0 (com.prxfitness.calorietracker; contact@utr.ua)` — без нього можливий бан.
 - Порядок: спершу локальна база (вже сканували) → OFF → USDA fallback. Знайдений продукт зберігати локально, повторний скан = офлайн.
 - ODbL-атрибуція Open Food Facts обов'язкова скрізь, де показуються їхні дані (уже є футер у ScanFlowView — не прибирати).
 - Моделі відповідей — толерантні до null/відсутніх полів (все optional, числа можуть приходити рядками), OFF-дані брудні.
