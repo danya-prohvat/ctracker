@@ -76,10 +76,16 @@ struct DayView: View {
                     .padding(.bottom, 88)
             }
         }
-        .navigationDestination(isPresented: $showingAdd) {
-            // Pushed as a full page; it owns its own inline nav bar (title +
-            // back + search) via `.detailNavBar`, so the top blurs on scroll.
-            AddFoodSheet(dayKey: dayKey)
+        .fullScreenCover(isPresented: $showingAdd) {
+            // Presented in its own NavigationStack rather than pushed into the
+            // parent one. When DayView is itself a pushed calendar detail, a
+            // second `navigationDestination` on the same stack jams navigation
+            // (the add tap and the back button both freeze). A self-contained
+            // cover keeps its inline nav bar (title + back + search) via
+            // `.detailNavBar` and works from both Today and the calendar.
+            NavigationStack {
+                AddFoodSheet(dayKey: dayKey)
+            }
         }
         .task {
             #if DEBUG

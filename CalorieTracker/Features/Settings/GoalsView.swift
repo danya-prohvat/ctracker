@@ -20,28 +20,29 @@ struct GoalsView: View {
     private var settings: UserSettings? { settingsList.first }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    GoalsSectionCaption("Daily goals")
-                        .padding(.top, 8)
-                    PlanEditor(
-                        calories: $calories, protein: $protein, fat: $fat, carbs: $carbs
-                    )
-                    GoalsExtrasCard(showCalculator: $showCalculator, netCarbs: netCarbsBinding)
-                    if let settings {
-                        NutrientGoalsSection(settings: settings)
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                GoalsSectionCaption("Daily goals")
+                    .padding(.top, 8)
+                PlanEditor(
+                    calories: $calories, protein: $protein, fat: $fat, carbs: $carbs
+                )
+                GoalsExtrasCard(showCalculator: $showCalculator, netCarbs: netCarbsBinding)
+                if let settings {
+                    NutrientGoalsSection(settings: settings)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 4)
             }
-            .contentMargins(.bottom, 110, for: .scrollContent)
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
         }
+        .contentMargins(.bottom, 110, for: .scrollContent)
         .background(AppBackground())
-        .toolbar(.hidden, for: .navigationBar)
         .hidesFloatingTabBar()
+        .detailNavBar(
+            backLabel: Text("Settings"),
+            title: Text("Goals & nutrients"),
+            onBack: { dismiss() }
+        )
         .onAppear(perform: loadOnce)
         .onChange(of: calories) { persistGoals() }
         .onChange(of: protein) { persistGoals() }
@@ -57,34 +58,6 @@ struct GoalsView: View {
             .presentationCornerRadius(26)
             .presentationBackground(.thinMaterial)
         }
-    }
-
-    // MARK: - Header (custom, system nav bar hidden)
-
-    private var header: some View {
-        ZStack {
-            Text("Goals & nutrients")
-                .font(.headline)
-                .foregroundStyle(Theme.textPrimary)
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    HStack(spacing: 3) {
-                        Image(systemName: "chevron.backward")
-                            .font(.subheadline.weight(.semibold))
-                        Text("Settings")
-                            .font(.callout.weight(.medium))
-                    }
-                    .foregroundStyle(Theme.accentLabel)
-                }
-                .buttonStyle(.plain)
-                Spacer()
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 10)
     }
 
     // MARK: - Bindings & persistence

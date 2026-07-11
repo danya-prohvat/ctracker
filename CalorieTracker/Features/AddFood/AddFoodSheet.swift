@@ -2,8 +2,9 @@ import SwiftUI
 import SwiftData
 
 /// "Add food" page (spec §5): pinned search, Recent chips, New product /
-/// Scan cards and the "My products" list. Pushed from the day screen; the
-/// quantity and new-product steps are presented modally (see AddFoodRoutes).
+/// Scan cards and the "My products" list. Presented as a full-screen cover
+/// from the day screen (in its own NavigationStack); the quantity and
+/// new-product steps are presented modally (see AddFoodRoutes).
 struct AddFoodSheet: View {
     // Internal (not private): AddFoodScanFlow.swift extends this type.
     @Environment(\.modelContext) var context
