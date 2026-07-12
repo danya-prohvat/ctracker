@@ -132,12 +132,7 @@ struct ScanFlowView: View {
     }
 
     private func localProduct(for code: String) -> Product? {
-        let target: String? = code
-        var descriptor = FetchDescriptor<Product>(
-            predicate: #Predicate { $0.barcode == target }
-        )
-        descriptor.fetchLimit = 1
-        return (try? context.fetch(descriptor))?.first
+        ProductStore.existing(barcode: code, in: context)
     }
 
     private func lookup(_ code: String) {

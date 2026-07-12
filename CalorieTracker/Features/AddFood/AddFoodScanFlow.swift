@@ -45,7 +45,7 @@ extension AddFoodSheet {
 
     private func loggable(from prefill: ScanPrefill) -> LoggableFood {
         LoggableFood(
-            productID: nil, name: prefill.name, basis: .per100g,
+            productID: nil, name: prefill.name, basis: prefill.basis,
             per100Calories: prefill.calories, per100Protein: prefill.protein,
             per100Fat: prefill.fat, per100Carbs: prefill.carbs,
             per100Micros: prefill.micros, lastQuantity: nil,

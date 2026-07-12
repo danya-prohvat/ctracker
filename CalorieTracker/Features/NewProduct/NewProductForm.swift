@@ -41,6 +41,15 @@ struct NewProductForm: View {
             || microTexts.values.contains { !$0.isEmpty }
     }
 
+    /// The scanner matched a product whose card has no nutrition values at all
+    /// (a half-filled OFF entry) — worth telling the user why fields are empty.
+    private var scanFoundButEmpty: Bool {
+        guard let prefill, prefill.wasScanned else { return false }
+        return prefill.per100Calories == 0 && prefill.per100Protein == 0
+            && prefill.per100Fat == 0 && prefill.per100Carbs == 0
+            && prefill.per100Micros.isEmpty
+    }
+
     private var primaryTitle: LocalizedStringKey {
         switch mode {
         case .logging: return saveToMyProducts ? "Add & log" : "Log once"
@@ -58,7 +67,8 @@ struct NewProductForm: View {
                            microTexts: $microTexts,
                            saveToMyProducts: $saveToMyProducts,
                            barcode: barcode,
-                           showsSaveToggle: isLogging)
+                           showsSaveToggle: isLogging,
+                           showsMissingNutritionNotice: scanFoundButEmpty)
             .background(AppBackground())
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 ProductFormCTABar(title: primaryTitle, enabled: canSubmit) { submit() }
@@ -134,20 +144,18 @@ struct NewProductForm: View {
             dismiss()
 
         case .saving:
-            let product = Product(name: trimmedName, basis: basis,
-                                  calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
-                                  micros: micros, barcode: barcode)
-            context.insert(product)
-            try? context.save()
+            // Upsert by barcode — scanning the same product twice must never
+            // create a twin (CloudKit rules forbid a unique constraint).
+            _ = ProductStore.upsert(name: trimmedName, basis: basis,
+                                    calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
+                                    micros: micros, barcode: barcode, in: context)
             dismiss()
 
         case .logging:
             if saveToMyProducts {
-                let product = Product(name: trimmedName, basis: basis,
-                                      calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
-                                      micros: micros, barcode: barcode)
-                context.insert(product)
-                try? context.save()
+                let product = ProductStore.upsert(name: trimmedName, basis: basis,
+                                                  calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
+                                                  micros: micros, barcode: barcode, in: context)
                 onContinue(product.loggable)
             } else {
                 let food = LoggableFood(

@@ -7,27 +7,19 @@ enum LookupResult {
     case notFound
 }
 
-/// USDA FoodData Central configuration. Leave `apiKey` empty to disable the
-/// USDA fallback entirely (Open Food Facts needs no key).
-enum USDAConfig {
-    static let apiKey = ""
-}
-
 /// Async barcode → nutrition lookup pipeline (spec §7). Network only — checking
 /// the user's own product database first is the caller's responsibility.
 ///
-/// Order: Open Food Facts (free, no key) → USDA FoodData Central (only when
-/// `USDAConfig.apiKey` is set). All parsing is defensive: OFF fields may be
-/// missing, or numbers encoded as strings.
+/// Source: Open Food Facts (free, no key). All parsing is defensive: OFF
+/// fields may be missing, or numbers encoded as strings. (A USDA FoodData
+/// Central fallback existed briefly and was removed by user decision
+/// 2026-07-12 — OFF alone covers the target markets.)
 enum BarcodeLookupService {
 
     /// Looks a barcode up online. Throws on transport / server errors so the
     /// caller can show an offline state with a Retry button.
     static func lookup(barcode: String) async throws -> LookupResult {
         if let prefill = try await lookupOpenFoodFacts(barcode: barcode) {
-            return .found(prefill)
-        }
-        if let prefill = try await lookupUSDA(barcode: barcode) {
             return .found(prefill)
         }
         return .notFound
@@ -72,14 +64,20 @@ enum BarcodeLookupService {
         }
 
         var micros: [String: Double] = [:]
-        for mapping in offMicroMappings {
-            guard let raw = coerceDouble(nutriments[mapping.offKey]), raw.isFinite else { continue }
+        for mapping in OFFMicroMapping.all {
+            guard micros[mapping.nutrientID] == nil,
+                  let raw = coerceDouble(nutriments[mapping.offKey]), raw.isFinite
+            else { continue }
             let value = raw * mapping.multiplier
             if value > 0 { micros[mapping.nutrientID] = value }
+        }
+        if let sodiumGrams = resolvedSodiumGrams(nutriments), sodiumGrams > 0 {
+            micros["sodium"] = sodiumGrams * 1000 // catalog unit is mg
         }
 
         return ScanPrefill(
             name: name,
+            basis: detectedBasis(product),
             calories: sanitized(calories),
             protein: sanitized(coerceDouble(nutriments["proteins_100g"])),
             fat: sanitized(coerceDouble(nutriments["fat_100g"])),
@@ -89,110 +87,51 @@ enum BarcodeLookupService {
         )
     }
 
-    /// OFF nutriment key → our `NutrientDef.id`, with a multiplier converting
-    /// OFF's grams into our fixed catalog unit (mg / µg where applicable).
-    private struct OFFMicroMapping {
-        let offKey: String
-        let nutrientID: String
-        let multiplier: Double
-    }
-
-    private static let offMicroMappings: [OFFMicroMapping] = [
-        OFFMicroMapping(offKey: "fiber_100g", nutrientID: "fiber", multiplier: 1),
-        OFFMicroMapping(offKey: "sugars_100g", nutrientID: "sugar", multiplier: 1),
-        OFFMicroMapping(offKey: "saturated-fat_100g", nutrientID: "saturatedFat", multiplier: 1),
-        OFFMicroMapping(offKey: "trans-fat_100g", nutrientID: "transFat", multiplier: 1),
-        OFFMicroMapping(offKey: "cholesterol_100g", nutrientID: "cholesterol", multiplier: 1000),
-        OFFMicroMapping(offKey: "sodium_100g", nutrientID: "sodium", multiplier: 1000),
-        OFFMicroMapping(offKey: "calcium_100g", nutrientID: "calcium", multiplier: 1000),
-        OFFMicroMapping(offKey: "iron_100g", nutrientID: "iron", multiplier: 1000),
-        OFFMicroMapping(offKey: "potassium_100g", nutrientID: "potassium", multiplier: 1000),
-        OFFMicroMapping(offKey: "magnesium_100g", nutrientID: "magnesium", multiplier: 1000),
-        OFFMicroMapping(offKey: "zinc_100g", nutrientID: "zinc", multiplier: 1000),
-        OFFMicroMapping(offKey: "vitamin-c_100g", nutrientID: "vitaminC", multiplier: 1000),
-        OFFMicroMapping(offKey: "vitamin-a_100g", nutrientID: "vitaminA", multiplier: 1_000_000),
-        OFFMicroMapping(offKey: "vitamin-d_100g", nutrientID: "vitaminD", multiplier: 1_000_000),
-        OFFMicroMapping(offKey: "vitamin-b12_100g", nutrientID: "vitaminB12", multiplier: 1_000_000),
-        OFFMicroMapping(offKey: "caffeine_100g", nutrientID: "caffeine", multiplier: 1000),
-    ]
-
-    // MARK: - USDA FoodData Central fallback
-
-    private static func lookupUSDA(barcode: String) async throws -> ScanPrefill? {
-        let key = USDAConfig.apiKey
-        guard !key.isEmpty else { return nil }
-
-        var components = URLComponents(string: "https://api.nal.usda.gov/fdc/v1/foods/search")
-        components?.queryItems = [
-            URLQueryItem(name: "api_key", value: key),
-            URLQueryItem(name: "query", value: barcode),
-            URLQueryItem(name: "dataType", value: "Branded"),
-        ]
-        guard let url = components?.url else { return nil }
-
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            // A bad key / server rejection should read as "not found", not "offline".
-            return nil
+    /// Detects whether an OFF product is a liquid, so the form opens on
+    /// "per 100 ml" instead of "per 100 g". Signals, most reliable first:
+    /// nutrition declared per 100 ml, a volume quantity unit ("0,5 l", "33 cl"),
+    /// or a beverages food group / category. Defaults to grams.
+    private static func detectedBasis(_ product: [String: Any]) -> Basis {
+        if let per = (product["nutrition_data_per"] as? String)?.lowercased(),
+           per.contains("ml") {
+            return .per100ml
         }
-
-        guard
-            let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-            let foods = root["foods"] as? [[String: Any]],
-            let first = foods.first,
-            let gtin = first["gtinUpc"] as? String,
-            gtin.contains(barcode) || barcode.contains(gtin)
-        else { return nil }
-
-        let nutrients = first["foodNutrients"] as? [[String: Any]] ?? []
-
-        let name = firstNonEmptyString(
-            first["description"],
-            first["brandName"],
-            first["brandOwner"]
-        ) ?? ""
-
-        return ScanPrefill(
-            name: name,
-            calories: sanitized(usdaEnergyKcal(nutrients)),
-            protein: sanitized(usdaValue(nutrients) { $0 == "protein" }),
-            fat: sanitized(usdaValue(nutrients) { $0.contains("total lipid") || $0 == "fat" }),
-            carbs: sanitized(usdaValue(nutrients) { $0.contains("carbohydrate") }),
-            micros: [:],
-            barcode: barcode
-        )
-    }
-
-    /// Energy in kcal from a USDA `foodNutrients` array; prefers a KCAL entry,
-    /// converts a kJ entry when that is all there is.
-    private static func usdaEnergyKcal(_ nutrients: [[String: Any]]) -> Double? {
-        var kilojoules: Double?
-        for entry in nutrients {
-            guard
-                let name = (entry["nutrientName"] as? String)?.lowercased(),
-                name.contains("energy"),
-                let value = coerceDouble(entry["value"])
-            else { continue }
-            let unit = (entry["unitName"] as? String)?.uppercased() ?? ""
-            if unit == "KCAL" { return value }
-            if unit == "KJ" { kilojoules = value }
+        if let unit = (product["product_quantity_unit"] as? String)?.lowercased(),
+           ["ml", "cl", "dl", "l"].contains(unit) {
+            return .per100ml
         }
-        return kilojoules.map { $0 / 4.184 }
-    }
-
-    /// First nutrient value whose lowercased `nutrientName` matches.
-    private static func usdaValue(
-        _ nutrients: [[String: Any]],
-        matching predicate: (String) -> Bool
-    ) -> Double? {
-        for entry in nutrients {
-            if let name = (entry["nutrientName"] as? String)?.lowercased(),
-               predicate(name),
-               let value = coerceDouble(entry["value"]) {
-                return value
+        if let quantity = (product["quantity"] as? String)?.lowercased() {
+            let compact = quantity.replacingOccurrences(of: " ", with: "")
+            // Covers "500ml", "33cl", "0,5l" — and "1gal", since it ends in "l" too.
+            if compact.hasSuffix("l") || compact.hasSuffix("floz") {
+                return .per100ml
             }
         }
-        return nil
+        let groupSources: [[String]] = [
+            product["food_groups_tags"] as? [String] ?? [],
+            product["categories_tags"] as? [String] ?? [],
+            (product["pnns_groups_1"] as? String).map { [$0.lowercased()] } ?? [],
+        ]
+        if groupSources.joined().contains(where: { $0.contains("beverage") || $0.contains("drink") }) {
+            return .per100ml
+        }
+        return .per100g
+    }
+
+    /// Sodium per 100 g/ml in grams, cross-checked against salt. Physically
+    /// sodium = salt × 0.4, so a card where sodium exceeds salt has a unit
+    /// mix-up (mg typed into the grams field — a common OFF error); the salt
+    /// field wins then. Falls back to deriving from salt when sodium is
+    /// missing entirely.
+    private static func resolvedSodiumGrams(_ nutriments: [String: Any]) -> Double? {
+        let sodium = coerceDouble(nutriments["sodium_100g"])
+        let salt = coerceDouble(nutriments["salt_100g"])
+        switch (sodium, salt) {
+        case let (sodium?, salt?): return sodium > salt ? salt * 0.4 : sodium
+        case let (sodium?, nil): return sodium
+        case let (nil, salt?): return salt * 0.4
+        case (nil, nil): return nil
+        }
     }
 
     // MARK: - JSON coercion helpers

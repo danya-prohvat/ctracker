@@ -14,12 +14,19 @@ struct ProductFormContent: View {
     @Binding var saveToMyProducts: Bool
     let barcode: String?
     let showsSaveToggle: Bool
+    /// Scan matched a product, but its card carried no nutrition values.
+    var showsMissingNutritionNotice: Bool = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if let barcode {
                     SavedBarcodeChip(code: barcode)
+                        .padding(.bottom, 14)
+                }
+
+                if showsMissingNutritionNotice {
+                    MissingNutritionNotice()
                         .padding(.bottom, 14)
                 }
 
