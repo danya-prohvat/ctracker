@@ -13,8 +13,10 @@ enum Seeder {
     }
 
     #if DEBUG
-    /// How many days of history to generate (back from today, inclusive).
-    private static let historyDays = 30
+    /// How many days of history to generate (back from today, inclusive). 90 days
+    /// also spans the free-tier 30-day wall, so the calendar's locked days / fully
+    /// locked months / unlock CTA are all exercised (spec §9).
+    private static let historyDays = 90
 
     /// A sample product plus a typical logged portion (canonical g / ml).
     private struct SampleFood {
@@ -115,6 +117,9 @@ enum Seeder {
 
         var inserted = 0
         for dayOffset in 0..<historyDays {
+            // Some days have nothing logged at all — real diaries have gaps, and
+            // the calendar should show empty days among logged ones.
+            if isEmptyDay(dayOffset) { continue }
             guard let dayStart = cal.date(byAdding: .day, value: -dayOffset,
                                           to: cal.startOfDay(for: now)) else { continue }
             // Scale the whole day's portions so its total lands on the target
@@ -135,6 +140,17 @@ enum Seeder {
 
         try? context.save()
         return inserted
+    }
+
+    /// Day offsets (back from today) left with NO entries, so the calendar shows
+    /// real gaps. Today (offset 0) and the two most recent days always have data;
+    /// the pattern mixes two multi-day gaps (a trip, a lapse) with a roughly
+    /// weekly single miss. Deterministic so seeded data is reproducible.
+    private static func isEmptyDay(_ dayOffset: Int) -> Bool {
+        guard dayOffset > 2 else { return false }
+        if (18...22).contains(dayOffset) { return true }   // ~3 weeks ago: 5-day gap
+        if (47...49).contains(dayOffset) { return true }   // ~7 weeks ago: 3-day gap
+        return dayOffset % 8 == 3                           // ~one skipped day a week
     }
 
     /// Unscaled calories a full day of slots contributes at nominal portions.
