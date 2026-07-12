@@ -18,6 +18,9 @@ struct CalendarTabView: View {
     @State private var kcalByDay: [String: Double] = [:]
     /// Per-day averages over the visible period, shown in the stat cards.
     @State private var periodStats: CalendarPeriodStats?
+    /// True when every day of the visible period is outside the free history
+    /// window — the stats give way to the unlock CTA instead of leaking averages.
+    @State private var periodFullyLocked = false
     @State private var selectedDayKey: String?
     @State private var showingPaywall = false
 
@@ -41,26 +44,34 @@ struct CalendarTabView: View {
                         anchor: anchor,
                         kcalByDay: kcalByDay,
                         calorieGoal: settings?.calorieGoal,
+                        isDayLocked: { !isDayUnlocked($0) },
                         onStep: changeStep,
                         onTapDay: openDay
                     )
                     .animation(.easeInOut(duration: 0.2), value: mode)
 
-                    CalendarStatsRow(
-                        stats: periodStats,
-                        goals: statGoals,
-                        caption: periodCaption
-                    )
-                    .padding(.top, 18)
+                    if periodFullyLocked {
+                        // Whole period behind the 30-day wall: offer the upgrade
+                        // instead of averages computed over locked days.
+                        CalendarHistoryLockedCard(onUnlock: { showingPaywall = true })
+                            .padding(.top, 18)
+                    } else {
+                        CalendarStatsRow(
+                            stats: periodStats,
+                            goals: statGoals,
+                            caption: periodCaption
+                        )
+                        .padding(.top, 18)
 
-                    CalendarRingLegend()
-                        .padding(.top, 16)
-                    Text("Tap a day with a ring to view details.")
-                        .font(.footnote)
-                        .foregroundStyle(Theme.textTertiary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 8)
+                        CalendarRingLegend()
+                            .padding(.top, 16)
+                        Text("Tap a day with a ring to view details.")
+                            .font(.footnote)
+                            .foregroundStyle(Theme.textTertiary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 8)
+                    }
                 }
                 .padding(.horizontal, 16)
             }
@@ -74,6 +85,11 @@ struct CalendarTabView: View {
                 PaywallView()
             }
             .onAppear { refetch() }
+            .onChange(of: settings?.isPremium) {
+                // Unlock the grid, stats and CTA right after a purchase, instead
+                // of leaving stale locked-state @State until the next refetch.
+                refetch()
+            }
             .onChange(of: mode) {
                 // Keep the user near where they were when the scale changes.
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -137,15 +153,24 @@ struct CalendarTabView: View {
         guard let interval = Calendar.current.dateInterval(of: mode.component, for: anchor) else {
             kcalByDay = [:]
             periodStats = nil
+            periodFullyLocked = false
             return
         }
+        // Rings and averages cover only unlocked days, so a free user never sees
+        // aggregated data from days behind the 30-day wall (spec §9). Locked cells
+        // render their own lock via `isDayLocked`.
         let entries = Self.fetchEntries(in: interval, context: context)
+            .filter { isDayUnlocked($0.dayKey) }
         var totals: [String: Double] = [:]
         for entry in entries {
             totals[entry.dayKey, default: 0] += entry.calories
         }
         kcalByDay = totals
         periodStats = Self.averages(of: entries)
+        // The period is fully locked when even its newest day is out of the
+        // window (a period holding today or recent days always has one unlocked).
+        let newestKey = DayKey.string(from: interval.end.addingTimeInterval(-1))
+        periodFullyLocked = !isDayUnlocked(newestKey)
     }
 
     /// Averages entries over the distinct days they cover (nil when empty).

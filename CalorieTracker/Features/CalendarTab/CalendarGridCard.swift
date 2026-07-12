@@ -10,6 +10,8 @@ struct CalendarGridCard: View {
     let anchor: Date
     let kcalByDay: [String: Double]
     let calorieGoal: Double?
+    /// Whether a day falls outside the free-tier history window (spec §9).
+    let isDayLocked: (String) -> Bool
     let onStep: (Int) -> Void
     let onTapDay: (String) -> Void
 
@@ -121,7 +123,8 @@ struct CalendarGridCard: View {
             kcal: kcalByDay[key],
             calorieGoal: calorieGoal,
             isToday: key == todayKey,
-            isFuture: key > todayKey
+            isFuture: key > todayKey,
+            isLocked: isDayLocked(key)
         ) {
             onTapDay(key)
         }
@@ -171,11 +174,13 @@ struct CalendarGridCard: View {
             CalendarGridCard(
                 mode: .month, anchor: Date(),
                 kcalByDay: [DayKey.today: 1450], calorieGoal: 2200,
+                isDayLocked: { _ in false },
                 onStep: { _ in }, onTapDay: { _ in }
             )
             CalendarGridCard(
                 mode: .week, anchor: Date(),
                 kcalByDay: [DayKey.today: 1450], calorieGoal: 2200,
+                isDayLocked: { _ in false },
                 onStep: { _ in }, onTapDay: { _ in }
             )
         }

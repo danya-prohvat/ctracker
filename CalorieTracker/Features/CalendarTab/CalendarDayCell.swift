@@ -22,6 +22,9 @@ struct CalendarDayCell: View {
     let calorieGoal: Double?
     let isToday: Bool
     let isFuture: Bool
+    /// Free-tier day older than the 30-day history window (spec §9): shows a lock
+    /// instead of its ring/data and routes the tap to the paywall.
+    let isLocked: Bool
     let onTap: () -> Void
 
     /// Ring track from the prototype day cells (#EEEEF0).
@@ -50,6 +53,31 @@ struct CalendarDayCell: View {
 
     var body: some View {
         Button(action: onTap) {
+            content
+                .frame(width: 40, height: 40)
+                .frame(maxWidth: .infinity)
+                .frame(height: 42)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isFuture)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    /// A locked day drops its ring and shows a muted number + lock; every other
+    /// day keeps the ring/number treatment.
+    @ViewBuilder
+    private var content: some View {
+        if isLocked {
+            VStack(spacing: 3) {
+                Text(date, format: .dateTime.day())
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.calendarDayMuted)
+                Image(systemName: "lock.fill")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.calendarDayMuted)
+            }
+        } else {
             ZStack {
                 if isToday {
                     // Soft brand-tinted disc marks the current day behind its
@@ -74,14 +102,7 @@ struct CalendarDayCell: View {
                     .font(isToday ? .headline.weight(.bold) : .subheadline.weight(.semibold))
                     .foregroundStyle(numberColor)
             }
-            .frame(width: 40, height: 40)
-            .frame(maxWidth: .infinity)
-            .frame(height: 42)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .disabled(isFuture)
-        .accessibilityLabel(accessibilityLabel)
     }
 
     /// VoiceOver label: date, calories vs. target, and the state word so color
@@ -89,6 +110,9 @@ struct CalendarDayCell: View {
     /// Today wraps the same state word with "so far" and "in progress".
     private var accessibilityLabel: Text {
         let day = Text(date, format: .dateTime.month(.wide).day())
+        if isLocked {
+            return Text("\(day), locked. Upgrade to view older history.")
+        }
         if isToday {
             let today = String(localized: "today, in progress")
             guard let kcal else { return Text("\(day), \(today)") }
@@ -112,22 +136,22 @@ struct CalendarDayCell: View {
             // Today, in progress: soft tinted disc + bold green number, with a
             // ring scored live (here 85% → green) as the day fills.
             CalendarDayCell(date: Date(), kcal: 1700, calorieGoal: 2000,
-                            isToday: true, isFuture: false) {}
+                            isToday: true, isFuture: false, isLocked: false) {}
             // On target (80–105%): green, filled to actual percentage.
             CalendarDayCell(date: Date(), kcal: 1900, calorieGoal: 2000,
-                            isToday: false, isFuture: false) {}
+                            isToday: false, isFuture: false, isLocked: false) {}
             // Under (< 80%): muted gray, partial fill.
             CalendarDayCell(date: Date(), kcal: 900, calorieGoal: 2000,
-                            isToday: false, isFuture: false) {}
+                            isToday: false, isFuture: false, isLocked: false) {}
             // Over (> 105%): amber, fully filled.
             CalendarDayCell(date: Date(), kcal: 2600, calorieGoal: 2000,
-                            isToday: false, isFuture: false) {}
-            // No target: neutral gray fallback.
-            CalendarDayCell(date: Date(), kcal: 1500, calorieGoal: nil,
-                            isToday: false, isFuture: false) {}
+                            isToday: false, isFuture: false, isLocked: false) {}
+            // Locked (free tier, older than 30 days): muted number + lock, no ring.
+            CalendarDayCell(date: Date(), kcal: 1500, calorieGoal: 2000,
+                            isToday: false, isFuture: false, isLocked: true) {}
             // Future / empty: no ring.
             CalendarDayCell(date: Date(), kcal: nil, calorieGoal: 2000,
-                            isToday: false, isFuture: true) {}
+                            isToday: false, isFuture: true, isLocked: false) {}
         }
         .padding(16)
     }
