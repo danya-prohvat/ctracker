@@ -9,10 +9,13 @@ import SwiftData
 struct VitaminsMineralsSection: View {
     let entries: [DiaryEntry]
     let settings: UserSettings
+    /// The day being shown — the list reflects the nutrients tracked on *that*
+    /// day, not the current global set, so history stays truthful (spec §2.1).
+    let dayKey: String
 
     @State private var isExpanded = false
 
-    private var defs: [NutrientDef] { settings.enabledNutrientDefs }
+    private var defs: [NutrientDef] { settings.enabledNutrientDefs(on: dayKey) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -185,7 +188,7 @@ private struct VitaminsMineralsPreviewHost: View {
 
         return ZStack {
             AppBackground()
-            VitaminsMineralsSection(entries: entries, settings: settings)
+            VitaminsMineralsSection(entries: entries, settings: settings, dayKey: DayKey.today)
                 .padding(22)
                 .glassCard()
                 .padding(20)

@@ -21,4 +21,9 @@ enum DayKey {
     }
 
     static var today: String { string(from: Date()) }
+
+    /// A key that sorts before every real "yyyy-MM-dd" day, used as the floor for
+    /// per-day look-ups (e.g. the initial nutrient-tracking baseline). Not a real
+    /// date — never derived from `Date`.
+    static let beginning = "0000-01-01"
 }

@@ -18,6 +18,11 @@ final class UserSettings {
     var enabledNutrients: [String] = Array(NutrientCatalog.defaultEnabled)
     /// Per-nutrient goal overrides (id → value). Missing → NutrientDef.defaultDV.
     var nutrientGoalOverrides: [String: Double] = [:]
+    /// Frozen history of when the tracked-nutrient set changed — one entry per day
+    /// it changed (see `NutrientTrackingChange`). Empty on legacy installs, where
+    /// callers fall back to `enabledNutrients`. Lets a past day show the nutrients
+    /// tracked *then*, so changing the set later never rewrites history (spec §2.1).
+    var nutrientTrackingLog: [NutrientTrackingChange] = []
 
     private var unitSystemRaw: String = UnitSystem.metric.rawValue
     /// nil = follow system language.

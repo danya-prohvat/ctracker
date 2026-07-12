@@ -109,7 +109,7 @@ struct DayView: View {
                 .padding(.top, 40)
         } else {
             VStack(alignment: .leading, spacing: 0) {
-                DaySummaryCard(entries: entries, settings: settings, isToday: isToday)
+                DaySummaryCard(entries: entries, settings: settings, isToday: isToday, dayKey: dayKey)
                 loggedSection
                     .padding(.top, 26)
             }

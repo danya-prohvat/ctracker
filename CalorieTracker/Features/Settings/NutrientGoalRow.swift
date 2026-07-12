@@ -113,11 +113,14 @@ struct NutrientGoalRow: View {
         Binding(
             get: { isOn },
             set: { newValue in
+                if newValue && locked {
+                    onLockedEnableAttempt()
+                    return
+                }
+                // Freeze the pre-change set as the historical baseline before
+                // mutating, so past days keep what they tracked (spec §2.1).
+                settings.ensureNutrientTrackingBaseline()
                 if newValue {
-                    if locked {
-                        onLockedEnableAttempt()
-                        return
-                    }
                     var enabled = Set(settings.enabledNutrients)
                     enabled.insert(def.id)
                     // Preserve catalog order when storing.
@@ -126,6 +129,9 @@ struct NutrientGoalRow: View {
                 } else {
                     settings.enabledNutrients.removeAll { $0 == def.id }
                 }
+                // Record the resulting set for today; only today and future days
+                // reflect the change.
+                settings.recordNutrientTrackingChange()
                 try? context.save()
             }
         )

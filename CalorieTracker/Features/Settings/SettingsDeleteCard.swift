@@ -49,6 +49,7 @@ struct SettingsDeleteCard: View {
         settings.enabledNutrients = NutrientCatalog.all.map(\.id)
             .filter { NutrientCatalog.defaultEnabled.contains($0) }
         settings.nutrientGoalOverrides = [:]
+        settings.nutrientTrackingLog = []
         settings.unitSystem = .metric
         settings.netCarbsEnabled = false
         settings.notificationsEnabled = false

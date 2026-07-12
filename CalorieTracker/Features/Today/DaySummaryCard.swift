@@ -8,6 +8,9 @@ struct DaySummaryCard: View {
     let entries: [DiaryEntry]
     let settings: UserSettings?
     let isToday: Bool
+    /// Local day key of the shown day — scopes the tracked-nutrient list to what
+    /// was enabled on that day (spec §2.1).
+    let dayKey: String
 
     @State private var showPercents = false
 
@@ -71,8 +74,8 @@ struct DaySummaryCard: View {
                 .frame(maxWidth: .infinity)
             }
 
-            if let settings, !settings.enabledNutrients.isEmpty {
-                VitaminsMineralsSection(entries: entries, settings: settings)
+            if let settings, !settings.enabledNutrientIDs(on: dayKey).isEmpty {
+                VitaminsMineralsSection(entries: entries, settings: settings, dayKey: dayKey)
             }
         }
         .padding(22)
@@ -141,7 +144,8 @@ private struct DaySummaryPreviewHost: View {
             DaySummaryCard(
                 entries: entries,
                 settings: UserSettings.current(in: context),
-                isToday: true
+                isToday: true,
+                dayKey: DayKey.today
             )
             .padding(20)
         }
