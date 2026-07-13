@@ -7,6 +7,7 @@ enum AppTab: String {
 
 struct RootView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var settingsList: [UserSettings]
 
     @State private var showOnboarding = false
@@ -49,6 +50,12 @@ struct RootView: View {
         // The palette is light-only for now; without this, system materials
         // and sheets would flip dark while cards/text stay light.
         .preferredColorScheme(.light)
+        .onChange(of: scenePhase) { _, phase in
+            // ATT on first launch (user decision 2026-07-13). The system alert
+            // only appears while active, hence scenePhase and not .task.
+            guard phase == .active else { return }
+            Task { await TrackingConsent.requestIfNeeded() }
+        }
         .onAppear {
             let settings = UserSettings.current(in: context)
             Seeder.seedIfRequested(context)

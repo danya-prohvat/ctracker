@@ -15,9 +15,10 @@
 - **Набір трекованих нутрієнтів — per-day, історія незмінна** (рішення користувача 2026-07-12): `enabledNutrients` — це лише «поточний» набір; фактичний набір для конкретного дня береться з журналу змін `UserSettings.nutrientTrackingLog` (`[NutrientTrackingChange]`, див. `Core/NutrientTrackingLog.swift`). День-детейл (`DayView`→`DaySummaryCard`→`VitaminsMineralsSection`) показує нутрієнти, ввімкнені **на той день**, через `enabledNutrientDefs(on: dayKey)`, а не глобальний список. Правило запису: перемикання нутрієнта → `ensureNutrientTrackingBaseline()` (сід floor-точки `DayKey.beginning` з попереднім набором) перед мутацією, потім `recordNutrientTrackingChange()` (upsert точки на сьогодні) — минулі дні НІКОЛИ не переписуються. Порожній журнал (legacy-інстали) → фолбек на живий `enabledNutrients`. Знімки `DiaryEntry.per100Micros` і далі містять УСІ мікронутрієнти незалежно від ввімкнення — «ввімкнено» керує лише відображенням/цілями, не даними. **Преміум-політика**: гейт стоїть на *ввімкненні* (`PremiumGate.isNutrientUnlocked`), а не на відображенні; після втрати преміуму історичні дні й далі показують преміум-нутрієнти, які тоді трекались (форвард обмежується безкоштовним набором). НЕ гейтити нутрієнти на рівні показу історії й не прибирати журнал змін заради «дедуплікації».
 
 ## Стек
-- SwiftUI + SwiftData, iOS 17.0+, Swift 5, лише системні фреймворки: AVFoundation, UserNotifications, SafariServices, StoreKit, UIKit (точково: `UIApplication.openSettingsURLString`, `resignFirstResponder`, `UIColor` для SFSafariViewController).
+- SwiftUI + SwiftData, iOS 17.0+, Swift 5; системні фреймворки: AVFoundation, UserNotifications, SafariServices, StoreKit, AppTrackingTransparency, UIKit (точково: `UIApplication.openSettingsURLString`, `resignFirstResponder`, `UIColor` для SFSafariViewController, `AdPresenter`/`BannerView` для реклами).
 - Сховище: локальний SQLite через SwiftData. CloudKit НЕ ввімкнено, але всі моделі мають лишатися CloudKit-сумісними (див. нижче).
 - RevenueCat підключається тільки через умовну компіляцію `#if canImport(RevenueCat)`. Без SDK код має збиратися.
+- Google Mobile Ads (AdMob) — єдиний реально під'єднаний сторонній SDK (рішення користувача 2026-07-13): SPM-пакет `swift-package-manager-google-mobile-ads`, вимога v13+ (потребує Xcode 26.2+). Увесь рекламний код — під `#if canImport(GoogleMobileAds)` зі стабами (див. «Реклама»); без SDK проект мусить збиратися.
 - Тестового таргета немає — не створювати тестові файли без явного прохання.
 - Локалізація: `.xcstrings` файлів поки немає, всі рядки — inline через `LocalizedStringKey` / `String(localized:)`.
 
@@ -89,6 +90,14 @@
 - Один entitlement — `"premium"` — відкриває все.
 - Soft paywall: базове логування їжі ніколи не блокувати — гейтити тільки преміум-фічі згідно спеки.
 - Локальне тестування покупок — через `.storekit` configuration file у схемі.
+
+## Реклама (Google AdMob) — додано 2026-07-13
+- Код реклами живе в `Core/Ads/`. ID рекламних блоків — ТІЛЬКИ в `AdsConfig.swift`: DEBUG = тестові ID Google (НЕ міняти — клік по власній живій рекламі порушує політику AdMob), Release = реальні блоки `banner_general`/`interstitial_general`/`rewarded_general` (акаунт ca-app-pub-2939708793200469, підключено 2026-07-13). App ID — реальний, у `Config/Info.plist` → `GADApplicationIdentifier` (`INFOPLIST_FILE = Config/Info.plist` мержиться з generated Info.plist, там же список `SKAdNetworkItems`).
+- Реклама — лише для безкоштовних юзерів: єдина перевірка `AdsConfig.shouldShowAds(settings:)` (через `PremiumGate`; преміум = без реклами). Не розкидати `isPremium`-перевірки по рекламних view.
+- SDK стартує ліниво через `AdMobService.startIfNeeded()` перед першим завантаженням реклами — не чіпати launch-шлях застосунку.
+- Розміщення зараз: ОДИН банер у Settings (`AdBannerView` внизу `SettingsHomeView`). `InterstitialAdManager` і `RewardedAdManager` готові до використання, але ніде не викликаються — нові розміщення/типи ТІЛЬКИ за явним рішенням користувача.
+- ATT підключено (рішення користувача 2026-07-13): системний промпт на першому старті — `TrackingConsent.requestIfNeeded()` з `RootView.onChange(scenePhase == .active)` (НЕ переносити в `.task`/`onAppear` — неактивна сцена мовчки ковтає алерт); текст — `INFOPLIST_KEY_NSUserTrackingUsageDescription` у build settings. Відмова ≠ без реклами: контекстна реклама йде й без IDFA.
+- Борг перед релізом: UMP consent flow (GDPR для EEA/UK; спершу налаштувати повідомлення в AdMob-консолі) свідомо не підключений; в App Store Connect → App Privacy задекларувати збір даних AdMob (tracking = yes, Device ID; див. developers.google.com/admob/ios/privacy/data-disclosure).
 
 ## Принципи коду (KISS / SOLID / DRY)
 - Файл — не більше 200 рядків. Наближається до ліміту → виносити підв'юхи, extension'и, helper'и в окремі файли, а не «дотискати».

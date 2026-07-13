@@ -75,6 +75,9 @@ struct SettingsHomeView: View {
                 SettingsDeleteCard(settings: settings)
                     .padding(.top, 14)
 
+                AdBannerView(settings: settings)
+                    .padding(.top, 14)
+
                 #if DEBUG
                 caption("Test")
                     .padding(.top, 14)
