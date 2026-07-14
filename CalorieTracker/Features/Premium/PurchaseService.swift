@@ -1,10 +1,8 @@
 import Foundation
 
-/// Abstraction over the billing backend so the paywall could ship before real
-/// billing is wired up (spec §9).
-///
-/// TODO(real billing): production implementation is RevenueCat — see
-/// `RevenueCatPurchaseService.swift`. All four `PaywallPlan`s unlock a single
+/// Abstraction over the billing backend (spec §9). The production backend is
+/// RevenueCat (`RevenueCatPurchaseService`); the stub keeps the paywall working
+/// in builds without the SDK. All four `PaywallPlan`s unlock the single
 /// "premium" entitlement: weekly / monthly / yearly are auto-renewable
 /// subscriptions, Lifetime is a non-consumable one-time purchase.
 protocol PurchaseService {
@@ -15,6 +13,25 @@ protocol PurchaseService {
     /// Restores previous purchases and re-applies the entitlement to
     /// `UserSettings.isPremium`.
     func restore() async throws
+
+    /// Localized store display data (product name, price) per plan. Empty when
+    /// the store is unreachable or billing isn't wired — the paywall then shows
+    /// "—" instead of a price (prices are never hardcoded).
+    func quotes() async -> [PaywallPlan: PaywallPlanQuote]
+}
+
+/// The single place that picks the billing backend: RevenueCat when the SDK is
+/// compiled in and `PurchasesConfig.revenueCatAPIKey` is set, the development
+/// stub otherwise.
+enum PurchaseServices {
+    static func make(settings: UserSettings) -> PurchaseService {
+        #if canImport(RevenueCat)
+        if !PurchasesConfig.revenueCatAPIKey.isEmpty {
+            return RevenueCatPurchaseService(settings: settings)
+        }
+        #endif
+        return StubPurchaseService(settings: settings)
+    }
 }
 
 /// Development stub: pretends the App Store took 0.8 s, then unlocks premium.
@@ -31,17 +48,14 @@ final class StubPurchaseService: PurchaseService {
     }
 
     func purchase(_ plan: PaywallPlan) async throws {
-        // TODO(RevenueCat): replace with Purchases.shared.purchase(package:),
-        // mapping PaywallPlan → the weekly/monthly/annual/lifetime package of
-        // the current Offering. One "premium" entitlement covers all plans.
         try await Task.sleep(nanoseconds: 800_000_000)
         settings.isPremium = true
     }
 
     func restore() async throws {
-        // TODO(RevenueCat): replace with Purchases.shared.restorePurchases()
-        // and mirror the "premium" entitlement into settings.isPremium.
         try await Task.sleep(nanoseconds: 800_000_000)
         settings.isPremium = true
     }
+
+    func quotes() async -> [PaywallPlan: PaywallPlanQuote] { [:] }
 }

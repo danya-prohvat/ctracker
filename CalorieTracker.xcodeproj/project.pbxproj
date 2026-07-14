@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		40C0AA683005E67600EEF1C8 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 40C0AA673005E67600EEF1C8 /* RevenueCat */; };
 		CA7000000000000000000010 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = CA7000000000000000000012 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				40C0AA683005E67600EEF1C8 /* RevenueCat in Frameworks */,
 				CA7000000000000000000010 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -67,6 +69,7 @@
 			name = CalorieTracker;
 			packageProductDependencies = (
 				CA7000000000000000000012 /* GoogleMobileAds */,
+				40C0AA673005E67600EEF1C8 /* RevenueCat */,
 			);
 			productName = CalorieTracker;
 			productReference = CA7000000000000000000001 /* CalorieTracker.app */;
@@ -102,6 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				CA7000000000000000000011 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				40C0AA663005E67600EEF1C8 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			productRefGroup = CA7000000000000000000005 /* Products */;
 			projectDirPath = "";
@@ -340,6 +344,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		40C0AA663005E67600EEF1C8 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.80.3;
+			};
+		};
 		CA7000000000000000000011 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
@@ -351,6 +363,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		40C0AA673005E67600EEF1C8 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 40C0AA663005E67600EEF1C8 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
+		};
 		CA7000000000000000000012 /* GoogleMobileAds */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CA7000000000000000000011 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;

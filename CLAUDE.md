@@ -124,7 +124,7 @@
 ## Відомі відхилення від цих правил (борг — виправляти при нагоді, не ламаючи поведінку)
 - Пресети нутрієнтів зі спеки §4 (Basic / Vitamins & minerals / All / None) прибрані з UI на прохання користувача 2026-07-08; `NutrientCatalog.preset*` видалено. НЕ повертати без явного прохання.
 - `VersionedSchema` + `SchemaMigrationPlan` ще не заведені (зараз «гола» Schema) — зробити ДО першого релізу.
-- 2 файли > 200 рядків: OnboardingFlow (638), PaywallView (376) — розбивати при наступному дотику до файлу. (BarcodeLookupService вийшов з ліміту після видалення USDA-fallback 2026-07-12; решту розбито під час приведення UI до прототипу 2026-07-07.)
+- 1 файл > 200 рядків: OnboardingFlow (638) — розбивати при наступному дотику до файлу. (PaywallView розбито на PaywallHeader/PaywallFeatureList/PaywallPlan/PaywallPlanRow/PaywallLegalPage при підключенні RevenueCat 2026-07-14; BarcodeLookupService вийшов з ліміту після видалення USDA-fallback 2026-07-12.)
 - Нормалізації UPC-A → EAN-13 (провідний нуль) перед lookup немає.
 - Знайдений через OFF продукт поки не зберігається в локальну базу автоматично (повторний скан іде в мережу).
 - `Core/Format.swift` — на `NumberFormatter`, не на `.formatted()`; це ок (єдина точка), але нове форматування — тільки через нього.

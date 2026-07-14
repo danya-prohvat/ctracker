@@ -9,22 +9,25 @@ import Foundation
 ///     library product to the CalorieTracker target).
 ///  2. Paste the app's *public* SDK key ("appl_…") into
 ///     `PurchasesConfig.revenueCatAPIKey` below.
-///  3. In the RevenueCat dashboard create ONE entitlement named "premium"
-///     attached to all four products — weekly / monthly / yearly auto-renewable
-///     subscriptions plus the Lifetime non-consumable — and a current Offering
-///     with the standard weekly / monthly / annual / lifetime packages.
-///  4. Where the paywall constructs its service, swap `StubPurchaseService`
-///     for `RevenueCatPurchaseService` (same initializer, drop-in).
+///  3. In the RevenueCat dashboard create ONE entitlement (id =
+///     `PurchasesConfig.premiumEntitlementID`) attached to all four products —
+///     weekly / monthly / yearly auto-renewable subscriptions plus the Lifetime
+///     non-consumable — and a current Offering with the standard
+///     weekly / monthly / annual / lifetime packages.
+/// `PurchaseServices.make` then picks this service automatically — plan names
+/// and prices on the paywall come from the store (`quotes()`), and purchases
+/// unlock the "premium" entitlement mirrored into `UserSettings.isPremium`.
 
 /// Build-time billing configuration. Lives outside the `#if canImport` block so
 /// the key can be filled in before the package is added.
 enum PurchasesConfig {
     /// RevenueCat public API key ("appl_…"). Empty string = billing not wired;
     /// keep using `StubPurchaseService`.
-    static let revenueCatAPIKey = ""
+    static let revenueCatAPIKey = "appl_PwdrifgGiobkwIzsqYlpexrnOrL"
 
-    /// The single entitlement every plan unlocks.
-    static let premiumEntitlementID = "premium"
+    /// The single entitlement every plan unlocks (identifier as configured in
+    /// the RevenueCat dashboard).
+    static let premiumEntitlementID = "Calorie Tracker Pro"
 }
 
 #if canImport(RevenueCat)
@@ -76,6 +79,29 @@ final class RevenueCatPurchaseService: PurchaseService {
         guard Purchases.isConfigured else { throw RevenueCatPurchaseError.notConfigured }
         let info = try await Purchases.shared.restorePurchases()
         apply(info)
+    }
+
+    /// Localized product names/prices from the current Offering. Any failure →
+    /// empty dictionary; the paywall then shows "—" instead of prices.
+    func quotes() async -> [PaywallPlan: PaywallPlanQuote] {
+        guard Purchases.isConfigured,
+              let offering = try? await Purchases.shared.offerings().current
+        else { return [:] }
+        var quotes: [PaywallPlan: PaywallPlanQuote] = [:]
+        for plan in PaywallPlan.allCases {
+            guard let product = package(for: plan, in: offering)?.storeProduct else { continue }
+            quotes[plan] = PaywallPlanQuote(
+                title: product.localizedTitle.isEmpty ? nil : product.localizedTitle,
+                price: product.localizedPriceString,
+                pricePerMonth: plan == .yearly ? pricePerMonth(of: product) : nil
+            )
+        }
+        return quotes
+    }
+
+    private func pricePerMonth(of product: StoreProduct) -> String? {
+        guard let perMonth = product.pricePerMonth else { return nil }
+        return product.priceFormatter?.string(from: perMonth)
     }
 
     private func package(for plan: PaywallPlan, in offering: Offering) -> Package? {
