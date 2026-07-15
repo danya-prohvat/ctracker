@@ -14,12 +14,4 @@ enum Basis: String, Codable, CaseIterable, Identifiable {
 
     /// Short label used in "per 100 g" / "per 100 ml".
     var per100Label: LocalizedStringKey { isVolume ? "per 100 ml" : "per 100 g" }
-
-    /// Segmented control label.
-    var segmentLabel: LocalizedStringKey { isVolume ? "per 100 ml" : "per 100 g" }
-
-    /// Section header, e.g. "NUTRITION (PER 100 G)".
-    var nutritionSectionTitle: LocalizedStringKey {
-        isVolume ? "Nutrition (per 100 ml)" : "Nutrition (per 100 g)"
-    }
 }

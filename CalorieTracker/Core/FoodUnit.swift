@@ -28,10 +28,4 @@ enum FoodUnit: String, Codable, CaseIterable, Identifiable {
         case .floz: return "fl oz"
         }
     }
-
-    /// Units available for a basis — weight products get g/oz, volume products ml/fl oz.
-    /// Logging "ml of cheese" must be physically impossible (spec §3).
-    static func units(for basis: Basis) -> [FoodUnit] {
-        basis.isVolume ? [.ml, .floz] : [.g, .oz]
-    }
 }

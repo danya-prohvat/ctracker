@@ -6,6 +6,9 @@ import SwiftUI
 struct ProductFormContent: View {
     @Binding var name: String
     @Binding var basis: Basis
+    @Binding var perAmountText: String
+    /// Parsed "Per" amount (nil while invalid) — drives the nutrition caption.
+    let perAmount: Double?
     @Binding var caloriesText: String
     @Binding var proteinText: String
     @Binding var fatText: String
@@ -30,10 +33,12 @@ struct ProductFormContent: View {
                         .padding(.bottom, 14)
                 }
 
-                ProductInfoCard(name: $name, basis: $basis)
+                ProductInfoCard(name: $name, basis: $basis,
+                                perAmountText: $perAmountText)
                     .padding(.bottom, 16)
 
                 NutritionValuesCard(basis: basis,
+                                    perAmount: perAmount ?? 100,
                                     calories: $caloriesText,
                                     protein: $proteinText,
                                     fat: $fatText,
@@ -60,6 +65,8 @@ struct ProductFormContent: View {
         AppBackground()
         ProductFormContent(name: .constant(""),
                            basis: .constant(.per100g),
+                           perAmountText: .constant("100"),
+                           perAmount: 100,
                            caloriesText: .constant(""),
                            proteinText: .constant(""),
                            fatText: .constant(""),

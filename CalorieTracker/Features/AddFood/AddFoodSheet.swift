@@ -92,8 +92,7 @@ struct AddFoodSheet: View {
                                 unitSystem: unitSystem, onLogged: logFinished)
             }
         case .newProduct(let route):
-            NewProductLogSheet(route: route, dayKey: dayKey,
-                               unitSystem: unitSystem, onLogged: logFinished)
+            NewProductLogSheet(route: route, dayKey: dayKey, onLogged: logFinished)
         }
     }
 

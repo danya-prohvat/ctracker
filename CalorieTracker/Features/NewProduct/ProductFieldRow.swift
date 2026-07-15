@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// One nutrient-input row from the prototype's form cards: fixed-width label,
-/// decimal text field with a gray "0" placeholder and a trailing unit caption.
+/// whole-number text field with a gray "0" placeholder and a trailing unit caption.
 struct ProductFieldRow: View {
     let label: Text
     var labelWidth: CGFloat = 88
@@ -15,7 +15,8 @@ struct ProductFieldRow: View {
                 .foregroundStyle(Theme.textPrimary)
                 .frame(width: labelWidth, alignment: .leading)
             TextField("0", text: $text)
-                .keyboardType(.decimalPad)
+                .keyboardType(.numberPad)
+                .numericInputLimit($text)
                 .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
                 .frame(maxWidth: .infinity)

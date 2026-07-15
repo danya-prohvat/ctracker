@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// Top card of the product form: "Name" text field and the "Per 100" row with
-/// the mini g/ml segmented control. Nutrition stays canonical per-100 —
-/// the base amount is fixed (spec §1), only the unit toggles.
+/// Top card of the product form: "Name" text field and the "Per" row with an
+/// editable base amount and the mini g/ml segmented control. Storage stays
+/// canonical per-100 — entered values are normalized on save (user decision
+/// 2026-07-14), the base amount here only sets what the fields below mean.
 struct ProductInfoCard: View {
     @Binding var name: String
     @Binding var basis: Basis
+    @Binding var perAmountText: String
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,7 +30,9 @@ struct ProductInfoCard: View {
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .frame(width: 88, alignment: .leading)
-                Text(Format.amount(100))
+                TextField("100", text: $perAmountText)
+                    .keyboardType(.numberPad)
+                    .numericInputLimit($perAmountText)
                     .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -83,7 +87,8 @@ private struct BasisSegmentControl: View {
 #Preview {
     ZStack {
         AppBackground()
-        ProductInfoCard(name: .constant(""), basis: .constant(.per100g))
+        ProductInfoCard(name: .constant(""), basis: .constant(.per100g),
+                        perAmountText: .constant("100"))
             .padding(20)
     }
 }

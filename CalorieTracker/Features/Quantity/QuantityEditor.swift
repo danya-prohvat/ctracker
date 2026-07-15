@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 
 /// Prototype quantity sheet (spec §5), shared by the add and edit flows:
-/// custom header, live glass card, unit pills and a custom keypad.
+/// custom header, live glass card and a custom keypad. The input unit is fixed
+/// by the global unit-system setting (Settings → Units), no per-entry switcher.
 /// Works in canonical g / ml; oz / fl oz convert via `FoodUnit.toCanonical`
 /// at input time — commit always receives the canonical quantity.
 struct QuantityEditor: View {
@@ -13,7 +14,7 @@ struct QuantityEditor: View {
     let per100Protein: Double
     let per100Fat: Double
     let per100Carbs: Double
-    let unitSystem: UnitSystem
+    let unit: FoodUnit
     let title: LocalizedStringKey
     let ctaTitle: LocalizedStringKey
     let onBack: () -> Void
@@ -21,7 +22,6 @@ struct QuantityEditor: View {
     let onDelete: (() -> Void)?
     let onCommit: (Double) -> Void   // receives canonical quantity (g / ml)
 
-    @State private var selectedUnit: FoodUnit
     @State private var text: String
 
     init(
@@ -48,7 +48,7 @@ struct QuantityEditor: View {
         self.per100Protein = per100Protein
         self.per100Fat = per100Fat
         self.per100Carbs = per100Carbs
-        self.unitSystem = unitSystem
+        self.unit = unitSystem.defaultUnit(for: basis)
         self.title = title
         self.ctaTitle = ctaTitle
         self.onBack = onBack
@@ -56,15 +56,11 @@ struct QuantityEditor: View {
         self.onDelete = onDelete
         self.onCommit = onCommit
 
-        let unit = unitSystem.defaultUnit(for: basis)
-        _selectedUnit = State(initialValue: unit)
-        _text = State(initialValue: Self.inputString(fromCanonical: initialCanonical, unit: unit))
+        _text = State(initialValue: Self.inputString(fromCanonical: initialCanonical, unit: unitSystem.defaultUnit(for: basis)))
     }
 
-    private var availableUnits: [FoodUnit] { FoodUnit.units(for: basis) }
-
     /// Quantity in canonical units (g / ml).
-    private var canonical: Double { (Format.parse(text) ?? 0) * selectedUnit.toCanonical }
+    private var canonical: Double { (Format.parse(text) ?? 0) * unit.toCanonical }
 
     var body: some View {
         ScrollView {
@@ -84,19 +80,15 @@ struct QuantityEditor: View {
 
                 QuantityLiveCard(
                     quantityText: text,
-                    unitLabel: selectedUnit.label,
+                    unitLabel: unit.label,
                     calories: NutritionMath.scaled(per100: per100Calories, quantity: canonical),
                     protein: NutritionMath.scaled(per100: per100Protein, quantity: canonical),
                     fat: NutritionMath.scaled(per100: per100Fat, quantity: canonical),
                     carbs: NutritionMath.scaled(per100: per100Carbs, quantity: canonical)
                 )
 
-                QuantityUnitPills(units: availableUnits, selectedUnit: selectedUnit,
-                                  onSelect: changeUnit)
-                    .padding(.top, 12)
-
                 QuantityKeypad(onKey: handleKey)
-                    .padding(.top, 12)
+                    .padding(.top, 16)
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -149,35 +141,24 @@ struct QuantityEditor: View {
 
     private func handleKey(_ key: QuantityKey) {
         Haptics.tap()
-        let separator = Locale.current.decimalSeparator ?? "."
         var s = text
         switch key {
         case .backspace:
             s = s.count > 1 ? String(s.dropLast()) : "0"
-        case .separator:
-            if !s.contains(separator) { s += separator }
         case .digit(let digit):
             s = (s == "0") ? "\(digit)" : s + "\(digit)"
         }
-        if s.count > 6 { s = String(s.prefix(6)) }
+        if s.count > Self.maxDigits { s = String(s.prefix(Self.maxDigits)) }
         text = s
     }
 
-    /// Converting units keeps the same physical amount (existing behavior).
-    private func changeUnit(to newUnit: FoodUnit) {
-        guard newUnit != selectedUnit else { return }
-        Haptics.selection()
-        let current = canonical
-        selectedUnit = newUnit
-        text = Self.inputString(fromCanonical: current, unit: newUnit)
-    }
+    /// Same global sanity cap as `numericInputLimit`: 4 digits (9999 g / ml).
+    private static let maxDigits = 4
 
-    /// Locale-aware keypad string for a canonical amount, clamped to 6 chars.
+    /// Keypad string for a canonical amount — whole numbers, clamped to the cap.
     private static func inputString(fromCanonical canonical: Double, unit: FoodUnit) -> String {
         var s = Format.editable(canonical / unit.toCanonical)
-        if s.count > 6 { s = String(s.prefix(6)) }
-        let separator = Locale.current.decimalSeparator ?? "."
-        if s.hasSuffix(separator) { s = String(s.dropLast()) }
+        if s.count > maxDigits { s = String(s.prefix(maxDigits)) }
         return s.isEmpty ? "0" : s
     }
 }

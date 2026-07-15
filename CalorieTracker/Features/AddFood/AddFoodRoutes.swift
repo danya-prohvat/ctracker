@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Prefill context for the New-product modal: blank, scan-prefilled, or with a
 /// scanned barcode to attach.
@@ -18,27 +19,30 @@ struct AddSheet: Identifiable {
     let kind: Kind
 }
 
-/// The New-product modal: the form, then a pushed quantity step on "continue",
-/// kept inside the sheet's own stack so "Back" returns to the form and a
-/// completed log dismisses the whole modal.
+/// The New-product modal. With the save toggle on the form saves and dismisses
+/// itself (no immediate log — the product is then logged from the list, user
+/// decision 2026-07-14); it only continues here for log-once entries.
 struct NewProductLogSheet: View {
+    @Environment(\.modelContext) private var context
+
     let route: NewProductRoute
     let dayKey: String
-    let unitSystem: UnitSystem
     let onLogged: () -> Void
-
-    @State private var quantityFood: LoggableFood?
 
     var body: some View {
         NavigationStack {
             NewProductForm(mode: .logging,
                            prefill: route.prefill,
                            prefillBarcode: route.barcode,
-                           onContinue: { quantityFood = $0 })
-                .navigationDestination(item: $quantityFood) { food in
-                    QuantityLogView(food: food, dayKey: dayKey,
-                                    unitSystem: unitSystem, onLogged: onLogged)
-                }
+                           onContinue: logOnce)
         }
+    }
+
+    /// Log once: the form's values are already "what was eaten", so write them
+    /// as-is — the "Per" base amount arrives via `lastQuantity` (canonical g / ml).
+    private func logOnce(_ food: LoggableFood) {
+        Haptics.success()
+        DiaryLogger.log(food, quantity: food.lastQuantity ?? 100, dayKey: dayKey, in: context)
+        onLogged()
     }
 }

@@ -1,44 +1,45 @@
 import SwiftUI
 
 /// A key on the custom quantity keypad.
-enum QuantityKey: Hashable, Identifiable {
+enum QuantityKey: Hashable {
     case digit(Int)
-    case separator
     case backspace
-
-    var id: Self { self }
-
-    /// Prototype layout: 1–9, decimal separator, 0, backspace.
-    static let layout: [QuantityKey] = [
-        .digit(1), .digit(2), .digit(3),
-        .digit(4), .digit(5), .digit(6),
-        .digit(7), .digit(8), .digit(9),
-        .separator, .digit(0), .backspace
-    ]
 }
 
-/// Prototype-style 3-column glass keypad that replaces the system keyboard.
-/// Shows the locale decimal separator; emits key events to the owner.
+/// Prototype-style 3-column glass keypad that replaces the system keyboard;
+/// whole numbers only (user decision 2026-07-14) — no decimal separator, the
+/// bottom-row 0 stretches across two columns with backspace on the right.
 struct QuantityKeypad: View {
     let onKey: (QuantityKey) -> Void
 
-    private var separator: String { Locale.current.decimalSeparator ?? "." }
-
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-            ForEach(QuantityKey.layout) { key in
-                Button {
-                    onKey(key)
-                } label: {
-                    keyLabel(for: key)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .contentShape(RoundedRectangle(cornerRadius: Theme.radiusButton, style: .continuous))
+        Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+            ForEach(0..<3) { row in
+                GridRow {
+                    ForEach(1..<4) { column in
+                        keyButton(.digit(row * 3 + column))
+                    }
                 }
-                .buttonStyle(.plain)
-                .glassCard(cornerRadius: Theme.radiusButton)
+            }
+            GridRow {
+                keyButton(.digit(0))
+                    .gridCellColumns(2)
+                keyButton(.backspace)
             }
         }
+    }
+
+    private func keyButton(_ key: QuantityKey) -> some View {
+        Button {
+            onKey(key)
+        } label: {
+            keyLabel(for: key)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .contentShape(RoundedRectangle(cornerRadius: Theme.radiusButton, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .glassCard(cornerRadius: Theme.radiusButton)
     }
 
     @ViewBuilder
@@ -46,10 +47,6 @@ struct QuantityKeypad: View {
         switch key {
         case .digit(let value):
             Text(verbatim: "\(value)")
-                .font(.stat(.title2, .regular))
-                .foregroundStyle(Theme.textPrimary)
-        case .separator:
-            Text(verbatim: separator)
                 .font(.stat(.title2, .regular))
                 .foregroundStyle(Theme.textPrimary)
         case .backspace:

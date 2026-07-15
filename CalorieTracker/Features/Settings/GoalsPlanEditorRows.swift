@@ -38,7 +38,8 @@ extension PlanEditor {
     private var kcalValue: some View {
         if focused == .calories {
             TextField("0", text: textBinding(.calories))
-                .keyboardType(.decimalPad)
+                .keyboardType(.numberPad)
+                .numericInputLimit(textBinding(.calories), maxDigits: 5)
                 .multilineTextAlignment(.center)
                 .focused($focused, equals: .calories)
                 .font(.stat(.largeTitle))
@@ -97,7 +98,8 @@ extension PlanEditor {
         if focused == field {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 TextField("0", text: textBinding(field))
-                    .keyboardType(.decimalPad)
+                    .keyboardType(.numberPad)
+                    .numericInputLimit(textBinding(field))
                     .multilineTextAlignment(.trailing)
                     .focused($focused, equals: field)
                     .font(.stat(.callout))

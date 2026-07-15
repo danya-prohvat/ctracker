@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// "NUTRITION (PER 100 G/ML)" caption plus the glass card with the four
-/// macro input rows (Calories / Protein / Fat / Carbs).
+/// "NUTRITION (PER X G/ML)" caption plus the glass card with the four
+/// macro input rows (Calories / Protein / Fat / Carbs). The caption follows
+/// the form's editable "Per" amount so the fields' meaning stays obvious.
 struct NutritionValuesCard: View {
     let basis: Basis
+    let perAmount: Double
     @Binding var calories: String
     @Binding var protein: String
     @Binding var fat: String
@@ -11,7 +13,7 @@ struct NutritionValuesCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(basis.nutritionSectionTitle)
+            Text("Nutrition (per \(Format.amount(perAmount)) \(basis.canonicalUnit.label))")
                 .textCase(.uppercase)
                 .font(.footnote)
                 .foregroundStyle(Theme.textSecondary)
@@ -35,6 +37,7 @@ struct NutritionValuesCard: View {
     ZStack {
         AppBackground()
         NutritionValuesCard(basis: .per100g,
+                            perAmount: 100,
                             calories: .constant(""),
                             protein: .constant(""),
                             fat: .constant(""),

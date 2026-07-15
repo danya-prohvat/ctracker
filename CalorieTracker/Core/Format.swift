@@ -1,15 +1,15 @@
 import Foundation
 
-/// Locale-aware number formatting (spec §2.4 — decimal separator follows the user's locale).
+/// Locale-aware number formatting (spec §2.4 — grouping follows the user's locale).
+/// The app works in whole numbers only (user decision 2026-07-14): every value
+/// is rounded to an integer at display, edit-prefill and parse time.
 enum Format {
-    /// Compact number: no decimals for integers, up to 1 fractional digit otherwise.
+    /// Compact whole number for display.
     static func amount(_ value: Double) -> String {
-        let rounded = (value * 10).rounded() / 10
         let f = NumberFormatter()
         f.numberStyle = .decimal
-        f.minimumFractionDigits = 0
-        f.maximumFractionDigits = (rounded == rounded.rounded()) ? 0 : 1
-        return f.string(from: NSNumber(value: rounded)) ?? String(rounded)
+        f.maximumFractionDigits = 0
+        return f.string(from: NSNumber(value: value.rounded())) ?? String(Int(value.rounded()))
     }
 
     /// Integer kcal.
@@ -30,25 +30,25 @@ enum Format {
         amount(value) + " " + unit.label
     }
 
-    /// Value for a text field: locale decimal separator, no grouping, up to 2 decimals.
+    /// Value for a text field: whole number, no grouping.
     static func editable(_ value: Double) -> String {
         let f = NumberFormatter()
         f.numberStyle = .decimal
         f.usesGroupingSeparator = false
-        f.minimumFractionDigits = 0
-        f.maximumFractionDigits = 2
-        return f.string(from: NSNumber(value: value)) ?? String(value)
+        f.maximumFractionDigits = 0
+        return f.string(from: NSNumber(value: value.rounded())) ?? String(Int(value.rounded()))
     }
 
-    /// Parse user-typed decimal input honoring the current locale separator.
+    /// Parse user-typed input honoring the current locale separator. Fractions
+    /// (pasted or legacy) are rounded — the app stores whole numbers only.
     static func parse(_ text: String) -> Double? {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty { return nil }
         let f = NumberFormatter()
         f.numberStyle = .decimal
         f.locale = Locale.current
-        if let n = f.number(from: trimmed) { return n.doubleValue }
+        if let n = f.number(from: trimmed) { return n.doubleValue.rounded() }
         // Fallback: accept both separators.
-        return Double(trimmed.replacingOccurrences(of: ",", with: "."))
+        return Double(trimmed.replacingOccurrences(of: ",", with: "."))?.rounded()
     }
 }

@@ -22,7 +22,9 @@ struct QuantityLogView: View {
             per100Fat: food.per100Fat,
             per100Carbs: food.per100Carbs,
             unitSystem: unitSystem,
-            initialCanonical: food.lastQuantity ?? 100,
+            // Always start from the canonical default of 100 g / ml (user
+            // decision 2026-07-14) — not from the last logged quantity.
+            initialCanonical: 100,
             title: "Add quantity",
             ctaTitle: "Add to today",
             onBack: { dismiss() },      // pop back to the add list
@@ -32,33 +34,7 @@ struct QuantityLogView: View {
     }
 
     private func log(_ canonical: Double) {
-        let now = Date()
-        let entry = DiaryEntry(
-            loggedAt: now,
-            dayKey: dayKey,
-            productName: food.name,
-            basis: food.basis,
-            quantity: canonical,
-            per100Calories: food.per100Calories,
-            per100Protein: food.per100Protein,
-            per100Fat: food.per100Fat,
-            per100Carbs: food.per100Carbs,
-            per100Micros: food.per100Micros,
-            productID: food.productID,
-            wasScanned: food.wasScanned
-        )
-        context.insert(entry)
-
-        // Update source product recency/prefill (only if saved).
-        if let id = food.productID {
-            var descriptor = FetchDescriptor<Product>(predicate: #Predicate { $0.id == id })
-            descriptor.fetchLimit = 1
-            if let product = try? context.fetch(descriptor).first {
-                product.lastQuantity = canonical
-                product.lastLoggedAt = now
-            }
-        }
-        try? context.save()
+        DiaryLogger.log(food, quantity: canonical, dayKey: dayKey, in: context)
         onLogged()
     }
 }

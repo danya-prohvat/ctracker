@@ -16,6 +16,7 @@ struct NewProductForm: View {
 
     @State private var name = ""
     @State private var basis: Basis = .per100g
+    @State private var perAmountText = "100"
     @State private var caloriesText = ""
     @State private var proteinText = ""
     @State private var fatText = ""
@@ -31,13 +32,27 @@ struct NewProductForm: View {
     private var isEditing: Bool { if case .editing = mode { return true }; return false }
 
     private var caloriesValue: Double? { Format.parse(caloriesText) }
+
+    /// Editable "Per" base amount; the nutrition fields mean "per this many
+    /// g/ml". nil while empty/zero — submit stays disabled.
+    private var perAmount: Double? {
+        guard let value = Format.parse(perAmountText), value > 0 else { return nil }
+        return value
+    }
+
+    /// Storage is canonical per-100 (spec §3): entered values are multiplied
+    /// by this on save.
+    private var per100Factor: Double { 100 / (perAmount ?? 100) }
+
     private var canSubmit: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty && caloriesValue != nil
+        !name.trimmingCharacters(in: .whitespaces).isEmpty
+            && caloriesValue != nil && perAmount != nil
     }
 
     private var isDirty: Bool {
         !name.isEmpty || !caloriesText.isEmpty || !proteinText.isEmpty
             || !fatText.isEmpty || !carbsText.isEmpty
+            || perAmountText != "100"
             || microTexts.values.contains { !$0.isEmpty }
     }
 
@@ -52,7 +67,7 @@ struct NewProductForm: View {
 
     private var primaryTitle: LocalizedStringKey {
         switch mode {
-        case .logging: return saveToMyProducts ? "Add & log" : "Log once"
+        case .logging: return saveToMyProducts ? "Save" : "Add to today"
         case .saving, .editing: return "Save"
         }
     }
@@ -60,6 +75,8 @@ struct NewProductForm: View {
     var body: some View {
         ProductFormContent(name: $name,
                            basis: $basis,
+                           perAmountText: $perAmountText,
+                           perAmount: perAmount,
                            caloriesText: $caloriesText,
                            proteinText: $proteinText,
                            fatText: $fatText,
@@ -78,9 +95,11 @@ struct NewProductForm: View {
                 title: isEditing ? Text("Edit product") : Text("New product"),
                 onBack: { if isDirty { showDiscard = true } else { cancel() } }
             )
-            .confirmationDialog("Discard changes?", isPresented: $showDiscard, titleVisibility: .visible) {
-                Button("Discard", role: .destructive) { cancel() }
+            .alert("Discard changes?", isPresented: $showDiscard) {
                 Button("Keep editing", role: .cancel) {}
+                Button("Discard", role: .destructive) { cancel() }
+            } message: {
+                Text("What you've entered won't be saved.")
             }
             .onAppear(perform: loadOnce)
     }
@@ -113,16 +132,16 @@ struct NewProductForm: View {
     private func parsedMicros() -> [String: Double] {
         var out: [String: Double] = [:]
         for (id, text) in microTexts {
-            if let value = Format.parse(text), value > 0 { out[id] = value }
+            if let value = Format.parse(text), value > 0 { out[id] = value * per100Factor }
         }
         return out
     }
 
     private func makeValues() -> (cals: Double, p: Double, f: Double, c: Double) {
-        (caloriesValue ?? 0,
-         Format.parse(proteinText) ?? 0,
-         Format.parse(fatText) ?? 0,
-         Format.parse(carbsText) ?? 0)
+        ((caloriesValue ?? 0) * per100Factor,
+         (Format.parse(proteinText) ?? 0) * per100Factor,
+         (Format.parse(fatText) ?? 0) * per100Factor,
+         (Format.parse(carbsText) ?? 0) * per100Factor)
     }
 
     private func submit() {
@@ -153,16 +172,21 @@ struct NewProductForm: View {
 
         case .logging:
             if saveToMyProducts {
-                let product = ProductStore.upsert(name: trimmedName, basis: basis,
-                                                  calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
-                                                  micros: micros, barcode: barcode, in: context)
-                onContinue(product.loggable)
+                // Save only (user decision 2026-07-14): no immediate quantity
+                // step — the product lands in My products and is logged by
+                // tapping it in the list.
+                _ = ProductStore.upsert(name: trimmedName, basis: basis,
+                                        calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
+                                        micros: micros, barcode: barcode, in: context)
+                dismiss()
             } else {
+                // lastQuantity = the entered base amount, so the immediate
+                // log-once writes exactly the values the user typed.
                 let food = LoggableFood(
                     productID: nil, name: trimmedName, basis: basis,
                     per100Calories: v.cals, per100Protein: v.p,
                     per100Fat: v.f, per100Carbs: v.c,
-                    per100Micros: micros, lastQuantity: nil,
+                    per100Micros: micros, lastQuantity: perAmount,
                     wasScanned: barcode?.isEmpty == false
                 )
                 onContinue(food)
