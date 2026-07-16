@@ -22,6 +22,7 @@ struct SettingsAboutCard: View {
         .sheet(item: $webLink) { link in
             SafariWebView(url: link.url)
                 .ignoresSafeArea()
+                .presentationDragIndicator(.visible)
         }
     }
 

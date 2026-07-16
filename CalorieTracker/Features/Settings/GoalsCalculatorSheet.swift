@@ -57,6 +57,7 @@ struct GoalsCalculatorSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .dismissesKeyboardOnTap()
             .navigationTitle("Calculate goals")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

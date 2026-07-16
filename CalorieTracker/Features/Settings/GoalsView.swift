@@ -35,6 +35,7 @@ struct GoalsView: View {
             .padding(.horizontal, 20)
             .padding(.top, 4)
         }
+        .dismissesKeyboardOnTap()
         .contentMargins(.bottom, 110, for: .scrollContent)
         .background(AppBackground())
         .hidesFloatingTabBar()
@@ -57,6 +58,7 @@ struct GoalsView: View {
             }
             .presentationCornerRadius(26)
             .presentationBackground(.thinMaterial)
+            .presentationDragIndicator(.visible)
         }
     }
 

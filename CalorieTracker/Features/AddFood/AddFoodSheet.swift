@@ -2,8 +2,9 @@ import SwiftUI
 import SwiftData
 
 /// "Add food" page (spec §5): pinned search, Recent chips, New product /
-/// Scan cards and the "My products" list. Presented as a full-screen cover
-/// from the day screen (in its own NavigationStack); the quantity and
+/// Scan cards and the "My products" list. Presented from the day screen in
+/// its own NavigationStack — full-screen cover on Today, card sheet from a
+/// calendar day detail (see AddFoodPresentation); the quantity and
 /// new-product steps are presented modally (see AddFoodRoutes).
 struct AddFoodSheet: View {
     // Internal (not private): AddFoodScanFlow.swift extends this type.
@@ -56,12 +57,17 @@ struct AddFoodSheet: View {
                 onBack: { dismiss() }
             )
             .hidesFloatingTabBar()
-            .sheet(item: $addSheet, onDismiss: popIfNeeded) { addStep($0.kind) }
+            .sheet(item: $addSheet, onDismiss: popIfNeeded) {
+                addStep($0.kind)
+                    .presentationDragIndicator(.visible)
+            }
             .sheet(item: $editingProduct) { product in
                 NavigationStack { NewProductForm(mode: .editing(product)) }
+                    .presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $creatingProduct) {
                 NavigationStack { NewProductForm(mode: .saving) }
+                    .presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) { scanFlow }

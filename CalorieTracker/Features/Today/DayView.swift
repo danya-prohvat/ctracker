@@ -76,17 +76,11 @@ struct DayView: View {
                     .padding(.bottom, 88)
             }
         }
-        .fullScreenCover(isPresented: $showingAdd) {
-            // Presented in its own NavigationStack rather than pushed into the
-            // parent one. When DayView is itself a pushed calendar detail, a
-            // second `navigationDestination` on the same stack jams navigation
-            // (the add tap and the back button both freeze). A self-contained
-            // cover keeps its inline nav bar (title + back + search) via
-            // `.detailNavBar` and works from both Today and the calendar.
-            NavigationStack {
-                AddFoodSheet(dayKey: dayKey)
-            }
-        }
+        // Today keeps the full-screen add flow under the FAB; a pushed calendar
+        // day presents the same flow as a card sheet so it reads as a modal
+        // (user request 2026-07-16). See AddFoodPresentation for the
+        // own-NavigationStack rationale.
+        .modifier(AddFoodPresentation(asSheet: isPresented, isActive: $showingAdd, dayKey: dayKey))
         .task {
             #if DEBUG
             // Launch with `-showAddSheet 1` to open the add flow immediately.

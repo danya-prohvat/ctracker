@@ -60,6 +60,7 @@ struct LanguagePickerSheet: View {
                 }
             }
         }
+        .presentationDragIndicator(.visible)
     }
 
     private func choose(_ language: SettingsLanguage) {

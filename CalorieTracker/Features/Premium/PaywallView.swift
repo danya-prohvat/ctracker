@@ -37,6 +37,9 @@ struct PaywallView: View {
             .padding(.bottom, 12)
         }
         .background(Theme.background)
+        // Presented as a sheet from several places — the grabber lives here
+        // so every call site gets it. Ignored by the onboarding cover.
+        .presentationDragIndicator(.visible)
         .safeAreaInset(edge: .bottom) { footer }
         .overlay(alignment: .topTrailing) { closeButton }
         .task {
@@ -49,6 +52,7 @@ struct PaywallView: View {
         .sheet(item: $legal) { page in
             SafariWebView(url: page.url)
                 .ignoresSafeArea()
+                .presentationDragIndicator(.visible)
         }
         .alert(
             "Purchase failed",

@@ -2,7 +2,8 @@ import SwiftUI
 
 /// One diary row inside the logged card: name + "80 g · P10 F5 C48" and the
 /// kcal column. Swiping toward the leading edge reveals an 88 pt Delete
-/// button (prototype style); tapping the row edits the quantity.
+/// button (prototype style); tapping the row edits the quantity, and a long
+/// press shows an edit/delete context menu.
 struct DiaryRow: View {
     let entry: DiaryEntry
     var onTap: () -> Void
@@ -15,6 +16,18 @@ struct DiaryRow: View {
             deleteAccessibilityLabel: "Delete entry"
         ) {
             rowContent
+        }
+        .contextMenu {
+            Button {
+                onTap()
+            } label: {
+                Label("Edit", systemImage: "pencil")
+            }
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 

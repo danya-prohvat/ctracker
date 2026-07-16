@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// "MY PRODUCTS" caption + one glass card listing the user's products.
-/// Rows support swipe-to-delete (like the diary) and keep an edit/delete
+/// Rows reveal Edit + Delete on a swipe (Mail-style) and keep an edit/delete
 /// context menu; the trailing "+" saves a product without logging it (spec §5).
 struct AddFoodProductList: View {
     let products: [Product]
@@ -39,7 +39,9 @@ struct AddFoodProductList: View {
                     SwipeToDeleteRow(
                         onTap: { onSelect(product) },
                         onDelete: { onDelete(product) },
-                        deleteAccessibilityLabel: "Delete product"
+                        onEdit: { onEdit(product) },
+                        deleteAccessibilityLabel: "Delete product",
+                        editAccessibilityLabel: "Edit product"
                     ) {
                         AddFoodProductRow(product: product)
                     }

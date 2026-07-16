@@ -67,6 +67,7 @@ struct MicroFieldsSection: View {
             NavigationStack {
                 NutrientsSettingsView()
             }
+            .presentationDragIndicator(.visible)
         }
     }
 

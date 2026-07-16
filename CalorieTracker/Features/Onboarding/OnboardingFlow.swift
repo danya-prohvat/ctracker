@@ -361,12 +361,11 @@ struct OnboardingFlow: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
             }
+            .dismissesKeyboardOnTap()
 
             OnboardingPrimaryButton(title: "Continue") {
                 // Blur any in-progress PlanEditor edit so it commits first.
-                UIApplication.shared.sendAction(
-                    #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil
-                )
+                hideKeyboard()
                 Task {
                     try? await Task.sleep(for: .seconds(0.1))
                     advance()

@@ -33,6 +33,7 @@ enum Theme {
     static let destructive = Color(hex: 0xFF3B30)
     static let warning = Color(hex: 0xFF9500)                    // near-limit amber (systemOrange)
     static let destructiveSoft = Color(hex: 0xFFE0DA)            // trash button bg
+    static let neutralAction = Color(hex: 0x8E8E93)              // gray swipe action (Edit) — systemGray
 
     // Macro accent colors (protein / fat / carbs) + micronutrient bars.
     static let protein = Color(hex: 0xC36E63)         // oklch(0.63 0.11 28)

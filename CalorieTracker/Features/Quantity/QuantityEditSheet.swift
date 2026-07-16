@@ -33,6 +33,7 @@ struct QuantityEditSheet: View {
         }
         .presentationCornerRadius(26)
         .presentationBackground(.thinMaterial)
+        .presentationDragIndicator(.visible)
     }
 
     private func save(_ canonical: Double) {
