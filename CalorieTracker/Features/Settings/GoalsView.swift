@@ -56,9 +56,6 @@ struct GoalsView: View {
                 fat = plan.fat
                 carbs = plan.carbs
             }
-            .presentationCornerRadius(26)
-            .presentationBackground(.thinMaterial)
-            .presentationDragIndicator(.visible)
         }
     }
 

@@ -2,7 +2,8 @@ import SwiftUI
 
 /// "Calculate for me" sheet: sex, age, height, weight, activity and goal
 /// direction → GoalCalculator.plan, applied back into the goals editor.
-/// Presented over a frosted background (corner radius 26 at the call site).
+/// A native grouped form styled like the other modal pickers (see
+/// LanguagePickerSheet) so every sheet in the app reads the same.
 struct GoalsCalculatorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -56,7 +57,6 @@ struct GoalsCalculatorSheet: View {
                     .pickerStyle(.segmented)
                 }
             }
-            .scrollContentBackground(.hidden)
             .dismissesKeyboardOnTap()
             .navigationTitle("Calculate goals")
             .navigationBarTitleDisplayMode(.inline)
@@ -72,6 +72,7 @@ struct GoalsCalculatorSheet: View {
             }
             .tint(Theme.accentLabel)
         }
+        .presentationDragIndicator(.visible)
     }
 
     private func measurementField(
