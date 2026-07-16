@@ -135,6 +135,7 @@ struct DayView: View {
             } else {
                 DiaryListCard(
                     entries: entries,
+                    unitSystem: settings?.unitSystem ?? .metric,
                     showsAddFooter: isPresented,
                     onTap: { editing = EditingEntry(entry: $0) },
                     onDelete: delete,

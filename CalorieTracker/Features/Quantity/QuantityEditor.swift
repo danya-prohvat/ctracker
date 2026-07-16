@@ -142,23 +142,32 @@ struct QuantityEditor: View {
     private func handleKey(_ key: QuantityKey) {
         Haptics.tap()
         var s = text
+        let separator = Locale.current.decimalSeparator ?? "."
         switch key {
         case .backspace:
             s = s.count > 1 ? String(s.dropLast()) : "0"
+        case .separator:
+            if !s.contains(separator) { s += separator }
         case .digit(let digit):
-            s = (s == "0") ? "\(digit)" : s + "\(digit)"
+            if let sepRange = s.range(of: separator) {
+                // One decimal place only (user decision 2026-07-16).
+                if s[sepRange.upperBound...].isEmpty { s += "\(digit)" }
+            } else if s == "0" {
+                s = "\(digit)"
+            } else if s.count < Self.maxDigits {
+                s += "\(digit)"
+            }
         }
-        if s.count > Self.maxDigits { s = String(s.prefix(Self.maxDigits)) }
         text = s
     }
 
-    /// Same global sanity cap as `numericInputLimit`: 4 digits (9999 g / ml).
+    /// Same global sanity cap as `numericInputLimit`: 4 integer digits
+    /// (9999 g / ml) plus at most one decimal place.
     private static let maxDigits = 4
 
-    /// Keypad string for a canonical amount — whole numbers, clamped to the cap.
+    /// Keypad string for a canonical amount, clamped to the cap.
     private static func inputString(fromCanonical canonical: Double, unit: FoodUnit) -> String {
-        var s = Format.editable(canonical / unit.toCanonical)
-        if s.count > maxDigits { s = String(s.prefix(maxDigits)) }
+        let s = NumericInput.limited(Format.editable(canonical / unit.toCanonical), maxDigits: maxDigits)
         return s.isEmpty ? "0" : s
     }
 }

@@ -15,7 +15,7 @@ struct ProductFieldRow: View {
                 .foregroundStyle(Theme.textPrimary)
                 .frame(width: labelWidth, alignment: .leading)
             TextField("0", text: $text)
-                .keyboardType(.numberPad)
+                .keyboardType(.decimalPad)
                 .numericInputLimit($text)
                 .font(.callout)
                 .foregroundStyle(Theme.textPrimary)

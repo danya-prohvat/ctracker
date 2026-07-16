@@ -82,7 +82,7 @@ struct GoalsCalculatorSheet: View {
             Text(title)
             Spacer()
             TextField("0", text: text)
-                .keyboardType(.numberPad)
+                .keyboardType(.decimalPad)
                 .numericInputLimit(text, maxDigits: 3)
                 .multilineTextAlignment(.trailing)
                 .frame(maxWidth: 120)

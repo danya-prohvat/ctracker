@@ -6,6 +6,7 @@ import SwiftUI
 /// press shows an edit/delete context menu.
 struct DiaryRow: View {
     let entry: DiaryEntry
+    let unitSystem: UnitSystem
     var onTap: () -> Void
     var onDelete: () -> Void
 
@@ -41,7 +42,7 @@ struct DiaryRow: View {
                         .lineLimit(1)
                     if entry.wasScanned { ScannedBadge() }
                 }
-                Text("\(Format.amount(entry.quantity)) \(entry.basis.canonicalUnit.label) · P\(Format.amount(entry.protein.rounded())) F\(Format.amount(entry.fat.rounded())) C\(Format.amount(entry.carbs.rounded()))")
+                Text("\(Format.quantity(entry.quantity, basis: entry.basis, unitSystem: unitSystem)) · P\(Format.amount(entry.protein.rounded())) F\(Format.amount(entry.fat.rounded())) C\(Format.amount(entry.carbs.rounded()))")
                     .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)

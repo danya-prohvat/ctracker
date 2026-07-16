@@ -4,6 +4,7 @@ import SwiftUI
 /// products (2-tap logging entry point).
 struct AddFoodRecentsRow: View {
     let products: [Product]
+    let unitSystem: UnitSystem
     let onSelect: (Product) -> Void
 
     var body: some View {
@@ -15,7 +16,7 @@ struct AddFoodRecentsRow: View {
                         Button {
                             onSelect(product)
                         } label: {
-                            AddFoodRecentChip(product: product)
+                            AddFoodRecentChip(product: product, unitSystem: unitSystem)
                         }
                         .buttonStyle(.plain)
                     }
@@ -26,9 +27,10 @@ struct AddFoodRecentsRow: View {
     }
 }
 
-/// One recent chip: name (14pt semibold) + "380 kcal / 100g" (12pt secondary).
+/// One recent chip: name (14pt semibold) + "380 kcal / 100 g" (12pt secondary).
 private struct AddFoodRecentChip: View {
     let product: Product
+    let unitSystem: UnitSystem
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -39,7 +41,7 @@ private struct AddFoodRecentChip: View {
                     .lineLimit(1)
                 if product.wasScanned { ScannedBadge() }
             }
-            Text("\(Format.kcal(product.calories)) kcal / 100\(product.basis.canonicalUnit.label)")
+            Text("\(Format.kcal(product.calories)) kcal / \(product.basis.per100Compact(unitSystem))")
                 .font(.caption)
                 .foregroundStyle(Theme.textSecondary)
                 .lineLimit(1)
@@ -54,7 +56,7 @@ private struct AddFoodRecentChip: View {
 #Preview {
     ZStack {
         AppBackground()
-        AddFoodRecentsRow(products: [], onSelect: { _ in })
+        AddFoodRecentsRow(products: [], unitSystem: .metric, onSelect: { _ in })
             .padding(20)
     }
     .modelContainer(PreviewData.container)

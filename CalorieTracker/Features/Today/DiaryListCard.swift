@@ -5,6 +5,7 @@ import SwiftData
 /// with an optional "Add food to this day" footer for calendar day details.
 struct DiaryListCard: View {
     let entries: [DiaryEntry]
+    let unitSystem: UnitSystem
     let showsAddFooter: Bool
     let onTap: (DiaryEntry) -> Void
     let onDelete: (DiaryEntry) -> Void
@@ -15,6 +16,7 @@ struct DiaryListCard: View {
             ForEach(Array(entries.enumerated()), id: \.element.persistentModelID) { index, entry in
                 DiaryRow(
                     entry: entry,
+                    unitSystem: unitSystem,
                     onTap: { onTap(entry) },
                     onDelete: { onDelete(entry) }
                 )

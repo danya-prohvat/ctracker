@@ -31,7 +31,7 @@ struct ProductInfoCard: View {
                     .foregroundStyle(Theme.textSecondary)
                     .frame(width: 88, alignment: .leading)
                 TextField("100", text: $perAmountText)
-                    .keyboardType(.numberPad)
+                    .keyboardType(.decimalPad)
                     .numericInputLimit($perAmountText)
                     .font(.callout)
                     .foregroundStyle(Theme.textPrimary)

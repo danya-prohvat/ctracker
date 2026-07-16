@@ -6,6 +6,7 @@ import SwiftUI
 struct AddFoodProductList: View {
     let products: [Product]
     let searchQuery: String
+    let unitSystem: UnitSystem
     let onSelect: (Product) -> Void
     let onEdit: (Product) -> Void
     let onDelete: (Product) -> Void
@@ -43,7 +44,7 @@ struct AddFoodProductList: View {
                         deleteAccessibilityLabel: "Delete product",
                         editAccessibilityLabel: "Edit product"
                     ) {
-                        AddFoodProductRow(product: product)
+                        AddFoodProductRow(product: product, unitSystem: unitSystem)
                     }
                     .contextMenu {
                         Button {
@@ -89,6 +90,7 @@ struct AddFoodProductList: View {
 /// "per 100 g" (prototype padding 14/16).
 private struct AddFoodProductRow: View {
     let product: Product
+    let unitSystem: UnitSystem
 
     var body: some View {
         HStack {
@@ -110,7 +112,7 @@ private struct AddFoodProductRow: View {
                 Text("\(Format.kcal(product.calories)) kcal")
                     .font(.stat(.subheadline))
                     .foregroundStyle(Theme.textPrimary)
-                Text(product.basis.per100Label)
+                Text(product.basis.per100Label(unitSystem))
                     .font(.caption2)
                     .foregroundStyle(Theme.textQuaternary)
             }
@@ -124,7 +126,7 @@ private struct AddFoodProductRow: View {
 #Preview {
     ZStack {
         AppBackground()
-        AddFoodProductList(products: [], searchQuery: "kiwi",
+        AddFoodProductList(products: [], searchQuery: "kiwi", unitSystem: .metric,
                            onSelect: { _ in }, onEdit: { _ in },
                            onDelete: { _ in }, onCreate: {})
             .padding(20)

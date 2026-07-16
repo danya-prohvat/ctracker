@@ -106,7 +106,7 @@ struct AddFoodSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if !recentProducts.isEmpty && search.isEmpty {
-                    AddFoodRecentsRow(products: recentProducts) { log($0) }
+                    AddFoodRecentsRow(products: recentProducts, unitSystem: unitSystem) { log($0) }
                         .padding(.bottom, 16)
                 }
                 AddFoodActionCards(
@@ -117,6 +117,7 @@ struct AddFoodSheet: View {
                 AddFoodProductList(
                     products: filteredProducts,
                     searchQuery: search.trimmingCharacters(in: .whitespaces),
+                    unitSystem: unitSystem,
                     onSelect: { log($0) },
                     onEdit: { editingProduct = $0 },
                     onDelete: { productToDelete = $0 },

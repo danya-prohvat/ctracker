@@ -3,12 +3,13 @@ import SwiftUI
 /// A key on the custom quantity keypad.
 enum QuantityKey: Hashable {
     case digit(Int)
+    case separator
     case backspace
 }
 
-/// Prototype-style 3-column glass keypad that replaces the system keyboard;
-/// whole numbers only (user decision 2026-07-14) — no decimal separator, the
-/// bottom-row 0 stretches across two columns with backspace on the right.
+/// Prototype-style 3-column glass keypad that replaces the system keyboard.
+/// The bottom row is separator · 0 · backspace — one decimal place allowed
+/// (user decision 2026-07-16, replaces the whole-numbers-only rule).
 struct QuantityKeypad: View {
     let onKey: (QuantityKey) -> Void
 
@@ -22,8 +23,8 @@ struct QuantityKeypad: View {
                 }
             }
             GridRow {
+                keyButton(.separator)
                 keyButton(.digit(0))
-                    .gridCellColumns(2)
                 keyButton(.backspace)
             }
         }
@@ -47,6 +48,10 @@ struct QuantityKeypad: View {
         switch key {
         case .digit(let value):
             Text(verbatim: "\(value)")
+                .font(.stat(.title2, .regular))
+                .foregroundStyle(Theme.textPrimary)
+        case .separator:
+            Text(verbatim: Locale.current.decimalSeparator ?? ".")
                 .font(.stat(.title2, .regular))
                 .foregroundStyle(Theme.textPrimary)
         case .backspace:

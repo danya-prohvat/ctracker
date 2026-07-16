@@ -1,23 +1,24 @@
 import Foundation
 
 /// Locale-aware number formatting (spec §2.4 — grouping follows the user's locale).
-/// The app works in whole numbers only (user decision 2026-07-14): every value
-/// is rounded to an integer at display, edit-prefill and parse time.
+/// The app shows at most one decimal place (user decision 2026-07-16, replaces
+/// the earlier whole-numbers rule): display, edit-prefill and parse all round
+/// to a single fraction digit; whole values render without a trailing ".0".
 enum Format {
-    /// Compact whole number for display.
+    /// Rounds to the single decimal place the app works in.
+    static func round1(_ value: Double) -> Double { (value * 10).rounded() / 10 }
+
+    /// Compact number for display: up to one decimal place.
     static func amount(_ value: Double) -> String {
         let f = NumberFormatter()
         f.numberStyle = .decimal
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: value.rounded())) ?? String(Int(value.rounded()))
+        f.maximumFractionDigits = 1
+        return f.string(from: NSNumber(value: value)) ?? String(round1(value))
     }
 
-    /// Integer kcal.
+    /// kcal, up to one decimal place.
     static func kcal(_ value: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .decimal
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: value.rounded())) ?? String(Int(value.rounded()))
+        amount(value)
     }
 
     /// Grams with a "g" suffix used in macro captions.
@@ -30,25 +31,33 @@ enum Format {
         amount(value) + " " + unit.label
     }
 
-    /// Value for a text field: whole number, no grouping.
+    /// A logged quantity: canonical g / ml rendered in the user's unit system
+    /// ("150 g" / "5 oz" / "34 fl oz"), whole numbers per the integers rule.
+    /// Storage stays canonical (spec §3) — this converts at display time only.
+    static func quantity(_ canonical: Double, basis: Basis, unitSystem: UnitSystem) -> String {
+        let unit = unitSystem.defaultUnit(for: basis)
+        return amount(canonical / unit.toCanonical) + " " + unit.label
+    }
+
+    /// Value for a text field: up to one decimal place, no grouping.
     static func editable(_ value: Double) -> String {
         let f = NumberFormatter()
         f.numberStyle = .decimal
         f.usesGroupingSeparator = false
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: value.rounded())) ?? String(Int(value.rounded()))
+        f.maximumFractionDigits = 1
+        return f.string(from: NSNumber(value: value)) ?? String(round1(value))
     }
 
-    /// Parse user-typed input honoring the current locale separator. Fractions
-    /// (pasted or legacy) are rounded — the app stores whole numbers only.
+    /// Parse user-typed input honoring the current locale separator. Extra
+    /// fraction digits (pasted or legacy) round to the app's single decimal.
     static func parse(_ text: String) -> Double? {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty { return nil }
         let f = NumberFormatter()
         f.numberStyle = .decimal
         f.locale = Locale.current
-        if let n = f.number(from: trimmed) { return n.doubleValue.rounded() }
+        if let n = f.number(from: trimmed) { return round1(n.doubleValue) }
         // Fallback: accept both separators.
-        return Double(trimmed.replacingOccurrences(of: ",", with: "."))?.rounded()
+        return Double(trimmed.replacingOccurrences(of: ",", with: ".")).map(round1)
     }
 }
