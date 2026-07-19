@@ -18,6 +18,9 @@ struct DayView: View {
 
     @State private var showingAdd = false
     @State private var editing: EditingEntry?
+    /// Entry awaiting delete confirmation (swipe or context menu). Deleting a
+    /// logged entry is irreversible, so we always ask first.
+    @State private var pendingDelete: DiaryEntry?
 
     init(dayKey: String, isToday: Bool) {
         self.dayKey = dayKey
@@ -92,6 +95,7 @@ struct DayView: View {
         .sheet(item: $editing) { wrapper in
             QuantityEditSheet(entry: wrapper.entry)
         }
+        .confirmDeleteEntry($pendingDelete, onConfirm: delete)
     }
 
     @ViewBuilder
@@ -138,7 +142,7 @@ struct DayView: View {
                     unitSystem: settings?.unitSystem ?? .metric,
                     showsAddFooter: isPresented,
                     onTap: { editing = EditingEntry(entry: $0) },
-                    onDelete: delete,
+                    onDelete: { pendingDelete = $0 },
                     onAdd: { showingAdd = true }
                 )
                 if isPresented {

@@ -18,6 +18,9 @@ struct CalendarTabView: View {
     @State private var kcalByDay: [String: Double] = [:]
     /// Per-day averages over the visible period, shown in the stat cards.
     @State private var periodStats: CalendarPeriodStats?
+    /// Per-nutrient mean daily intake over the visible period, respecting the
+    /// per-day tracked set. Empty when nothing tracked has data → card hidden.
+    @State private var nutrientAverages: [NutrientPeriodAverage] = []
     /// True when every day of the visible period is outside the free history
     /// window — the stats give way to the unlock CTA instead of leaking averages.
     @State private var periodFullyLocked = false
@@ -62,6 +65,14 @@ struct CalendarTabView: View {
                             caption: periodCaption
                         )
                         .padding(.top, 18)
+
+                        if !nutrientAverages.isEmpty {
+                            CalendarNutrientHistoryCard(
+                                averages: nutrientAverages,
+                                caption: periodCaption
+                            )
+                            .padding(.top, 12)
+                        }
 
                         CalendarRingLegend()
                             .padding(.top, 16)
@@ -153,58 +164,28 @@ struct CalendarTabView: View {
         guard let interval = Calendar.current.dateInterval(of: mode.component, for: anchor) else {
             kcalByDay = [:]
             periodStats = nil
+            nutrientAverages = []
             periodFullyLocked = false
             return
         }
         // Rings and averages cover only unlocked days, so a free user never sees
         // aggregated data from days behind the 30-day wall (spec §9). Locked cells
         // render their own lock via `isDayLocked`.
-        let entries = Self.fetchEntries(in: interval, context: context)
+        let entries = CalendarPeriodData.fetchEntries(in: interval, context: context)
             .filter { isDayUnlocked($0.dayKey) }
         var totals: [String: Double] = [:]
         for entry in entries {
             totals[entry.dayKey, default: 0] += entry.calories
         }
         kcalByDay = totals
-        periodStats = Self.averages(of: entries)
+        periodStats = CalendarPeriodData.macroAverages(of: entries)
+        nutrientAverages = settings.map {
+            CalendarPeriodData.nutrientAverages(of: entries, settings: $0)
+        } ?? []
         // The period is fully locked when even its newest day is out of the
         // window (a period holding today or recent days always has one unlocked).
         let newestKey = DayKey.string(from: interval.end.addingTimeInterval(-1))
         periodFullyLocked = !isDayUnlocked(newestKey)
-    }
-
-    /// Averages entries over the distinct days they cover (nil when empty).
-    private static func averages(of entries: [DiaryEntry]) -> CalendarPeriodStats? {
-        guard !entries.isEmpty else { return nil }
-        var days: Set<String> = []
-        var totalCalories: Double = 0
-        var totalProtein: Double = 0
-        var totalFat: Double = 0
-        var totalCarbs: Double = 0
-        for entry in entries {
-            days.insert(entry.dayKey)
-            totalCalories += entry.calories
-            totalProtein += entry.protein
-            totalFat += entry.fat
-            totalCarbs += entry.carbs
-        }
-        let dayCount = Double(days.count)
-        return CalendarPeriodStats(
-            avgCalories: totalCalories / dayCount,
-            avgProtein: totalProtein / dayCount,
-            avgFat: totalFat / dayCount,
-            avgCarbs: totalCarbs / dayCount
-        )
-    }
-
-    private static func fetchEntries(in interval: DateInterval, context: ModelContext) -> [DiaryEntry] {
-        let startKey = DayKey.string(from: interval.start)
-        // `interval.end` is the exclusive start of the next period.
-        let endKey = DayKey.string(from: interval.end.addingTimeInterval(-1))
-        let descriptor = FetchDescriptor<DiaryEntry>(
-            predicate: #Predicate { $0.dayKey >= startKey && $0.dayKey <= endKey }
-        )
-        return (try? context.fetch(descriptor)) ?? []
     }
 
     /// Start of the calendar period (`.weekOfYear` or `.month`) containing `date`.

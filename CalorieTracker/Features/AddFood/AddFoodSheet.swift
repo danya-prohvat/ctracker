@@ -106,25 +106,29 @@ struct AddFoodSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if !recentProducts.isEmpty && search.isEmpty {
+                    // Full-bleed so the chips clip at the screen edge (and peek)
+                    // instead of at the 20 pt margin; the row insets itself to align.
                     AddFoodRecentsRow(products: recentProducts, unitSystem: unitSystem) { log($0) }
                         .padding(.bottom, 16)
                 }
-                AddFoodActionCards(
-                    onNewProduct: { addSheet = AddSheet(kind: .newProduct(NewProductRoute())) },
-                    onScan: startScan
-                )
-                .padding(.bottom, 16)
-                AddFoodProductList(
-                    products: filteredProducts,
-                    searchQuery: search.trimmingCharacters(in: .whitespaces),
-                    unitSystem: unitSystem,
-                    onSelect: { log($0) },
-                    onEdit: { editingProduct = $0 },
-                    onDelete: { productToDelete = $0 },
-                    onCreate: { creatingProduct = true }
-                )
+                VStack(alignment: .leading, spacing: 0) {
+                    AddFoodActionCards(
+                        onNewProduct: { addSheet = AddSheet(kind: .newProduct(NewProductRoute())) },
+                        onScan: startScan
+                    )
+                    .padding(.bottom, 16)
+                    AddFoodProductList(
+                        products: filteredProducts,
+                        searchQuery: search.trimmingCharacters(in: .whitespaces),
+                        unitSystem: unitSystem,
+                        onSelect: { log($0) },
+                        onEdit: { editingProduct = $0 },
+                        onDelete: { productToDelete = $0 },
+                        onCreate: { creatingProduct = true }
+                    )
+                }
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 40)
         }

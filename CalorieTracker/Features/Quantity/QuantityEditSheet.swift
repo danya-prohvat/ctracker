@@ -11,6 +11,10 @@ struct QuantityEditSheet: View {
 
     let entry: DiaryEntry
 
+    /// Non-nil while the delete confirmation is up. Deleting a logged entry is
+    /// irreversible, so we always ask before removing it.
+    @State private var pendingDelete: DiaryEntry?
+
     var body: some View {
         NavigationStack {
             QuantityEditor(
@@ -27,13 +31,14 @@ struct QuantityEditSheet: View {
                 ctaTitle: "Save changes",
                 onBack: { dismiss() },     // prototype: Back closes the sheet in edit mode
                 onClose: { dismiss() },
-                onDelete: deleteEntry,
+                onDelete: { pendingDelete = entry },
                 onCommit: save
             )
         }
         .presentationCornerRadius(26)
         .presentationBackground(.thinMaterial)
         .presentationDragIndicator(.visible)
+        .confirmDeleteEntry($pendingDelete) { _ in deleteEntry() }
     }
 
     private func save(_ canonical: Double) {

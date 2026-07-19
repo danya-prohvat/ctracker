@@ -1,15 +1,21 @@
 import SwiftUI
 
 /// "RECENT" caption + horizontally scrolling glass chips of recently logged
-/// products (2-tap logging entry point).
+/// products (2-tap logging entry point). Placed full-width by the parent: the
+/// row insets its own caption and chips by `horizontalInset` so they align with
+/// the sections below, while the chips scroll edge-to-edge and clip at the true
+/// screen edge (peeking) instead of being cut off at a padding boundary.
 struct AddFoodRecentsRow: View {
     let products: [Product]
     let unitSystem: UnitSystem
     let onSelect: (Product) -> Void
+    /// Screen content margin the caption and first chip align to.
+    var horizontalInset: CGFloat = 20
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             AddFoodCaption(title: "Recent")
+                .padding(.horizontal, horizontalInset)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(products) { product in
@@ -21,6 +27,7 @@ struct AddFoodRecentsRow: View {
                         .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal, horizontalInset)
                 .padding(.bottom, 4)
             }
         }
@@ -56,8 +63,9 @@ private struct AddFoodRecentChip: View {
 #Preview {
     ZStack {
         AppBackground()
+        // Row is full-width and insets itself, matching how AddFoodSheet places it.
         AddFoodRecentsRow(products: [], unitSystem: .metric, onSelect: { _ in })
-            .padding(20)
+            .padding(.vertical, 20)
     }
     .modelContainer(PreviewData.container)
 }
