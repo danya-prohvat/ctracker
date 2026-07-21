@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// Main calorie ring (prototype variant B): 132 pt, eaten kcal over "/ goal".
-/// When no goal is set there is no progress arc (spec §2.5). The arc uses the
-/// shared goal-progress color (`CalendarRingState`): neutral under, green on
-/// target, amber over — never red (user decision 2026-07-10).
+/// When no goal is set there is no progress arc (spec §2.5). Colors — accent
+/// green arc over a green-tinted track, amber when over, never red — come
+/// from `TodayRingStyle` (user decision 2026-07-21).
 struct CalorieRingView: View {
     let consumed: Double
     let goal: Double?
@@ -13,13 +13,14 @@ struct CalorieRingView: View {
         return min(consumed / goal, 1)
     }
 
-    private var ringColor: Color {
-        CalendarRingState(consumed: consumed, target: goal).color
+    private var style: TodayRingStyle {
+        TodayRingStyle(accent: Theme.accent, consumed: consumed, goal: goal)
     }
 
     var body: some View {
         ZStack {
-            ProgressRing(progress: progress, lineWidth: 12, color: ringColor)
+            ProgressRing(progress: progress, lineWidth: 12,
+                         color: style.color, trackColor: style.track)
             VStack(spacing: 1) {
                 Text(Format.kcal(consumed))
                     .font(.stat(.title))

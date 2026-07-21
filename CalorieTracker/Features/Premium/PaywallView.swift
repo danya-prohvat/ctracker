@@ -31,16 +31,16 @@ struct PaywallView: View {
                 PaywallHeader()
                 PaywallFeatureList()
                 planList
+                footer
             }
             .padding(.horizontal, 20)
             .padding(.top, 56)
-            .padding(.bottom, 12)
+            .padding(.bottom, 24)
         }
         .background(Theme.background)
         // Presented as a sheet from several places — the grabber lives here
         // so every call site gets it. Ignored by the onboarding cover.
         .presentationDragIndicator(.visible)
-        .safeAreaInset(edge: .bottom) { footer }
         .overlay(alignment: .topTrailing) { closeButton }
         .task {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
@@ -101,6 +101,9 @@ struct PaywallView: View {
         }
     }
 
+    /// CTA + legal links, inline at the end of the scroll content (user
+    /// decision 2026-07-21) — not a pinned bar, so plan rows never slide
+    /// underneath it while scrolling.
     private var footer: some View {
         VStack(spacing: 14) {
             ctaButton
@@ -113,10 +116,6 @@ struct PaywallView: View {
             .foregroundStyle(Theme.textSecondary)
             .disabled(isWorking)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
-        .background(Theme.background)
     }
 
     private var ctaButton: some View {

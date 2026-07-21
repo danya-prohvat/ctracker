@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftData
 
-/// "General" card: language picker row, meal-reminders toggle (label pushes
-/// the times editor while enabled) and the premium-gated iCloud sync toggle.
+/// "General" card: language picker row, the single reminders toggle — it
+/// drives both the smart meal reminders (`MealReminderScheduler`) and the
+/// re-engagement series (`ReengagementNotificationService`), user decision
+/// 2026-07-21 — and the premium-gated iCloud sync toggle.
 struct SettingsGeneralCard: View {
     @Environment(\.modelContext) private var context
 
@@ -52,26 +54,10 @@ struct SettingsGeneralCard: View {
 
     private var remindersRow: some View {
         HStack(spacing: 12) {
-            if settings.notificationsEnabled {
-                NavigationLink {
-                    SettingsRemindersView(settings: settings)
-                } label: {
-                    HStack(spacing: 5) {
-                        Text("Reminders")
-                            .font(.callout)
-                            .foregroundStyle(Theme.textPrimary)
-                        SettingsRowChevron()
-                        Spacer(minLength: 0)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            } else {
-                Text("Reminders")
-                    .font(.callout)
-                    .foregroundStyle(Theme.textPrimary)
-                Spacer(minLength: 0)
-            }
+            Text("Reminders")
+                .font(.callout)
+                .foregroundStyle(Theme.textPrimary)
+            Spacer(minLength: 0)
             Toggle(isOn: notificationsBinding) { Text("Reminders") }
                 .labelsHidden()
                 .tint(Theme.accent)
@@ -81,9 +67,16 @@ struct SettingsGeneralCard: View {
 
     private var iCloudRow: some View {
         HStack(spacing: 12) {
-            Text("iCloud sync")
-                .font(.callout)
-                .foregroundStyle(Theme.textPrimary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("iCloud sync")
+                    .font(.callout)
+                    .foregroundStyle(Theme.textPrimary)
+                if CloudSync.needsRestart(settings: settings) {
+                    Text("Applies after restarting the app")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textTertiary)
+                }
+            }
             Spacer(minLength: 0)
             Toggle(isOn: iCloudBinding) { Text("iCloud sync") }
                 .labelsHidden()
@@ -109,18 +102,19 @@ struct SettingsGeneralCard: View {
             get: { settings.notificationsEnabled },
             set: { newValue in
                 if newValue {
-                    SettingsReminderScheduler.requestAuthorization { granted in
+                    MealReminderScheduler.requestAuthorization { granted in
                         settings.notificationsEnabled = granted
-                        if granted {
-                            SettingsReminderScheduler.reschedule(
-                                minutesList: settings.reminderTimesMinutes
-                            )
-                        }
                         try? context.save()
+                        guard granted else { return }
+                        Task { @MainActor in
+                            MealReminderScheduler.reschedule(in: context)
+                            ReengagementNotificationService.reschedule(in: context)
+                        }
                     }
                 } else {
                     settings.notificationsEnabled = false
-                    SettingsReminderScheduler.cancelAll()
+                    MealReminderScheduler.cancelAll()
+                    ReengagementNotificationService.cancelAll()
                     try? context.save()
                 }
             }
@@ -135,10 +129,11 @@ struct SettingsGeneralCard: View {
                     onUpgrade()
                     return
                 }
-                // TODO(integration): switching the actual CloudKit container happens
-                // in a later pass — for now only the preference is stored.
                 settings.iCloudSyncEnabled = newValue
                 try? context.save()
+                // The store is rebuilt on the next launch (see CloudSync);
+                // the row shows the restart footnote until then.
+                CloudSync.refresh(in: context)
             }
         )
     }

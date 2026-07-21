@@ -55,4 +55,33 @@ enum ProductStore {
         try? context.save()
         return product
     }
+
+    /// Post-CloudKit-merge cleanup: two devices can each save the same barcode
+    /// while offline, so the merged store ends up with twins. Every device
+    /// keeps the same deterministic winner per barcode (lowest UUID), folds
+    /// the freshest logging metadata into it and deletes the rest. History is
+    /// untouched — diary entries carry frozen snapshots (spec §2.1).
+    @MainActor
+    static func dedupeMerged(in context: ModelContext) {
+        let scanned = (try? context.fetch(
+            FetchDescriptor<Product>(predicate: #Predicate { $0.barcode != nil })
+        )) ?? []
+        var changed = false
+        for twins in Dictionary(grouping: scanned, by: { $0.barcode ?? "" }).values
+        where twins.count > 1 {
+            guard let winner = twins.min(by: { $0.id.uuidString < $1.id.uuidString }) else {
+                continue
+            }
+            for extra in twins where extra !== winner {
+                if let loggedAt = extra.lastLoggedAt,
+                   loggedAt > (winner.lastLoggedAt ?? .distantPast) {
+                    winner.lastLoggedAt = loggedAt
+                    winner.lastQuantity = extra.lastQuantity
+                }
+                context.delete(extra)
+            }
+            changed = true
+        }
+        if changed { try? context.save() }
+    }
 }

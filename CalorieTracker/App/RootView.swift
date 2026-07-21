@@ -11,6 +11,7 @@ struct RootView: View {
     @Query private var settingsList: [UserSettings]
 
     @State private var showOnboarding = false
+    @State private var postOnboardingPaywall = false
     @State private var tabBarHidden = false
     @State private var selectedTab: AppTab = {
         #if DEBUG
@@ -51,10 +52,29 @@ struct RootView: View {
         // and sheets would flip dark while cards/text stay light.
         .preferredColorScheme(.light)
         .onChange(of: scenePhase) { _, phase in
-            // ATT on first launch (user decision 2026-07-13). The system alert
-            // only appears while active, hence scenePhase and not .task.
-            guard phase == .active else { return }
-            Task { await TrackingConsent.requestIfNeeded() }
+            if phase == .active {
+                // ATT on first launch (user decision 2026-07-13). The system alert
+                // only appears while active, hence scenePhase and not .task.
+                Task { await TrackingConsent.requestIfNeeded() }
+            }
+            // Replan the smart meal reminders whenever the app gains or loses
+            // focus — logging only happens in-app, so this keeps the planned
+            // 14:00/20:00 notifications in sync with the diary.
+            if phase == .active || phase == .background {
+                MealReminderScheduler.reschedule(in: context)
+            }
+            // Restart the re-engagement countdown on every activation — a
+            // series notification only fires if the app stays unopened.
+            if phase == .active {
+                ReengagementNotificationService.reschedule(in: context)
+                // Keep the CloudKit-store mirror honest (premium may have
+                // lapsed since last launch) — applies on the next start.
+                CloudSync.refresh(in: context)
+                // A cloud merge can bring in barcode twins from other devices.
+                if CloudSync.activeThisLaunch {
+                    ProductStore.dedupeMerged(in: context)
+                }
+            }
         }
         .onAppear {
             let settings = UserSettings.current(in: context)
@@ -75,10 +95,18 @@ struct RootView: View {
         .fullScreenCover(isPresented: $showOnboarding) {
             if let settings = settingsList.first {
                 OnboardingFlow(settings: settings) {
+                    // Finished or skipped — same exit (user decision
+                    // 2026-07-21): onboarding dismisses, Today shows for a
+                    // beat, then the soft paywall slides up over it.
                     showOnboarding = false
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(1))
+                        postOnboardingPaywall = true
+                    }
                 }
             }
         }
+        .fullScreenCover(isPresented: $postOnboardingPaywall) { PaywallView() }
     }
 }
 

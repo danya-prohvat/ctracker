@@ -12,6 +12,7 @@ struct SettingsTestCard: View {
 
     @State private var seedNote: LocalizedStringKey?
     @State private var onboardingNote: LocalizedStringKey?
+    @State private var showScheduled = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,8 +34,19 @@ struct SettingsTestCard: View {
                 try? context.save()
                 onboardingNote = "Restart the app"
             }
+            SettingsRowDivider()
+            actionRow("Scheduled notifications", note: nil) {
+                showScheduled = true
+            }
+            SettingsRowDivider()
+            actionRow("Test re-engagement (minutes)", note: nil) {
+                ReengagementNotificationService.scheduleTestSeriesMinutes()
+            }
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
+        .sheet(isPresented: $showScheduled) {
+            PendingNotificationsSheet()
+        }
     }
 
     // MARK: - Rows

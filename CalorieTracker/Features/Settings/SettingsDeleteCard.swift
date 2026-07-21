@@ -53,13 +53,14 @@ struct SettingsDeleteCard: View {
         settings.unitSystem = .metric
         settings.netCarbsEnabled = false
         settings.notificationsEnabled = false
-        settings.reminderTimesMinutes = []
         settings.iCloudSyncEnabled = false
         settings.scanCount = 0
         settings.isPremium = false
         settings.onboardingCompleted = true
 
-        SettingsReminderScheduler.cancelAll()
+        MealReminderScheduler.cancelAll()
+        ReengagementNotificationService.cancelAll()
         try? context.save()
+        CloudSync.refresh(in: context)
     }
 }

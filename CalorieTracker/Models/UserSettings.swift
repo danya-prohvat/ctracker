@@ -29,9 +29,10 @@ final class UserSettings {
     var languageCode: String? = nil
 
     var netCarbsEnabled: Bool = false
+    /// The single reminders toggle (user decision 2026-07-21): covers both the
+    /// smart meal reminders (`MealReminderScheduler`) and the re-engagement
+    /// series (`ReengagementNotificationService`).
     var notificationsEnabled: Bool = false
-    /// Meal reminder times as minutes from midnight (local time).
-    var reminderTimesMinutes: [Int] = []
     var iCloudSyncEnabled: Bool = false
 
     /// Barcode scans used by a free user (3 free, then paywall — spec §9).
@@ -67,14 +68,38 @@ extension UserSettings {
     }
 
     /// Fetch the singleton settings, creating it on first launch.
+    ///
+    /// CloudKit merges can leave two "singletons" (cloud stores allow no
+    /// unique constraints): two devices that first launched offline each
+    /// created one. Every device keeps the same deterministic winner (see
+    /// `mergePriority`) and deletes the rest, so they converge.
     static func current(in context: ModelContext) -> UserSettings {
-        var descriptor = FetchDescriptor<UserSettings>()
-        descriptor.fetchLimit = 1
-        if let existing = try? context.fetch(descriptor).first {
-            return existing
+        let all = (try? context.fetch(FetchDescriptor<UserSettings>())) ?? []
+        if let winner = all.min(by: mergePriority) {
+            if all.count > 1 {
+                for extra in all where extra !== winner { context.delete(extra) }
+                try? context.save()
+            }
+            return winner
         }
         let created = UserSettings()
+        // First launch: follow the device's measurement system (user decision
+        // 2026-07-21). `.uk` counts as metric — food there is labeled in g/ml.
+        created.unitSystem = Locale.current.measurementSystem == .us ? .us : .metric
         context.insert(created)
         return created
+    }
+
+    /// Deterministic post-merge winner: prefer the instance with real
+    /// accumulated state — finished onboarding, then the longer
+    /// nutrient-tracking log — so a fresh install's defaults never replace a
+    /// long-time user's settings. UUID only breaks exact ties. Pure function
+    /// of content → every device picks the same winner, no coordination.
+    private static func mergePriority(_ a: UserSettings, _ b: UserSettings) -> Bool {
+        if a.onboardingCompleted != b.onboardingCompleted { return a.onboardingCompleted }
+        if a.nutrientTrackingLog.count != b.nutrientTrackingLog.count {
+            return a.nutrientTrackingLog.count > b.nutrientTrackingLog.count
+        }
+        return a.id.uuidString < b.id.uuidString
     }
 }

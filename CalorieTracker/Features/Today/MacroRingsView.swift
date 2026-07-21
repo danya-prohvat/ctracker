@@ -1,14 +1,15 @@
 import SwiftUI
 
-/// A macro (protein / fat / carbs) consumed-vs-goal value. The ring color is
-/// derived from the goal progress, not stored — see `MacroRing.ringColor`.
+/// A macro (protein / fat / carbs) consumed-vs-goal value. The ring colors
+/// come from the macro's accent via `TodayRingStyle` — see `MacroRing.style`.
 struct MacroValue {
     let titleKey: LocalizedStringKey
     let consumed: Double
     let goal: Double?
 }
 
-/// Three macro mini-rings (prototype variant B), spread space-around.
+/// Three macro mini-rings (prototype variant B), spread space-around, each in
+/// its own accent color (user decision 2026-07-21).
 struct MacroRingsView: View {
     let protein: MacroValue
     let fat: MacroValue
@@ -16,31 +17,33 @@ struct MacroRingsView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            MacroRing(value: protein)
-            MacroRing(value: fat)
-            MacroRing(value: carbs)
+            MacroRing(value: protein, accent: Theme.protein)
+            MacroRing(value: fat, accent: Theme.fat)
+            MacroRing(value: carbs, accent: Theme.carbs)
         }
     }
 }
 
 private struct MacroRing: View {
     let value: MacroValue
+    let accent: Color
 
     private var progress: Double {
         guard let goal = value.goal, goal > 0 else { return 0 }
         return min(value.consumed / goal, 1)
     }
 
-    /// Same goal-progress semantics as the calendar rings: neutral when under,
-    /// green on target, amber over — never the fixed macro accent.
-    private var ringColor: Color {
-        CalendarRingState(consumed: value.consumed, target: value.goal).color
+    /// Accent arc over a tinted track; amber when over 105% of the goal —
+    /// the same over-threshold as the calendar rings.
+    private var style: TodayRingStyle {
+        TodayRingStyle(accent: accent, consumed: value.consumed, goal: value.goal)
     }
 
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
-                ProgressRing(progress: progress, lineWidth: 6, color: ringColor)
+                ProgressRing(progress: progress, lineWidth: 6,
+                             color: style.color, trackColor: style.track)
                 Text(verbatim: Format.amount(value.consumed.rounded()))
                     .font(.stat(.subheadline))
                     .foregroundStyle(Theme.textPrimary)

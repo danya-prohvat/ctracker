@@ -2,13 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- AdMob app ID ("Calorie Counter & Food Log" in the AdMob console).
-	     Real ID for all configs — DEBUG safety comes from the test ad unit
-	     IDs in AdsConfig, not from the app ID. -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-2939708793200469~9453647324</string>
-	<!-- SKAdNetwork IDs for ad attribution: Google + third-party buyers,
-	     per https://developers.google.com/admob/ios/quick-start -->
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
@@ -211,6 +206,10 @@
 			<key>SKAdNetworkIdentifier</key>
 			<string>3qcr597p9d.skadnetwork</string>
 		</dict>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
 	</array>
 </dict>
 </plist>

@@ -2,12 +2,17 @@ import SwiftUI
 import SwiftData
 import UIKit
 
-/// Full-screen onboarding (spec §8): one question per screen, thin progress bar
-/// pinned top, small Skip in the corner on every step, auto-advance on card
-/// steps. Raw answers (sex / age / height / weight / activity / target) live
+/// Full-screen onboarding (spec §8): one question per screen (block centered
+/// vertically), thin progress bar pinned top, small Skip in the corner on
+/// every step, auto-advance on card steps. Raw answers (sex / age / height /
+/// weight / activity / target) live
 /// only in @State and are never persisted — only the resulting plan is written
 /// to UserSettings at the end. The current step index is persisted after each
 /// advance so an interrupted onboarding resumes where it left off.
+/// The closing soft paywall is NOT a step here — after the flow (finished or
+/// skipped alike) the host (RootView) dismisses this cover, shows Today for a
+/// beat and only then presents the paywall over it (user decision 2026-07-21),
+/// so the paywall never reveals a still-dismissing onboarding behind it.
 struct OnboardingFlow: View {
     @Environment(\.modelContext) private var context
 
@@ -33,9 +38,8 @@ struct OnboardingFlow: View {
     @State private var step: Int
     @State private var isAdvancing = false
     @State private var calcPhase = 0
-    @State private var showPaywall = false
 
-    private static let stepCount = 8
+    private static let stepCount = 7
 
     init(settings: UserSettings, onFinish: @escaping () -> Void) {
         self.settings = settings
@@ -53,9 +57,6 @@ struct OnboardingFlow: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Theme.background.ignoresSafeArea())
-        .fullScreenCover(isPresented: $showPaywall, onDismiss: finish) {
-            PaywallView()
-        }
         .onAppear(perform: resumeIfNeeded)
     }
 
@@ -94,8 +95,7 @@ struct OnboardingFlow: View {
         case 3: activityStep.transition(stepTransition)
         case 4: targetStep.transition(stepTransition)
         case 5: calculatingStep.transition(stepTransition)
-        case 6: resultStep.transition(stepTransition)
-        default: paywallStep.transition(stepTransition)
+        default: resultStep.transition(stepTransition)
         }
     }
 
@@ -228,6 +228,12 @@ struct OnboardingFlow: View {
         }
         .pickerStyle(.segmented)
         .frame(maxWidth: 240)
+        .onChange(of: useImperial) { _, imperial in
+            // Persist app-wide right away — before 2026-07-21 this was
+            // @State-only, so the onboarding choice silently never stuck.
+            settings.unitSystem = imperial ? .us : .metric
+            try? context.save()
+        }
     }
 
     // Step 4 — Activity.
@@ -368,7 +374,7 @@ struct OnboardingFlow: View {
                 hideKeyboard()
                 Task {
                     try? await Task.sleep(for: .seconds(0.1))
-                    advance()
+                    finish()
                 }
             }
             .padding(20)
@@ -376,19 +382,11 @@ struct OnboardingFlow: View {
         }
     }
 
-    // Step 8 — Paywall (soft; dismissing it finishes onboarding).
-    private var paywallStep: some View {
-        VStack {
-            Spacer()
-            ProgressView()
-                .tint(Theme.accent)
-            Spacer()
-        }
-        .onAppear { showPaywall = true }
-    }
-
     // MARK: - Step scaffold
 
+    /// Question steps: the title + controls block floats vertically centered
+    /// between the top bar and the footer (user decision 2026-07-21 — was
+    /// pinned top); the footer (Continue) stays pinned at the bottom.
     private func stepScaffold<Content: View, Footer: View>(
         title: LocalizedStringKey,
         subtitle: LocalizedStringKey? = nil,
@@ -396,6 +394,8 @@ struct OnboardingFlow: View {
         @ViewBuilder footer: () -> Footer
     ) -> some View {
         VStack(spacing: 0) {
+            Spacer(minLength: 24)
+
             VStack(spacing: 24) {
                 VStack(spacing: 6) {
                     Text(title)
@@ -409,13 +409,12 @@ struct OnboardingFlow: View {
                             .multilineTextAlignment(.center)
                     }
                 }
-                .padding(.top, 28)
 
                 content()
             }
             .padding(.horizontal, 20)
 
-            Spacer(minLength: 12)
+            Spacer(minLength: 24)
 
             footer()
                 .padding(.horizontal, 20)
@@ -529,7 +528,8 @@ struct OnboardingFlow: View {
         onFinish()
     }
 
-    /// Finish (after the paywall step): write ONLY the resulting plan.
+    /// Continue on "Your plan": write ONLY the resulting plan, then hand off
+    /// to the host (which shows the soft paywall a beat later).
     private func finish() {
         if planCalories <= 0 { computePlan() }
         settings.calorieGoal = planCalories
@@ -547,87 +547,6 @@ struct OnboardingFlow: View {
 
 fileprivate func onboardingClamp(_ value: Int, _ lo: Int, _ hi: Int) -> Int {
     min(max(value, lo), hi)
-}
-
-/// Big square option card (sex step).
-fileprivate struct OnboardingBigCard: View {
-    let icon: String
-    let title: LocalizedStringKey
-    let selected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.largeTitle)
-                    .foregroundStyle(selected ? Theme.accent : Theme.textSecondary)
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(Theme.textPrimary)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 150)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                    .fill(selected ? Theme.accentSoft : Theme.card)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                    .stroke(selected ? Theme.accent : Theme.separator, lineWidth: selected ? 2 : 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// Full-width option card with a title and description (activity step).
-fileprivate struct OnboardingRowCard: View {
-    let title: LocalizedStringKey
-    let subtitle: LocalizedStringKey
-    let selected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(Theme.textPrimary)
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.textSecondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                    .fill(selected ? Theme.accentSoft : Theme.card)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius)
-                    .stroke(selected ? Theme.accent : Theme.separator, lineWidth: selected ? 2 : 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// Big accent action button pinned near the bottom of a step.
-fileprivate struct OnboardingPrimaryButton: View {
-    let title: LocalizedStringKey
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(RoundedRectangle(cornerRadius: 14).fill(Theme.accent))
-        }
-    }
 }
 
 #Preview {

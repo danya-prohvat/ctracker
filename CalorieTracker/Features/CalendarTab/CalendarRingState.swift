@@ -4,8 +4,10 @@ import SwiftUI
 /// month-grid ring color, its fill and the legend. Three deliberately
 /// neutral-to-amber states: under-eating is styled as neither success nor
 /// failure (a low number usually means incomplete logging), and over-eating
-/// is amber, never red. This is the calendar overview only — the main Today
-/// ring stays green by design.
+/// is amber, never red. This neutral palette is for retrospective surfaces
+/// (calendar grid, period stats); the in-progress Today rings keep their
+/// accent colors and reuse only the `over` threshold via `TodayRingStyle`
+/// (user decision 2026-07-21).
 enum CalendarRingState {
     /// Below `underThreshold` of target, or no target set — muted neutral gray.
     case under

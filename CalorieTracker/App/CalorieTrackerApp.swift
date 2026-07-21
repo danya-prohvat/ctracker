@@ -6,19 +6,33 @@ struct CalorieTrackerApp: App {
     let container: ModelContainer
 
     init() {
+        let schema = Schema(versionedSchema: AppSchemaV1.self)
+        // CloudKit-backed store only when the user enabled sync AND premium is
+        // active (mirrored to UserDefaults — see CloudSync); the toggle takes
+        // effect on the next launch. If the cloud store can't open (capability
+        // missing, iCloud unavailable), fall back to local instead of crashing.
+        if CloudSync.activeThisLaunch,
+           let cloud = try? Self.makeContainer(schema: schema, cloud: true) {
+            container = cloud
+            return
+        }
         do {
-            // Local store for now. CloudKit sync can be enabled later by adding the
-            // CloudKit capability + entitlement and switching the configuration to
-            // `cloudKitDatabase: .automatic` (models are already CloudKit-friendly:
-            // all attributes have defaults, no `.unique` constraints).
-            let configuration = ModelConfiguration(isStoredInMemoryOnly: false)
-            container = try ModelContainer(
-                for: Product.self, DiaryEntry.self, UserSettings.self,
-                configurations: configuration
-            )
+            container = try Self.makeContainer(schema: schema, cloud: false)
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
+    }
+
+    private static func makeContainer(schema: Schema, cloud: Bool) throws -> ModelContainer {
+        let configuration = ModelConfiguration(
+            schema: schema,
+            cloudKitDatabase: cloud ? .private(CloudSync.containerID) : .none
+        )
+        return try ModelContainer(
+            for: schema,
+            migrationPlan: AppMigrationPlan.self,
+            configurations: [configuration]
+        )
     }
 
     var body: some Scene {

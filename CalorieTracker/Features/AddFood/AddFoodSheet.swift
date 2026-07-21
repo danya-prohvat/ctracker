@@ -32,10 +32,19 @@ struct AddFoodSheet: View {
     var settings: UserSettings? { settingsList.first }
     private var unitSystem: UnitSystem { settings?.unitSystem ?? .metric }
 
+    /// "My products" order: latest activity first — `lastLoggedAt` for logged
+    /// products, `createdAt` for never-logged ones, so a just-created product
+    /// appears at the top instead of below every logged one (user request
+    /// 2026-07-21). The raw query order (nil `lastLoggedAt` last) still serves
+    /// the Recent chips.
+    private var listProducts: [Product] {
+        products.sorted { ($0.lastLoggedAt ?? $0.createdAt) > ($1.lastLoggedAt ?? $1.createdAt) }
+    }
+
     private var filteredProducts: [Product] {
         let q = search.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return products }
-        return products.filter { $0.name.localizedCaseInsensitiveContains(q) }
+        guard !q.isEmpty else { return listProducts }
+        return listProducts.filter { $0.name.localizedCaseInsensitiveContains(q) }
     }
 
     /// Last 8 distinct logged products (spec §5).
