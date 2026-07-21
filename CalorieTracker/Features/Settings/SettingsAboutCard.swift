@@ -1,16 +1,18 @@
 import SwiftUI
-import StoreKit
 
 /// "About" card: rate / share / policy rows with trailing chevrons.
 /// Actions are unchanged — only the container is restyled.
 struct SettingsAboutCard: View {
-    @Environment(\.requestReview) private var requestReview
+    @Environment(\.openURL) private var openURL
 
     @State private var webLink: SettingsWebLink?
 
     var body: some View {
         VStack(spacing: 0) {
-            row("Rate the app") { requestReview() }
+            // Deep link to the App Store review panel, not `requestReview()` —
+            // the in-app dialog is throttled and can silently no-op on an
+            // explicit tap.
+            row("Rate the app") { openURL(AppLinks.writeReviewURL) }
             SettingsRowDivider()
             shareRow
             SettingsRowDivider()

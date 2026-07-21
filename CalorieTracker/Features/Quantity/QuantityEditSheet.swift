@@ -44,6 +44,9 @@ struct QuantityEditSheet: View {
     private func save(_ canonical: Double) {
         entry.quantity = canonical
         try? context.save()
+        if entry.dayKey == DayKey.today {
+            ReviewPromptService.checkGreenZone(in: context)
+        }
         dismiss()
     }
 

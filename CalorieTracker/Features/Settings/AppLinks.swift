@@ -3,13 +3,23 @@ import SafariServices
 
 /// External links used by Settings, onboarding and the paywall.
 ///
-/// TODO: All three URLs are placeholders — replace before release:
-///  - `privacyURL` / `termsURL` → the real hosted policy pages
-///  - `appStoreURL` → the real App Store URL once the app id is known
+/// TODO: `privacyURL` / `termsURL` are placeholders — replace with the real
+/// hosted policy pages before release.
 enum AppLinks {
     static let privacyURL = fixedURL("https://example.com/ctracker/privacy")
     static let termsURL = fixedURL("https://example.com/ctracker/terms")
-    static let appStoreURL = fixedURL("https://apps.apple.com/app/id0000000000")
+    /// "Calorie Counter & Food Log" — Apple ID from App Store Connect (2026-07-21).
+    static let appStoreURL = fixedURL("https://apps.apple.com/app/id6789442226")
+    /// App Store "Write a review" deep link — opens the store page with the
+    /// rating panel up. Unlike `requestReview()`, this always works, so it is
+    /// the right action for an explicit "Rate the app" button (the in-app
+    /// dialog is system-throttled and may silently not appear). Derived from
+    /// `appStoreURL` so the app id is replaced in one place before release.
+    static let writeReviewURL: URL = {
+        var components = URLComponents(url: appStoreURL, resolvingAgainstBaseURL: false)
+        components?.queryItems = [URLQueryItem(name: "action", value: "write-review")]
+        return components?.url ?? appStoreURL
+    }()
     /// System page for managing App Store subscriptions.
     static let manageSubscriptionsURL = fixedURL("https://apps.apple.com/account/subscriptions")
 

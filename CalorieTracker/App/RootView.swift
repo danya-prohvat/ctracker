@@ -67,6 +67,8 @@ struct RootView: View {
             // series notification only fires if the app stays unopened.
             if phase == .active {
                 ReengagementNotificationService.reschedule(in: context)
+                // App-open + green-zone review triggers (user decision 2026-07-21).
+                ReviewPromptService.checkOnActivation(in: context)
                 // Keep the CloudKit-store mirror honest (premium may have
                 // lapsed since last launch) — applies on the next start.
                 CloudSync.refresh(in: context)

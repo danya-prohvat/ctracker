@@ -13,6 +13,7 @@ struct SettingsTestCard: View {
     @State private var seedNote: LocalizedStringKey?
     @State private var onboardingNote: LocalizedStringKey?
     @State private var showScheduled = false
+    @State private var reviewNote: LocalizedStringKey?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,6 +42,19 @@ struct SettingsTestCard: View {
             SettingsRowDivider()
             actionRow("Test re-engagement (minutes)", note: nil) {
                 ReengagementNotificationService.scheduleTestSeriesMinutes()
+            }
+            SettingsRowDivider()
+            actionRow(
+                "Review: advance day",
+                note: reviewNote ?? "Day \(ReviewPromptService.debugDayNumber)"
+            ) {
+                ReviewPromptService.debugAdvanceDay()
+                reviewNote = "Day \(ReviewPromptService.debugDayNumber)"
+            }
+            SettingsRowDivider()
+            actionRow("Review: reset triggers", note: nil) {
+                ReviewPromptService.debugReset()
+                reviewNote = "Day \(ReviewPromptService.debugDayNumber)"
             }
         }
         .glassCard(cornerRadius: Theme.cornerRadius)

@@ -6,6 +6,7 @@ import SwiftData
 /// product's recency. Shared by the quantity screen and the log-once fast path.
 enum DiaryLogger {
     /// `quantity` is canonical g / ml.
+    @MainActor
     static func log(_ food: LoggableFood, quantity: Double, dayKey: String, in context: ModelContext) {
         let now = Date()
         let entry = DiaryEntry(
@@ -34,5 +35,9 @@ enum DiaryLogger {
             }
         }
         try? context.save()
+
+        if dayKey == DayKey.today {
+            ReviewPromptService.checkGreenZone(in: context)
+        }
     }
 }
