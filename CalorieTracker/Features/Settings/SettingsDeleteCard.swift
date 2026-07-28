@@ -39,8 +39,15 @@ struct SettingsDeleteCard: View {
     /// Wipe everything and return settings to first-launch defaults, except
     /// `onboardingCompleted` — onboarding shows only once (spec §8).
     private func deleteAllData() {
-        try? context.delete(model: Product.self)
-        try? context.delete(model: DiaryEntry.self)
+        // Object-by-object, not `context.delete(model:)`: batch deletes bypass
+        // the CloudKit export pipeline, so the synced copies would survive in
+        // iCloud and merge right back on the next launch.
+        for product in (try? context.fetch(FetchDescriptor<Product>())) ?? [] {
+            context.delete(product)
+        }
+        for entry in (try? context.fetch(FetchDescriptor<DiaryEntry>())) ?? [] {
+            context.delete(entry)
+        }
 
         settings.calorieGoal = 2000
         settings.proteinGoal = 150
@@ -50,7 +57,7 @@ struct SettingsDeleteCard: View {
             .filter { NutrientCatalog.defaultEnabled.contains($0) }
         settings.nutrientGoalOverrides = [:]
         settings.nutrientTrackingLog = []
-        settings.unitSystem = .metric
+        settings.unitSystem = UserSettings.defaultUnitSystem
         settings.netCarbsEnabled = false
         settings.notificationsEnabled = false
         settings.iCloudSyncEnabled = false

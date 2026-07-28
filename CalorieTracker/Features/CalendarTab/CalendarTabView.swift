@@ -66,6 +66,11 @@ struct CalendarTabView: View {
                         )
                         .padding(.top, 18)
 
+                        if let settings {
+                            AdBannerView(settings: settings)
+                                .padding(.top, 12)
+                        }
+
                         if !nutrientAverages.isEmpty {
                             CalendarNutrientHistoryCard(
                                 averages: nutrientAverages,

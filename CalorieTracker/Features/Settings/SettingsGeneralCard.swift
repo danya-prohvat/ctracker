@@ -4,12 +4,11 @@ import SwiftData
 /// "General" card: language picker row, the single reminders toggle — it
 /// drives both the smart meal reminders (`MealReminderScheduler`) and the
 /// re-engagement series (`ReengagementNotificationService`), user decision
-/// 2026-07-21 — and the premium-gated iCloud sync toggle.
+/// 2026-07-21 — and the iCloud sync toggle.
 struct SettingsGeneralCard: View {
     @Environment(\.modelContext) private var context
 
     let settings: UserSettings
-    let onUpgrade: () -> Void
 
     @State private var showLanguagePicker = false
 
@@ -125,10 +124,6 @@ struct SettingsGeneralCard: View {
         Binding(
             get: { settings.iCloudSyncEnabled },
             set: { newValue in
-                if newValue && !PremiumGate.isUnlocked(.icloudSync, settings: settings) {
-                    onUpgrade()
-                    return
-                }
                 settings.iCloudSyncEnabled = newValue
                 try? context.save()
                 // The store is rebuilt on the next launch (see CloudSync);

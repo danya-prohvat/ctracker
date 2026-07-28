@@ -61,7 +61,7 @@ struct SettingsHomeView: View {
 
                 caption("General")
                     .padding(.top, 14)
-                SettingsGeneralCard(settings: settings) { showPaywall = true }
+                SettingsGeneralCard(settings: settings)
 
                 caption("About")
                     .padding(.top, 14)

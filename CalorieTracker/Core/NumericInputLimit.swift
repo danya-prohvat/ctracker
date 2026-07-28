@@ -1,10 +1,16 @@
 import SwiftUI
 
 /// Shared sanitizer for free-typed numeric input: digits with at most one
-/// decimal separator ("." or ",") and one fraction digit (user decision
-/// 2026-07-16), the integer part capped at `maxDigits` so values like
-/// "323234234234234" simply can't be entered. Works on typing and paste.
+/// decimal separator and one fraction digit (user decision 2026-07-16), the
+/// integer part capped at `maxDigits` so values like "323234234234234" simply
+/// can't be entered. Works on typing and paste.
 enum NumericInput {
+    /// Accepted decimal separators. `Character.isNumber` admits Arabic-Indic
+    /// digits, so the Arabic separator "٫" (U+066B) — what ar keyboards and
+    /// formatters produce — must survive too, or a prefilled "١٥٠٫٥" (150.5)
+    /// silently collapses into 1505.
+    private static let separators: Set<Character> = [".", ",", "٫"]
+
     static func limited(_ raw: String, maxDigits: Int) -> String {
         var integer = ""
         var fraction = ""
@@ -16,7 +22,7 @@ enum NumericInput {
                 } else if fraction.isEmpty {
                     fraction.append(ch)
                 }
-            } else if separator == nil, ch == "." || ch == "," {
+            } else if separator == nil, separators.contains(ch) {
                 separator = ch
             }
         }

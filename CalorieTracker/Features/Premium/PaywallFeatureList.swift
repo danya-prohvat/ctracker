@@ -10,9 +10,6 @@ struct PaywallFeatureList: View {
             PaywallFeatureRow(icon: "barcode.viewfinder",
                               title: "Unlimited barcode scanner",
                               subtitle: "Scan any product, no limits.")
-            PaywallFeatureRow(icon: "icloud.fill",
-                              title: "iCloud sync",
-                              subtitle: "Your diary on all your devices.")
             PaywallFeatureRow(icon: "calendar",
                               title: "Full calendar history",
                               subtitle: "Look back further than 30 days.")

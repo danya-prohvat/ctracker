@@ -83,11 +83,16 @@ extension UserSettings {
             return winner
         }
         let created = UserSettings()
-        // First launch: follow the device's measurement system (user decision
-        // 2026-07-21). `.uk` counts as metric — food there is labeled in g/ml.
-        created.unitSystem = Locale.current.measurementSystem == .us ? .us : .metric
+        created.unitSystem = defaultUnitSystem
         context.insert(created)
         return created
+    }
+
+    /// First-launch default: follow the device's measurement system (user
+    /// decision 2026-07-21). `.uk` counts as metric — food there is labeled
+    /// in g/ml. Also the reset target for "Delete all data".
+    static var defaultUnitSystem: UnitSystem {
+        Locale.current.measurementSystem == .us ? .us : .metric
     }
 
     /// Deterministic post-merge winner: prefer the instance with real

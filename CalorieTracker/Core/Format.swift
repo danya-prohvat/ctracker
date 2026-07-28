@@ -57,7 +57,11 @@ enum Format {
         f.numberStyle = .decimal
         f.locale = Locale.current
         if let n = f.number(from: trimmed) { return round1(n.doubleValue) }
-        // Fallback: accept both separators.
-        return Double(trimmed.replacingOccurrences(of: ",", with: ".")).map(round1)
+        // Fallback: accept both Latin separators plus the Arabic "٫" — the
+        // custom keypad mixes ASCII digits with the locale's separator key.
+        let normalized = trimmed
+            .replacingOccurrences(of: ",", with: ".")
+            .replacingOccurrences(of: "٫", with: ".")
+        return Double(normalized).map(round1)
     }
 }

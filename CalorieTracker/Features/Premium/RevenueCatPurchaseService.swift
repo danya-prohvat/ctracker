@@ -16,7 +16,7 @@ import Foundation
 ///     weekly / monthly / annual / lifetime packages.
 /// `PurchaseServices.make` then picks this service automatically — plan names
 /// and prices on the paywall come from the store (`quotes()`), and purchases
-/// unlock the "premium" entitlement mirrored into `UserSettings.isPremium`.
+/// unlock the "pro" entitlement mirrored into `UserSettings.isPremium`.
 
 /// Build-time billing configuration. Lives outside the `#if canImport` block so
 /// the key can be filled in before the package is added.
@@ -27,7 +27,7 @@ enum PurchasesConfig {
 
     /// The single entitlement every plan unlocks (identifier as configured in
     /// the RevenueCat dashboard).
-    static let premiumEntitlementID = "Calorie Tracker Pro"
+    static let premiumEntitlementID = "pro"
 }
 
 #if canImport(RevenueCat)

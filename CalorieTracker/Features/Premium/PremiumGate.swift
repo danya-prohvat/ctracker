@@ -7,7 +7,6 @@ enum PremiumFeature {
     case nutrients
     /// Barcode scanner. Free users get 3 scans, then the paywall.
     case scanner
-    case icloudSync
     /// Calendar days older than the last 30 days.
     case deepHistory
 }
@@ -40,7 +39,6 @@ enum PremiumGate {
         switch feature {
         case .nutrients: return false
         case .scanner: return settings.scanCount < freeScanLimit
-        case .icloudSync: return false
         case .deepHistory: return false
         }
     }

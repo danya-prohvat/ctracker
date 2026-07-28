@@ -108,6 +108,12 @@ struct DayView: View {
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 DaySummaryCard(entries: entries, settings: settings, isToday: isToday, dayKey: dayKey)
+                // Banner only on the pushed calendar day-detail (user decision
+                // 2026-07-21); the Today tab root stays ad-free.
+                if isPresented, let settings {
+                    AdBannerView(settings: settings)
+                        .padding(.top, 12)
+                }
                 loggedSection
                     .padding(.top, 26)
             }

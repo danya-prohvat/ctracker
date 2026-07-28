@@ -69,8 +69,8 @@ struct RootView: View {
                 ReengagementNotificationService.reschedule(in: context)
                 // App-open + green-zone review triggers (user decision 2026-07-21).
                 ReviewPromptService.checkOnActivation(in: context)
-                // Keep the CloudKit-store mirror honest (premium may have
-                // lapsed since last launch) — applies on the next start.
+                // Keep the CloudKit-store mirror in sync with the toggle —
+                // applies on the next start.
                 CloudSync.refresh(in: context)
                 // A cloud merge can bring in barcode twins from other devices.
                 if CloudSync.activeThisLaunch {

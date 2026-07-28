@@ -135,6 +135,10 @@ struct AddFoodSheet: View {
                         onDelete: { productToDelete = $0 },
                         onCreate: { creatingProduct = true }
                     )
+                    if let settings {
+                        AdBannerView(settings: settings)
+                            .padding(.top, 14)
+                    }
                 }
                 .padding(.horizontal, 20)
             }
