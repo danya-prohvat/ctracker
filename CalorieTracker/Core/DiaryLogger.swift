@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UIKit
 
 /// The single writer of diary records: freezes the food's per-100 values into
 /// an immutable `DiaryEntry` snapshot (spec §2.1) and refreshes the source
@@ -35,6 +36,8 @@ enum DiaryLogger {
             }
         }
         try? context.save()
+
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
 
         if dayKey == DayKey.today {
             ReviewPromptService.checkGreenZone(in: context)

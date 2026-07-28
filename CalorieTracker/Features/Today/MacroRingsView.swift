@@ -47,6 +47,8 @@ private struct MacroRing: View {
                 Text(verbatim: Format.amount(value.consumed.rounded()))
                     .font(.stat(.subheadline))
                     .foregroundStyle(Theme.textPrimary)
+                    .contentTransition(.numericText(value: value.consumed))
+                    .animation(.snappy, value: value.consumed)
             }
             .frame(width: 68, height: 68)
 

@@ -27,7 +27,8 @@ struct CalorieRingView: View {
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                    .contentTransition(.numericText())
+                    .contentTransition(.numericText(value: consumed))
+                    .animation(.snappy, value: consumed)
                 if let goal {
                     Text(verbatim: "/ \(Format.kcal(goal))")
                         .font(.caption2.weight(.semibold))

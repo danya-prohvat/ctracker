@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Floating capsule tab bar with native SF Symbol icons and standard
-/// selected/unselected tinting (accent vs. secondary, no dimming).
+/// selected/unselected tinting (accent vs. secondary, no dimming). Icons
+/// bounce on selection with a light selection haptic.
 struct FloatingTabBar: View {
     @Binding var selection: AppTab
 
@@ -13,6 +14,7 @@ struct FloatingTabBar: View {
         }
         .frame(height: 64)
         .glassCapsuleBackground()
+        .sensoryFeedback(.selection, trigger: selection)
     }
 
     private func tab(_ tab: AppTab, label: LocalizedStringKey, symbol: String) -> some View {
@@ -24,6 +26,7 @@ struct FloatingTabBar: View {
                 Image(systemName: symbol)
                     .font(.title3.weight(.medium))
                     .symbolVariant(isSelected ? .fill : .none)
+                    .symbolEffect(.bounce, value: isSelected)
                     .frame(height: 24)
                 Text(label)
                     .font(.caption2.weight(isSelected ? .semibold : .medium))

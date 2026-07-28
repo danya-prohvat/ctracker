@@ -3,9 +3,16 @@ import SwiftUI
 /// App palette: the prototype's green accent family over a native iOS
 /// (Health-style) neutral base — flat grouped background and plain white cards.
 enum Theme {
-    // Flat light-gray base, matches systemGroupedBackground (light).
-    static let background = Color(hex: 0xF2F2F7)
+    // Neutral base under the aurora washes (see AppBackground).
+    static let background = Color(hex: 0xF5F6F5)
     static let card = Color.white
+
+    // Aurora backdrop washes — brand green, cool blue, warm amber at low
+    // opacity over `background`. Echo the accent/macro palette but are
+    // deliberately standalone so retuning macros never shifts the backdrop.
+    static let auroraGreen = Color(hex: 0x5CC388, alpha: 0.28)
+    static let auroraBlue = Color(hex: 0x558CB9, alpha: 0.17)
+    static let auroraWarm = Color(hex: 0xC99B5A, alpha: 0.15)
 
     // Greens (hue 156 family from the prototype).
     static let accent = Color(hex: 0x43A26D)          // rings, toggles — oklch(0.64 0.12 156)

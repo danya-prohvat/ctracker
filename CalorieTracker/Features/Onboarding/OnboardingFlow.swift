@@ -56,7 +56,7 @@ struct OnboardingFlow: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(AppBackground())
         .onAppear(perform: resumeIfNeeded)
     }
 

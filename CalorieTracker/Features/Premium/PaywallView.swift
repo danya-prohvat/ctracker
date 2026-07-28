@@ -37,7 +37,7 @@ struct PaywallView: View {
             .padding(.top, 56)
             .padding(.bottom, 24)
         }
-        .background(Theme.background)
+        .background(AppBackground())
         // Presented as a sheet from several places — the grabber lives here
         // so every call site gets it. Ignored by the onboarding cover.
         .presentationDragIndicator(.visible)
