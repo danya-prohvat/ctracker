@@ -8,6 +8,9 @@ struct CalendarGridCard: View {
     let mode: CalendarViewMode
     /// Start of the visible period (month-start or week-start).
     let anchor: Date
+    /// Last period step (-1 back / +1 forward / 0 none) — picks the direction
+    /// the day grid slides in from; 0 falls back to a plain crossfade.
+    let stepDirection: Int
     let kcalByDay: [String: Double]
     let calorieGoal: Double?
     /// Whether a day falls outside the free-tier history window (spec §9).
@@ -24,7 +27,14 @@ struct CalendarGridCard: View {
                 .padding(.bottom, 14)
             weekdayRow
                 .padding(.bottom, 8)
-            grid
+            // ZStack overlays old and new grids during the transition (no
+            // vertical layout jump); clipped keeps the slide inside the card.
+            ZStack {
+                grid
+                    .id(anchor)
+                    .transition(gridTransition)
+            }
+            .clipped()
         }
         .padding(.top, 18)
         .padding(.horizontal, 16)
@@ -85,7 +95,7 @@ struct CalendarGridCard: View {
     private var weekdayRow: some View {
         HStack(spacing: 0) {
             // Symbols can repeat (e.g. "T", "T" in English), so identify by column.
-            ForEach(Array(Self.weekdaySymbols().enumerated()), id: \.offset) { _, symbol in
+            ForEach(Array(CalendarGridMath.weekdaySymbols().enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(Theme.textTertiary)
@@ -95,6 +105,12 @@ struct CalendarGridCard: View {
     }
 
     // MARK: - Day grid (prototype: row gap 4, no column gap)
+
+    private var gridTransition: AnyTransition {
+        if stepDirection > 0 { return .push(from: .trailing) }
+        if stepDirection < 0 { return .push(from: .leading) }
+        return .opacity
+    }
 
     private var grid: some View {
         LazyVGrid(columns: Self.columns, spacing: 4) {
@@ -110,8 +126,8 @@ struct CalendarGridCard: View {
 
     private var days: [Date?] {
         switch mode {
-        case .month: Self.monthGridDays(for: anchor)
-        case .week: Self.weekDays(for: anchor)
+        case .month: CalendarGridMath.monthGridDays(for: anchor)
+        case .week: CalendarGridMath.weekDays(for: anchor)
         }
     }
 
@@ -130,41 +146,6 @@ struct CalendarGridCard: View {
         }
     }
 
-    // MARK: - Calendar math
-
-    /// The seven days of the week starting at `weekStart`.
-    private static func weekDays(for weekStart: Date) -> [Date?] {
-        let calendar = Calendar.current
-        return (0..<7).map { calendar.date(byAdding: .day, value: $0, to: weekStart) }
-    }
-
-    /// Cells for a 7-column month grid: leading/trailing nils align day 1 with
-    /// its weekday column, respecting `Calendar.current.firstWeekday`.
-    private static func monthGridDays(for monthStart: Date) -> [Date?] {
-        let calendar = Calendar.current
-        guard let interval = calendar.dateInterval(of: .month, for: monthStart),
-              let dayCount = calendar.range(of: .day, in: .month, for: monthStart)?.count
-        else { return [] }
-        let firstWeekday = calendar.component(.weekday, from: interval.start)
-        let leading = (firstWeekday - calendar.firstWeekday + 7) % 7
-        var cells = [Date?](repeating: nil, count: leading)
-        for offset in 0..<dayCount {
-            if let day = calendar.date(byAdding: .day, value: offset, to: interval.start) {
-                cells.append(day)
-            }
-        }
-        while cells.count % 7 != 0 { cells.append(nil) }
-        return cells
-    }
-
-    /// Localized single-letter weekday symbols rotated to the user's first weekday.
-    private static func weekdaySymbols() -> [String] {
-        let calendar = Calendar.current
-        let symbols = calendar.veryShortStandaloneWeekdaySymbols
-        let first = calendar.firstWeekday - 1
-        guard symbols.indices.contains(first) else { return symbols }
-        return Array(symbols[first...]) + Array(symbols[..<first])
-    }
 }
 
 #Preview {
@@ -172,13 +153,13 @@ struct CalendarGridCard: View {
         AppBackground()
         VStack(spacing: 16) {
             CalendarGridCard(
-                mode: .month, anchor: Date(),
+                mode: .month, anchor: Date(), stepDirection: 0,
                 kcalByDay: [DayKey.today: 1450], calorieGoal: 2200,
                 isDayLocked: { _ in false },
                 onStep: { _ in }, onTapDay: { _ in }
             )
             CalendarGridCard(
-                mode: .week, anchor: Date(),
+                mode: .week, anchor: Date(), stepDirection: 0,
                 kcalByDay: [DayKey.today: 1450], calorieGoal: 2200,
                 isDayLocked: { _ in false },
                 onStep: { _ in }, onTapDay: { _ in }

@@ -65,6 +65,9 @@ struct DayView: View {
             content
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
+                // Diary rows slide in/out and the empty state swaps smoothly
+                // when entries are logged or deleted.
+                .animation(.snappy(duration: 0.35), value: entries.count)
         }
         .contentMargins(.bottom, scrollBottomInset, for: .scrollContent)
         .background(AppBackground())
@@ -105,6 +108,7 @@ struct DayView: View {
             // the add affordance stays for spec compliance.
             DayEmptyStateCard(isToday: false, dateLabel: dayLabel) { showingAdd = true }
                 .padding(.top, 40)
+                .transition(.opacity.combined(with: .scale(scale: 0.97)))
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 DaySummaryCard(entries: entries, settings: settings, isToday: isToday, dayKey: dayKey)
@@ -142,6 +146,7 @@ struct DayView: View {
                     dateLabel: dayLabel,
                     onAdd: isPresented ? { showingAdd = true } : nil
                 )
+                .transition(.opacity.combined(with: .scale(scale: 0.97)))
             } else {
                 DiaryListCard(
                     entries: entries,

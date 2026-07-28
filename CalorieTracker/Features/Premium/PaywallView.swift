@@ -81,6 +81,7 @@ struct PaywallView: View {
                 .background(Circle().fill(Theme.card))
                 .overlay(Circle().stroke(Theme.separator, lineWidth: 1))
         }
+        .buttonStyle(.pressableScale)
         .padding(.trailing, 20)
         .padding(.top, 14)
         .opacity(closeVisible ? 1 : 0)
@@ -139,6 +140,7 @@ struct PaywallView: View {
                     .fill(Theme.accent)
             )
         }
+        .buttonStyle(.pressableCard)
         .disabled(isWorking)
     }
 

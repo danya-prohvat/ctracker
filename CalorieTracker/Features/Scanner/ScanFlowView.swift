@@ -31,6 +31,8 @@ struct ScanFlowView: View {
     @State private var scanToken = 0
     @State private var manualCode = ""
     @State private var didRequestPermission = false
+    /// Last camera-reported code, for the same-code debounce.
+    @State private var lastScan: (code: String, at: Date)?
 
     private var showsViewfinder: Bool {
         switch phase {
@@ -53,6 +55,8 @@ struct ScanFlowView: View {
             bottomBar
         }
         .background(Theme.scanBackground.ignoresSafeArea())
+        // Viewfinder, status panel and action bar fade between phases.
+        .animation(.easeInOut(duration: 0.2), value: phase)
         .task { await ensurePermission() }
     }
 
@@ -63,7 +67,7 @@ struct ScanFlowView: View {
             if showsViewfinder {
                 ScanViewfinder {
                     if case .scanning = phase {
-                        BarcodeScannerScreen(onCode: handleCode)
+                        BarcodeScannerScreen(onCode: handleScannedCode)
                             .id(scanToken)
                     }
                 }
@@ -118,6 +122,22 @@ struct ScanFlowView: View {
         #endif
     }
 
+    /// Camera path only: haptic + sound on recognition, and a re-report of the
+    /// same code within the debounce window silently resumes scanning instead
+    /// of looping the lookup. Manual (debug) lookup calls `handleCode` directly.
+    private func handleScannedCode(_ rawCode: String) {
+        let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !code.isEmpty else { return }
+        if let last = lastScan, last.code == code,
+           Date().timeIntervalSince(last.at) < ScanFeedback.debounceInterval {
+            scanToken += 1
+            return
+        }
+        lastScan = (code, Date())
+        ScanFeedback.success()
+        handleCode(code)
+    }
+
     private func handleCode(_ rawCode: String) {
         let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !code.isEmpty else { return }
@@ -158,19 +178,6 @@ struct ScanFlowView: View {
         scanToken += 1
         phase = .scanning
     }
-}
-
-/// Internal state machine for the scan flow (spec §7).
-enum ScanFlowPhase: Equatable {
-    case requestingPermission
-    case scanning
-    case searching(String)
-    case found
-    case notFound(String)
-    case denied
-    case offline(String)
-    /// A local product was handed to the caller; waiting for it to navigate.
-    case handedOff
 }
 
 #Preview {

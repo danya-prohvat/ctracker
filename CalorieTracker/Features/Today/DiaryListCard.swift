@@ -20,6 +20,7 @@ struct DiaryListCard: View {
                     onTap: { onTap(entry) },
                     onDelete: { onDelete(entry) }
                 )
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 if showsAddFooter || index < entries.count - 1 {
                     Rectangle()
                         .fill(Theme.separator)
@@ -42,7 +43,7 @@ struct DiaryListCard: View {
                 .padding(.horizontal, 18)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressableCard)
     }
 }
 

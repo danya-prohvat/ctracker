@@ -14,6 +14,8 @@ struct CalendarTabView: View {
     @State private var mode: CalendarViewMode = .month
     /// First moment of the visible period (month-start or week-start).
     @State private var anchor: Date = CalendarTabView.periodStart(of: .month, for: Date())
+    /// Last period step (-1/+1) — drives the grid's directional slide.
+    @State private var stepDirection = 0
     /// kcal totals per dayKey for the visible period. One fetch per period.
     @State private var kcalByDay: [String: Double] = [:]
     /// Per-day averages over the visible period, shown in the stat cards.
@@ -45,6 +47,7 @@ struct CalendarTabView: View {
                     CalendarGridCard(
                         mode: mode,
                         anchor: anchor,
+                        stepDirection: stepDirection,
                         kcalByDay: kcalByDay,
                         calorieGoal: settings?.calorieGoal,
                         isDayLocked: { !isDayUnlocked($0) },
@@ -59,34 +62,13 @@ struct CalendarTabView: View {
                         CalendarHistoryLockedCard(onUnlock: { showingPaywall = true })
                             .padding(.top, 18)
                     } else {
-                        CalendarStatsRow(
+                        CalendarStatsSection(
                             stats: periodStats,
                             goals: statGoals,
-                            caption: periodCaption
+                            caption: periodCaption,
+                            nutrientAverages: nutrientAverages,
+                            settings: settings
                         )
-                        .padding(.top, 18)
-
-                        if let settings {
-                            AdBannerView(settings: settings)
-                                .padding(.top, 12)
-                        }
-
-                        if !nutrientAverages.isEmpty {
-                            CalendarNutrientHistoryCard(
-                                averages: nutrientAverages,
-                                caption: periodCaption
-                            )
-                            .padding(.top, 12)
-                        }
-
-                        CalendarRingLegend()
-                            .padding(.top, 16)
-                        Text("Tap a day with a ring to view details.")
-                            .font(.footnote)
-                            .foregroundStyle(Theme.textTertiary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 8)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -107,6 +89,8 @@ struct CalendarTabView: View {
                 refetch()
             }
             .onChange(of: mode) {
+                // Scale change is not a step — crossfade, don't slide.
+                stepDirection = 0
                 // Keep the user near where they were when the scale changes.
                 withAnimation(.easeInOut(duration: 0.2)) {
                     anchor = Self.periodStart(of: mode.component, for: anchor)
@@ -154,7 +138,8 @@ struct CalendarTabView: View {
         guard let shifted = Calendar.current.date(
             byAdding: mode.component, value: delta, to: anchor
         ) else { return }
-        withAnimation(.easeInOut(duration: 0.2)) {
+        stepDirection = delta
+        withAnimation(.easeInOut(duration: 0.25)) {
             anchor = Self.periodStart(of: mode.component, for: shifted)
         }
         refetch()

@@ -19,7 +19,7 @@ struct ProductFormCTABar: View {
                         .fill(Theme.accentStrong)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressableCard)
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.5)
         .padding(.horizontal, 20)

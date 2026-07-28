@@ -38,6 +38,7 @@ enum DiaryLogger {
         try? context.save()
 
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+        WidgetBridge.refresh(in: context)
 
         if dayKey == DayKey.today {
             ReviewPromptService.checkGreenZone(in: context)

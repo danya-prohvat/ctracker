@@ -10,11 +10,11 @@ struct AddFoodActionCards: View {
             Button(action: onNewProduct) {
                 newProductCard
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressableCard)
             Button(action: onScan) {
                 scanCard
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressableCard)
         }
         .fixedSize(horizontal: false, vertical: true)
     }

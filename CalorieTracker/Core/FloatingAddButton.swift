@@ -19,17 +19,8 @@ struct FloatingAddButton: View {
                         .shadow(color: Theme.fabShadow.opacity(0.35), radius: 10, y: 6)
                 }
         }
-        .buttonStyle(PressableScaleStyle())
+        .buttonStyle(.pressableScale)
         .accessibilityLabel("Add food")
-    }
-}
-
-/// Scales the label down while pressed — the native "squishy" button feel.
-private struct PressableScaleStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
-            .animation(.snappy(duration: 0.2), value: configuration.isPressed)
     }
 }
 

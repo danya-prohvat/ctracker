@@ -14,5 +14,6 @@ struct OnboardingPrimaryButton: View {
                 .padding(.vertical, 16)
                 .background(RoundedRectangle(cornerRadius: 14).fill(Theme.accent))
         }
+        .buttonStyle(.pressableCard)
     }
 }

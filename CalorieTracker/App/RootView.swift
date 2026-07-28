@@ -36,6 +36,8 @@ struct RootView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Tab switch crossfades (branches use the default opacity transition).
+            .animation(.easeInOut(duration: 0.2), value: selectedTab)
             .onPreferenceChange(TabBarHiddenPreferenceKey.self) { tabBarHidden = $0 }
 
             if !tabBarHidden {
@@ -62,6 +64,9 @@ struct RootView: View {
             // 14:00/20:00 notifications in sync with the diary.
             if phase == .active || phase == .background {
                 MealReminderScheduler.reschedule(in: context)
+                // Push today's totals to the home-screen widget — covers edits
+                // and deletes too, since those only happen in-app.
+                WidgetBridge.refresh(in: context)
             }
             // Restart the re-engagement countdown on every activation — a
             // series notification only fires if the app stays unopened.

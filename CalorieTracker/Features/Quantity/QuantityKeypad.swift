@@ -13,6 +13,9 @@ enum QuantityKey: Hashable {
 struct QuantityKeypad: View {
     let onKey: (QuantityKey) -> Void
 
+    // Bumped on every key press to fire the keyboard-like tap haptic.
+    @State private var tapCount = 0
+
     var body: some View {
         Grid(horizontalSpacing: 8, verticalSpacing: 8) {
             ForEach(0..<3) { row in
@@ -28,19 +31,22 @@ struct QuantityKeypad: View {
                 keyButton(.backspace)
             }
         }
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: tapCount)
     }
 
+    // The card background lives inside the label so the whole key squeezes.
     private func keyButton(_ key: QuantityKey) -> some View {
         Button {
+            tapCount += 1
             onKey(key)
         } label: {
             keyLabel(for: key)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .contentShape(RoundedRectangle(cornerRadius: Theme.radiusButton, style: .continuous))
+                .glassCard(cornerRadius: Theme.radiusButton)
         }
-        .buttonStyle(.plain)
-        .glassCard(cornerRadius: Theme.radiusButton)
+        .buttonStyle(.pressableScale)
     }
 
     @ViewBuilder

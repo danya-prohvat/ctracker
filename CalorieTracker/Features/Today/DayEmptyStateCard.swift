@@ -44,7 +44,7 @@ struct DayEmptyStateCard: View {
                     AddFoodInlineLabel()
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressableScale)
                 .padding(.top, 6)
             }
         }

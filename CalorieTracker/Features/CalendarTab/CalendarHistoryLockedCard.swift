@@ -35,7 +35,7 @@ struct CalendarHistoryLockedCard: View {
                             .fill(Theme.accent)
                     )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressableCard)
         }
         .padding(22)
         .frame(maxWidth: .infinity)

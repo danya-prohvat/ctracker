@@ -22,7 +22,7 @@ struct QuantityActionBar: View {
                                 .fill(Theme.destructiveSoft)
                         )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressableScale)
             }
 
             Button(action: onCommit) {
@@ -38,7 +38,7 @@ struct QuantityActionBar: View {
                                     radius: 10, y: 6)
                     )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.pressableCard)
             .disabled(!isEnabled)
         }
         .padding(.horizontal, 20)
