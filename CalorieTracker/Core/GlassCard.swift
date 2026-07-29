@@ -27,11 +27,11 @@ extension View {
     ZStack {
         AppBackground()
         VStack(spacing: 16) {
-            Text("Summary")
+            Text(verbatim: "Summary")
                 .frame(maxWidth: .infinity)
                 .padding(22)
                 .glassCard()
-            Text("Row card")
+            Text(verbatim: "Row card")
                 .frame(maxWidth: .infinity)
                 .padding(14)
                 .glassCard(cornerRadius: Theme.cornerRadius)

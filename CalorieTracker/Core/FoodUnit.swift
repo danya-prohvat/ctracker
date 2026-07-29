@@ -20,12 +20,14 @@ enum FoodUnit: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Display label. Localized — some scripts write unit symbols in their own
+    /// letters (e.g. Arabic); the enum raw values stay the stable storage keys.
     var label: String {
         switch self {
-        case .g: return "g"
-        case .oz: return "oz"
-        case .ml: return "ml"
-        case .floz: return "fl oz"
+        case .g: return String(localized: "g", comment: "Unit symbol: grams")
+        case .oz: return String(localized: "oz", comment: "Unit symbol: ounces")
+        case .ml: return String(localized: "ml", comment: "Unit symbol: milliliters")
+        case .floz: return String(localized: "fl oz", comment: "Unit symbol: fluid ounces")
         }
     }
 }

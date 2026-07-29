@@ -1,0 +1,460 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "CalorieTracker"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُستخدم الكاميرا فقط لمسح الرموز الشريطية للمنتجات."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ক্যামেরা শুধুমাত্র পণ্যের বারকোড স্ক্যান করতে ব্যবহৃত হয়।"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoaparát se používá pouze ke skenování čárových kódů produktů."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kameraet bruges kun til at scanne produkters stregkoder."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Kamera wird nur zum Scannen von Produkt-Barcodes verwendet."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Η κάμερα χρησιμοποιείται μόνο για τη σάρωση barcode προϊόντων."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera is used only to scan product barcodes."
+          }
+        },
+        "es-ES": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara se usa únicamente para escanear códigos de barras de productos."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kameraa käytetään vain tuotteiden viivakoodien skannaamiseen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’appareil photo est utilisé uniquement pour scanner les codes-barres des produits."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המצלמה משמשת אך ורק לסריקת ברקודים של מוצרים."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कैमरे का उपयोग केवल प्रोडक्ट के बारकोड स्कैन करने के लिए किया जाता है।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera se koristi samo za skeniranje barkodova proizvoda."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kamera kizárólag a termékek vonalkódjának beolvasására szolgál."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera hanya digunakan untuk memindai barcode produk."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fotocamera viene usata solo per scansionare i codici a barre dei prodotti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カメラは商品のバーコードのスキャンにのみ使用されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카메라는 제품 바코드를 스캔하는 데만 사용됩니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera digunakan hanya untuk mengimbas kod bar produk."
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kameraet brukes kun til å skanne strekkoder på produkter."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De camera wordt alleen gebruikt om barcodes van producten te scannen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparat jest używany wyłącznie do skanowania kodów kreskowych produktów."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A câmera é usada apenas para escanear códigos de barras de produtos."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A câmara é utilizada apenas para digitalizar códigos de barras de produtos."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera este folosită doar pentru a scana codurile de bare ale produselor."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камера используется только для сканирования штрихкодов продуктов."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoaparát sa používa iba na skenovanie čiarových kódov produktov."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera se uporablja samo za skeniranje črtnih kod izdelkov."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kameran används endast för att skanna produkters streckkoder."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กล้องใช้เพื่อสแกนบาร์โค้ดของสินค้าเท่านั้น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera yalnızca ürün barkodlarını taramak için kullanılır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камера використовується лише для сканування штрихкодів продуктів."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کیمرا صرف پروڈکٹس کے بارکوڈ اسکین کرنے کے لیے استعمال ہوتا ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera chỉ được dùng để quét mã vạch sản phẩm."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机仅用于扫描食品条形码。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相機僅用於掃描產品條碼。"
+          }
+        }
+      }
+    },
+    "NSUserTrackingUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيُستخدم هذا المعرّف لعرض إعلانات مخصصة لك."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই শনাক্তকারী আপনাকে ব্যক্তিগতকৃত বিজ্ঞাপন দেখাতে ব্যবহৃত হবে।"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento identifikátor bude použit k zobrazování personalizovaných reklam."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne identifikator bruges til at vise dig personligt tilpassede annoncer."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Kennung wird verwendet, um dir personalisierte Werbung anzuzeigen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το αναγνωριστικό θα χρησιμοποιηθεί για την προβολή εξατομικευμένων διαφημίσεων σε εσάς."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This identifier will be used to deliver personalized ads to you."
+          }
+        },
+        "es-ES": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este identificador se usará para mostrarte anuncios personalizados."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tätä tunnistetta käytetään personoitujen mainosten näyttämiseen sinulle."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet identifiant sera utilisé pour vous proposer des publicités personnalisées."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מזהה זה ישמש להצגת פרסומות מותאמות אישית עבורך."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस पहचानकर्ता का उपयोग आपको वैयक्तिकृत विज्ञापन दिखाने के लिए किया जाएगा।"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj identifikator koristit će se za prikaz personaliziranih oglasa."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez az azonosító személyre szabott hirdetések megjelenítésére szolgál."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pengenal ini akan digunakan untuk menampilkan iklan yang dipersonalisasi kepada Anda."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo identificatore verrà usato per mostrarti annunci personalizzati."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この識別子は、パーソナライズされた広告を配信するために使用されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 식별자는 사용자에게 맞춤형 광고를 제공하는 데 사용됩니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pengecam ini akan digunakan untuk menyampaikan iklan yang diperibadikan kepada anda."
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne identifikatoren brukes til å vise deg personlig tilpassede annonser."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze identifier wordt gebruikt om je gepersonaliseerde advertenties te tonen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten identyfikator będzie używany do wyświetlania spersonalizowanych reklam."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este identificador será usado para exibir anúncios personalizados para você."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este identificador será utilizado para lhe apresentar anúncios personalizados."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest identificator va fi folosit pentru a-ți afișa reclame personalizate."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот идентификатор будет использоваться для показа персонализированной рекламы."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento identifikátor sa použije na zobrazovanie prispôsobených reklám."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta identifikator se bo uporabljal za prikaz prilagojenih oglasov."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denna identifierare används för att visa personligt anpassade annonser för dig."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ตัวระบุนี้จะถูกใช้เพื่อแสดงโฆษณาที่ปรับให้เหมาะกับคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu tanımlayıcı, size kişiselleştirilmiş reklamlar sunmak için kullanılacaktır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей ідентифікатор використовуватиметься для показу персоналізованої реклами."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ شناخت کنندہ آپ کو ذاتی نوعیت کے اشتہارات دکھانے کے لیے استعمال کیا جائے گا۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mã định danh này sẽ được dùng để hiển thị quảng cáo được cá nhân hóa cho bạn."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此标识符将用于向你投放个性化广告。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此識別碼將用於向你投放個人化廣告。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

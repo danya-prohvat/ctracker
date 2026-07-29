@@ -56,7 +56,7 @@ struct MicroFieldsSection: View {
                     ProductFieldRow(label: Text(def.nameKey),
                                     labelWidth: 110,
                                     text: textBinding(for: def.id),
-                                    unit: Text(LocalizedStringKey(def.unit.label)))
+                                    unit: Text(verbatim: def.unit.label))
                 }
                 ProductFormHairline()
                 trackMoreRow
@@ -104,7 +104,7 @@ struct MicroFieldsSection: View {
             HStack(spacing: 5) {
                 Text("Track more nutrients")
                     .font(.subheadline.weight(.medium))
-                Image(systemName: "arrow.right")
+                Image(systemName: "arrow.forward")
                     .font(.caption.weight(.semibold))
             }
             .foregroundStyle(Theme.accentLabel)

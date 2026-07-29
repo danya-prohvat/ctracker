@@ -188,3 +188,10 @@ struct CalendarTabView: View {
     CalendarTabView()
         .modelContainer(PreviewData.container)
 }
+
+#Preview("RTL ar") {
+    CalendarTabView()
+        .modelContainer(PreviewData.container)
+        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.locale, Locale(identifier: "ar"))
+}

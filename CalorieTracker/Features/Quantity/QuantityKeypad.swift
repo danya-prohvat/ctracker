@@ -61,7 +61,7 @@ struct QuantityKeypad: View {
                 .font(.stat(.title2, .regular))
                 .foregroundStyle(Theme.textPrimary)
         case .backspace:
-            Image(systemName: "delete.left")
+            Image(systemName: "delete.backward")
                 .font(.stat(.title2, .regular))
                 .foregroundStyle(Theme.textPrimary)
         }

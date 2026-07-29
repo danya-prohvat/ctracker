@@ -76,7 +76,7 @@ struct GoalsCalculatorSheet: View {
     }
 
     private func measurementField(
-        _ title: LocalizedStringKey, text: Binding<String>, unit: String
+        _ title: LocalizedStringKey, text: Binding<String>, unit: LocalizedStringKey
     ) -> some View {
         HStack {
             Text(title)
@@ -86,7 +86,7 @@ struct GoalsCalculatorSheet: View {
                 .numericInputLimit(text, maxDigits: 3)
                 .multilineTextAlignment(.trailing)
                 .frame(maxWidth: 120)
-            Text(verbatim: unit)
+            Text(unit)
                 .foregroundStyle(Theme.textSecondary)
                 .frame(width: 34, alignment: .leading)
         }

@@ -205,3 +205,12 @@ struct AddFoodSheet: View {
     }
     .modelContainer(PreviewData.container)
 }
+
+#Preview("RTL ar") {
+    NavigationStack {
+        AddFoodSheet(dayKey: DayKey.today)
+    }
+    .modelContainer(PreviewData.container)
+    .environment(\.layoutDirection, .rightToLeft)
+    .environment(\.locale, Locale(identifier: "ar"))
+}

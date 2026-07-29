@@ -148,7 +148,7 @@ struct OnboardingFlow: View {
         stepScaffold(title: "How old are you?") {
             Picker("Age", selection: $age) {
                 ForEach(10...99, id: \.self) { value in
-                    Text(verbatim: "\(value)").tag(value)
+                    Text("\(value)").tag(value)
                 }
             }
             .pickerStyle(.wheel)
@@ -180,7 +180,7 @@ struct OnboardingFlow: View {
                             } else {
                                 Picker("Height", selection: heightCmSelection) {
                                     ForEach(120...220, id: \.self) { value in
-                                        Text(verbatim: "\(value) cm").tag(value)
+                                        Text("\(value) cm").tag(value)
                                     }
                                 }
                             }
@@ -198,13 +198,13 @@ struct OnboardingFlow: View {
                             if useImperial {
                                 Picker("Weight", selection: weightLbsSelection) {
                                     ForEach(77...440, id: \.self) { value in
-                                        Text(verbatim: "\(value) lbs").tag(value)
+                                        Text("\(value) lbs").tag(value)
                                     }
                                 }
                             } else {
                                 Picker("Weight", selection: weightKgSelection) {
                                     ForEach(35...200, id: \.self) { value in
-                                        Text(verbatim: "\(value) kg").tag(value)
+                                        Text("\(value) kg").tag(value)
                                     }
                                 }
                             }
@@ -263,13 +263,13 @@ struct OnboardingFlow: View {
                     if useImperial {
                         Picker("Target weight", selection: targetLbsSelection) {
                             ForEach(77...440, id: \.self) { value in
-                                Text(verbatim: "\(value) lbs").tag(value)
+                                Text("\(value) lbs").tag(value)
                             }
                         }
                     } else {
                         Picker("Target weight", selection: targetKgSelection) {
                             ForEach(35...200, id: \.self) { value in
-                                Text(verbatim: "\(value) kg").tag(value)
+                                Text("\(value) kg").tag(value)
                             }
                         }
                     }
@@ -297,8 +297,8 @@ struct OnboardingFlow: View {
         // Safe default pace of 0.5 kg per week (spec §8).
         let weeks = max(1, Int((diffKg / 0.5).rounded(.up)))
         let amount = useImperial
-            ? "\(Format.amount((diffKg * 2.20462).rounded())) lbs"
-            : "\(Format.amount(diffKg)) kg"
+            ? String(localized: "\(Format.amount((diffKg * 2.20462).rounded())) lbs")
+            : String(localized: "\(Format.amount(diffKg)) kg")
 
         return Group {
             switch direction {

@@ -36,9 +36,16 @@ struct SettingsGeneralCard: View {
             showLanguagePicker = true
         } label: {
             HStack(spacing: 5) {
-                Text("Language")
-                    .font(.callout)
-                    .foregroundStyle(Theme.textPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Language")
+                        .font(.callout)
+                        .foregroundStyle(Theme.textPrimary)
+                    if AppLanguage.needsRestart(chosen: settings.languageCode) {
+                        Text("Applies after restarting the app")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                }
                 Spacer(minLength: 12)
                 SettingsLanguage(code: settings.languageCode).title
                     .font(.subheadline)

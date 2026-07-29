@@ -26,12 +26,13 @@ enum Basis: String, Codable, CaseIterable, Identifiable {
     }
 
     /// Compact fragment for the recent chips' "380 kcal / 100 g" caption.
+    /// Localized so the unit symbol can follow the script (e.g. Arabic).
     func per100Compact(_ unitSystem: UnitSystem) -> String {
         switch (unitSystem, isVolume) {
-        case (.metric, false): return "100 g"
-        case (.metric, true): return "100 ml"
-        case (.us, false): return "3.5 oz"
-        case (.us, true): return "3.4 fl oz"
+        case (.metric, false): return String(localized: "100 g", comment: "Reference amount: 100 grams")
+        case (.metric, true): return String(localized: "100 ml", comment: "Reference amount: 100 milliliters")
+        case (.us, false): return String(localized: "3.5 oz", comment: "Reference amount: 3.5 ounces (= 100 g)")
+        case (.us, true): return String(localized: "3.4 fl oz", comment: "Reference amount: 3.4 fluid ounces (= 100 ml)")
         }
     }
 }

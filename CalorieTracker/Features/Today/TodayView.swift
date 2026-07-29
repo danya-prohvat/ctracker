@@ -37,3 +37,10 @@ struct TodayView: View {
     TodayView()
         .modelContainer(PreviewData.container)
 }
+
+#Preview("RTL ar") {
+    TodayView()
+        .modelContainer(PreviewData.container)
+        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.locale, Locale(identifier: "ar"))
+}

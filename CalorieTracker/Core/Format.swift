@@ -21,9 +21,10 @@ enum Format {
         amount(value)
     }
 
-    /// Grams with a "g" suffix used in macro captions.
+    /// Grams with a "g" suffix used in macro captions. Reuses the localized
+    /// gram symbol so the unit follows the user's language.
     static func grams(_ value: Double) -> String {
-        amount(value) + " g"
+        nutrient(value, unit: .g)
     }
 
     /// A nutrient value with its fixed unit label.

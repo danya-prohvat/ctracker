@@ -20,7 +20,7 @@ struct QuantityLiveCard: View {
                 Text(verbatim: quantityText)
                     .font(.stat(.largeTitle))
                     .foregroundStyle(Theme.textPrimary)
-                Text(LocalizedStringKey(unitLabel))
+                Text(verbatim: unitLabel)
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(Theme.textSecondary)
             }

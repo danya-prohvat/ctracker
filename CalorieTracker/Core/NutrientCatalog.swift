@@ -6,11 +6,13 @@ enum NutrientUnit: String, Codable {
     case mg
     case mcg   // micrograms (µg)
 
+    /// Display label. Localized — some scripts write unit symbols in their own
+    /// letters (e.g. Arabic); the enum raw values stay the stable storage keys.
     var label: String {
         switch self {
-        case .g: return "g"
-        case .mg: return "mg"
-        case .mcg: return "µg"
+        case .g: return String(localized: "g", comment: "Unit symbol: grams")
+        case .mg: return String(localized: "mg", comment: "Unit symbol: milligrams")
+        case .mcg: return String(localized: "µg", comment: "Unit symbol: micrograms")
         }
     }
 }

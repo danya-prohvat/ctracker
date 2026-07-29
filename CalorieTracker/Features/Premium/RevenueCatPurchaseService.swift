@@ -40,9 +40,9 @@ enum RevenueCatPurchaseError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .notConfigured: return "Purchases are not configured."
-        case .noCurrentOffering: return "No offering is available right now."
-        case .packageUnavailable: return "This plan is currently unavailable."
+        case .notConfigured: return String(localized: "Purchases are not configured.")
+        case .noCurrentOffering: return String(localized: "No offering is available right now.")
+        case .packageUnavailable: return String(localized: "This plan is currently unavailable.")
         }
     }
 }

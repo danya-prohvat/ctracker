@@ -18,6 +18,8 @@ struct CalendarGridCard: View {
     let onStep: (Int) -> Void
     let onTapDay: (String) -> Void
 
+    @Environment(\.layoutDirection) private var layoutDirection
+
     private static let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
 
     var body: some View {
@@ -45,7 +47,10 @@ struct CalendarGridCard: View {
                 .onEnded { value in
                     guard abs(value.translation.width) > abs(value.translation.height),
                           abs(value.translation.width) > 40 else { return }
-                    onStep(value.translation.width < 0 ? 1 : -1)
+                    // Drag translation is physical; flip so a swipe toward the
+                    // start of reading order always means "next" under RTL too.
+                    let step = value.translation.width < 0 ? 1 : -1
+                    onStep(layoutDirection == .rightToLeft ? -step : step)
                 }
         )
     }
