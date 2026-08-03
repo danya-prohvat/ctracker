@@ -5,7 +5,8 @@ import SwiftData
 /// compact radio-style plan rows, single "Continue" CTA. Present in a `.sheet`.
 ///
 /// Plan names and prices come from the store via `PurchaseService.quotes()`
-/// (RevenueCat when wired); placeholders are shown until they arrive.
+/// (RevenueCat when wired), rendered instantly from `PaywallQuotesCache`
+/// (warmed at scene activation) — skeletons only appear on a cold cache.
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -18,8 +19,6 @@ struct PaywallView: View {
     @State private var closeVisible = false
     @State private var legal: PaywallLegalPage?
     @State private var errorMessage: String?
-
-    init() {}
 
     private var currentSettings: UserSettings {
         settingsList.first ?? UserSettings.current(in: context)
@@ -47,7 +46,8 @@ struct PaywallView: View {
             withAnimation(.easeInOut(duration: 0.3)) { closeVisible = true }
         }
         .task {
-            quotes = await PurchaseServices.make(settings: currentSettings).quotes()
+            quotes = PaywallQuotesCache.cached
+            quotes = await PaywallQuotesCache.load(settings: currentSettings)
         }
         .sheet(item: $legal) { page in
             SafariWebView(url: page.url)

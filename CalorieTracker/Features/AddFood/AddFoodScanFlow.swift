@@ -1,12 +1,15 @@
 import SwiftUI
 
-/// Scanner wiring for the add-food flow: launch gating (3 free scans, spec §9),
-/// scan counting and routing of scan outcomes into a modal step.
+/// Scanner wiring for the add-food flow: launch gating (10 free successful
+/// scans, user decision 2026-08-03), scan counting and routing of scan
+/// outcomes into a modal step.
 extension AddFoodSheet {
     var scanFlow: some View {
         ScanFlowView(
             onLocalProduct: { product in
-                countScan()
+                // Re-scanning a product already in the user's base is free:
+                // no counter tick and no rewarded ad (user decision
+                // 2026-08-03) — the lookup never left the device.
                 pendingScan = .quantity(product.loggable)
                 showScanner = false
             },
@@ -18,16 +21,17 @@ extension AddFoodSheet {
                 showScanner = false
             },
             onCreateManually: { barcode in
-                // "Add manually instead" from the denied state passes no code —
-                // no scan happened, so the free-tier counter must not tick.
-                if !barcode.isEmpty { countScan() }
+                // Not-found and denied paths never tick the counter: only
+                // scans that actually found a product count against the free
+                // limit (user decision 2026-08-03).
                 pendingScan = .newProduct(NewProductRoute(barcode: barcode.isEmpty ? nil : barcode))
                 showScanner = false
             }
         )
     }
 
-    /// Free tier gets 3 scans, then the paywall (spec §9).
+    /// Free tier gets `PremiumGate.freeScanLimit` successful scans, then the
+    /// paywall (spec §9; limit raised to 10 on 2026-08-03).
     func startScan() {
         guard let settings else { showScanner = true; return }
         if PremiumGate.isUnlocked(.scanner, settings: settings) {

@@ -87,8 +87,13 @@ struct QuantityEditor: View {
                     carbs: NutritionMath.scaled(per100: per100Carbs, quantity: canonical)
                 )
 
+                QuantityQuickChips(unit: unit) { picked in
+                    text = picked
+                }
+                .padding(.top, 16)
+
                 QuantityKeypad(onKey: handleKey)
-                    .padding(.top, 16)
+                    .padding(.top, 12)
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)

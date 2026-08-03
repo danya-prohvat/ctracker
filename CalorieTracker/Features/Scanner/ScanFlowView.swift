@@ -57,7 +57,10 @@ struct ScanFlowView: View {
         .background(Theme.scanBackground.ignoresSafeArea())
         // Viewfinder, status panel and action bar fade between phases.
         .animation(.easeInOut(duration: 0.2), value: phase)
-        .task { await ensurePermission() }
+        .task {
+            await ensurePermission()
+            await ScanRewardGate.preloadIfNeeded(context: context)
+        }
     }
 
     // MARK: - Layout
@@ -152,7 +155,7 @@ struct ScanFlowView: View {
     }
 
     private func localProduct(for code: String) -> Product? {
-        ProductStore.existing(barcode: code, in: context)
+        ProductStore.existing(scannedCode: code, in: context)
     }
 
     private func lookup(_ code: String) {
@@ -162,8 +165,13 @@ struct ScanFlowView: View {
                 let result = try await BarcodeLookupService.lookup(barcode: code)
                 switch result {
                 case .found(let prefill):
-                    phase = .found
-                    onPrefill(prefill)
+                    // Rewarded scan gate: the phase stays `.searching` while
+                    // the ad is up — the outcome is only revealed after it
+                    // closes, never announced beforehand.
+                    ScanRewardGate.present(context: context) {
+                        phase = .found
+                        onPrefill(prefill)
+                    }
                 case .notFound:
                     phase = .notFound(code)
                 }

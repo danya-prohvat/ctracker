@@ -32,25 +32,13 @@ struct AddFoodSheet: View {
     var settings: UserSettings? { settingsList.first }
     private var unitSystem: UnitSystem { settings?.unitSystem ?? .metric }
 
-    /// "My products" order: latest activity first — `lastLoggedAt` for logged
-    /// products, `createdAt` for never-logged ones, so a just-created product
-    /// appears at the top instead of below every logged one (user request
-    /// 2026-07-21). The raw query order (nil `lastLoggedAt` last) still serves
-    /// the Recent chips.
-    private var listProducts: [Product] {
-        products.sorted { ($0.lastLoggedAt ?? $0.createdAt) > ($1.lastLoggedAt ?? $1.createdAt) }
-    }
-
+    // List ordering and filtering live in AddFoodProductFiltering.swift; the
+    // raw query order (nil `lastLoggedAt` last) still serves the Recent chips.
     private var filteredProducts: [Product] {
-        let q = search.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return listProducts }
-        return listProducts.filter { $0.name.localizedCaseInsensitiveContains(q) }
+        products.byRecentActivity.matching(search)
     }
 
-    /// Last 8 distinct logged products (spec §5).
-    private var recentProducts: [Product] {
-        products.filter { $0.lastLoggedAt != nil }.prefix(8).map { $0 }
-    }
+    private var recentProducts: [Product] { products.recentlyLogged }
 
     var body: some View {
         content
@@ -80,21 +68,7 @@ struct AddFoodSheet: View {
             }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) { scanFlow }
-            .alert(
-                "Delete product?",
-                isPresented: Binding(
-                    get: { productToDelete != nil },
-                    set: { if !$0 { productToDelete = nil } }
-                ),
-                presenting: productToDelete
-            ) { product in
-                Button("Delete", role: .destructive) { delete(product) }
-                Button("Cancel", role: .cancel) {}
-            } message: { product in
-                // Deleting only removes it from My products; past diary entries
-                // keep their own snapshot (spec §2.1), so history is untouched.
-                Text("“\(product.name)” will be removed from your products. Your logged entries stay.")
-            }
+            .confirmDeleteProduct($productToDelete, onConfirm: delete)
             .task { applyDebugRoute() }
     }
 

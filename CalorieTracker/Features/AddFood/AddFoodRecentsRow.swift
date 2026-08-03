@@ -34,7 +34,9 @@ struct AddFoodRecentsRow: View {
     }
 }
 
-/// One recent chip: name (14pt semibold) + "380 kcal / 100 g" (12pt secondary).
+/// One recent chip: name (14pt semibold) + the last logged quantity with its
+/// kcal — "60 g · 228 kcal" (spec §5: repeat what you ate, not per-100 math).
+/// Products that somehow lack a last quantity fall back to "380 kcal / 100 g".
 private struct AddFoodRecentChip: View {
     let product: Product
     let unitSystem: UnitSystem
@@ -48,7 +50,7 @@ private struct AddFoodRecentChip: View {
                     .lineLimit(1)
                 if product.wasScanned { ScannedBadge() }
             }
-            Text("\(Format.kcal(product.calories)) kcal / \(product.basis.per100Compact(unitSystem))")
+            subtitle
                 .font(.caption)
                 .foregroundStyle(Theme.textSecondary)
                 .lineLimit(1)
@@ -57,6 +59,14 @@ private struct AddFoodRecentChip: View {
         .padding(.horizontal, 14)
         .frame(minWidth: 116, maxWidth: 158, alignment: .leading)
         .glassCard(cornerRadius: 14)
+    }
+
+    private var subtitle: Text {
+        if let quantity = product.lastQuantity, quantity > 0 {
+            let kcal = NutritionMath.scaled(per100: product.calories, quantity: quantity)
+            return Text("\(Format.quantity(quantity, basis: product.basis, unitSystem: unitSystem)) · \(Format.kcal(kcal)) kcal")
+        }
+        return Text("\(Format.kcal(product.calories)) kcal / \(product.basis.per100Compact(unitSystem))")
     }
 }
 

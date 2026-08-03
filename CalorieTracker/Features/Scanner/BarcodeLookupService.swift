@@ -16,11 +16,17 @@ enum LookupResult {
 /// 2026-07-12 — OFF alone covers the target markets.)
 enum BarcodeLookupService {
 
-    /// Looks a barcode up online. Throws on transport / server errors so the
-    /// caller can show an offline state with a Retry button.
+    /// Looks a barcode up online, trying the code as scanned and then its
+    /// UPC-A variant (leading-zero EAN-13, see `BarcodeNormalizer`) — OFF may
+    /// hold US products under either form. The returned prefill carries the
+    /// code that actually matched, so the saved product re-scans offline.
+    /// Throws on transport / server errors so the caller can show an offline
+    /// state with a Retry button.
     static func lookup(barcode: String) async throws -> LookupResult {
-        if let prefill = try await lookupOpenFoodFacts(barcode: barcode) {
-            return .found(prefill)
+        for candidate in BarcodeNormalizer.candidates(for: barcode) {
+            if let prefill = try await lookupOpenFoodFacts(barcode: candidate) {
+                return .found(prefill)
+            }
         }
         return .notFound
     }

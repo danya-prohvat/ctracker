@@ -14,6 +14,7 @@ struct SettingsTestCard: View {
     @State private var onboardingNote: LocalizedStringKey?
     @State private var showScheduled = false
     @State private var reviewNote: LocalizedStringKey?
+    @State private var adsGraceNote: LocalizedStringKey?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,6 +28,19 @@ struct SettingsTestCard: View {
             actionRow("Reset free scans", note: "Used: \(settings.scanCount)") {
                 settings.scanCount = 0
                 try? context.save()
+            }
+            SettingsRowDivider()
+            actionRow(
+                "Ads: skip ad-free day",
+                note: adsGraceNote ?? (AdsGracePeriod.isActive ? "Active" : "Over")
+            ) {
+                AdsGracePeriod.debugSkip()
+                adsGraceNote = "Over"
+            }
+            SettingsRowDivider()
+            actionRow("Ads: restart ad-free day", note: nil) {
+                AdsGracePeriod.debugReset()
+                adsGraceNote = "Active"
             }
             SettingsRowDivider()
             actionRow("Reset onboarding", note: onboardingNote) {

@@ -21,6 +21,18 @@ enum ProductStore {
         return (try? context.fetch(descriptor))?.first
     }
 
+    /// Scan-path lookup: tries the code as scanned plus its UPC-A variant
+    /// (an EAN-13 with a leading zero — see `BarcodeNormalizer`), so a product
+    /// saved under either form is found offline on a re-scan.
+    static func existing(scannedCode: String, in context: ModelContext) -> Product? {
+        for candidate in BarcodeNormalizer.candidates(for: scannedCode) {
+            if let product = existing(barcode: candidate, in: context) {
+                return product
+            }
+        }
+        return nil
+    }
+
     /// Inserts a new product — or, when one with the same barcode is already
     /// saved, updates that one in place instead of creating a twin. Returns
     /// the product actually persisted.

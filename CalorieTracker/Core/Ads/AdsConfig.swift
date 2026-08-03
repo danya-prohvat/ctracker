@@ -19,9 +19,18 @@ enum AdsConfig {
     static let rewardedAdUnitID = "ca-app-pub-2939708793200469/8791870568"
     #endif
 
-    /// Ads are a free-tier experience: premium removes them everywhere.
-    /// Views ask this single gate, never `isPremium` directly.
+    /// Ads are a free-tier experience: premium removes them everywhere, and
+    /// the first day after install is ad-free (`AdsGracePeriod`). Views ask
+    /// this single gate, never `isPremium` directly.
     static func shouldShowAds(settings: UserSettings) -> Bool {
-        !PremiumGate.isPremium(settings: settings)
+        !PremiumGate.isPremium(settings: settings) && !AdsGracePeriod.isActive
+    }
+
+    /// Rewarded gate for the barcode scanner (user decision 2026-08-03):
+    /// every successful scan after the first shows a rewarded ad before the
+    /// result is revealed. The very first scan stays ad-free, premium and the
+    /// install-day grace skip ads entirely via `shouldShowAds`.
+    static func shouldShowScanReward(settings: UserSettings) -> Bool {
+        shouldShowAds(settings: settings) && settings.scanCount >= 1
     }
 }

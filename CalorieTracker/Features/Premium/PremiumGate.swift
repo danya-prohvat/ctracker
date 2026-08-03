@@ -5,7 +5,7 @@ enum PremiumFeature {
     /// The full micronutrient catalog beyond the free set — prefer
     /// `PremiumGate.isNutrientUnlocked(_:settings:)` for per-nutrient checks.
     case nutrients
-    /// Barcode scanner. Free users get 3 scans, then the paywall.
+    /// Barcode scanner. Free users get 10 successful scans, then the paywall.
     case scanner
     /// Calendar days older than the last 30 days.
     case deepHistory
@@ -13,8 +13,10 @@ enum PremiumFeature {
 
 /// Single source of truth for what the current user may access (spec §9).
 enum PremiumGate {
-    /// Barcode scans a free user gets before the scanner locks.
-    static let freeScanLimit = 3
+    /// Successful barcode scans a free user gets before the scanner locks
+    /// (user decision 2026-08-03: 10, was 3; only scans that found a product
+    /// count — see `AddFoodScanFlow`).
+    static let freeScanLimit = 10
 
     /// Nutrients every user gets for free — deliberately the same set as the
     /// first-launch defaults (fiber, sugar, sodium, saturated fat): one
