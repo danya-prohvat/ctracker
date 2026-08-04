@@ -30,6 +30,15 @@ enum MealReminderScheduler {
             }
     }
 
+    /// Current system permission, reported on the main queue. `.denied` means
+    /// `requestAuthorization` would fail silently without showing a prompt —
+    /// the caller should point the user to iOS Settings instead.
+    static func authorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async { completion(settings.authorizationStatus) }
+        }
+    }
+
     /// Replace the whole planned window based on the current diary state.
     @MainActor
     static func reschedule(in context: ModelContext) {

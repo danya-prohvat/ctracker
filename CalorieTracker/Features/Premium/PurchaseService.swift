@@ -14,6 +14,12 @@ protocol PurchaseService {
     /// `UserSettings.isPremium`.
     func restore() async throws
 
+    /// Re-reads the entitlement from the billing backend and mirrors it into
+    /// `UserSettings.isPremium` — the only path that ever *revokes* premium
+    /// (expiry, cancellation, refund). Must leave the flag untouched when the
+    /// backend can't answer: an offline launch never strips premium.
+    func syncEntitlement() async
+
     /// Localized store display data (product name, price) per plan. Empty when
     /// the store is unreachable or billing isn't wired — the paywall then shows
     /// "—" instead of a price (prices are never hardcoded).
@@ -56,6 +62,9 @@ final class StubPurchaseService: PurchaseService {
         try await Task.sleep(nanoseconds: 800_000_000)
         settings.isPremium = true
     }
+
+    // No backend to ask — whatever the debug toggle / stub purchase set stands.
+    func syncEntitlement() async {}
 
     func quotes() async -> [PaywallPlan: PaywallPlanQuote] { [:] }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 /// "General" card: language picker row, the single reminders toggle — it
 /// drives both the smart meal reminders (`MealReminderScheduler`) and the
@@ -7,10 +8,12 @@ import SwiftData
 /// 2026-07-21 — and the iCloud sync toggle.
 struct SettingsGeneralCard: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.openURL) private var openURL
 
     let settings: UserSettings
 
     @State private var showLanguagePicker = false
+    @State private var showNotificationsDenied = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +29,16 @@ struct SettingsGeneralCard: View {
                 selected: SettingsLanguage(code: settings.languageCode),
                 onSelect: apply
             )
+        }
+        .alert("Notifications are off", isPresented: $showNotificationsDenied) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    openURL(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Allow notifications in Settings to get reminders.")
         }
     }
 
@@ -108,13 +121,23 @@ struct SettingsGeneralCard: View {
             get: { settings.notificationsEnabled },
             set: { newValue in
                 if newValue {
-                    MealReminderScheduler.requestAuthorization { granted in
-                        settings.notificationsEnabled = granted
-                        try? context.save()
-                        guard granted else { return }
-                        Task { @MainActor in
-                            MealReminderScheduler.reschedule(in: context)
-                            ReengagementNotificationService.reschedule(in: context)
+                    MealReminderScheduler.authorizationStatus { status in
+                        // Already denied in iOS Settings: a new request would
+                        // fail silently and the toggle would just snap back —
+                        // explain and link to Settings instead (same standard
+                        // as the scanner's camera-denied screen).
+                        if status == .denied {
+                            showNotificationsDenied = true
+                            return
+                        }
+                        MealReminderScheduler.requestAuthorization { granted in
+                            settings.notificationsEnabled = granted
+                            try? context.save()
+                            guard granted else { return }
+                            Task { @MainActor in
+                                MealReminderScheduler.reschedule(in: context)
+                                ReengagementNotificationService.reschedule(in: context)
+                            }
                         }
                     }
                 } else {

@@ -81,6 +81,16 @@ final class RevenueCatPurchaseService: PurchaseService {
         apply(info)
     }
 
+    func syncEntitlement() async {
+        // RevenueCat answers from its local cache when offline; a throw means
+        // it has no answer at all (first launch offline) — then `isPremium`
+        // must stay as-is rather than flip to false.
+        guard Purchases.isConfigured,
+              let info = try? await Purchases.shared.customerInfo()
+        else { return }
+        apply(info)
+    }
+
     /// Localized product names/prices from the current Offering. Any failure →
     /// empty dictionary; the paywall then shows "—" instead of prices.
     func quotes() async -> [PaywallPlan: PaywallPlanQuote] {

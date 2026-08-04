@@ -75,9 +75,17 @@ struct RootView: View {
             // series notification only fires if the app stays unopened.
             if phase == .active {
                 ReengagementNotificationService.reschedule(in: context)
-                // Warm the paywall price cache so plan rows render instantly
-                // whenever the paywall opens (user decision 2026-08-03).
-                Task { await PaywallQuotesCache.prefetch(settings: UserSettings.current(in: context)) }
+                Task {
+                    let settings = UserSettings.current(in: context)
+                    // Re-mirror the paid entitlement — purchase() and restore()
+                    // are otherwise the only reads, so without this an expired
+                    // subscription would keep premium forever.
+                    await PurchaseServices.make(settings: settings).syncEntitlement()
+                    try? context.save()
+                    // Warm the paywall price cache so plan rows render instantly
+                    // whenever the paywall opens (user decision 2026-08-03).
+                    await PaywallQuotesCache.prefetch(settings: settings)
+                }
                 // App-open + green-zone review triggers (user decision 2026-07-21).
                 ReviewPromptService.checkOnActivation(in: context)
                 // Keep the CloudKit-store mirror in sync with the toggle —

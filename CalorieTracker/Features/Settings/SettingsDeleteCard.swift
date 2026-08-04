@@ -37,7 +37,8 @@ struct SettingsDeleteCard: View {
     }
 
     /// Wipe everything and return settings to first-launch defaults, except
-    /// `onboardingCompleted` — onboarding shows only once (spec §8).
+    /// `onboardingCompleted` — onboarding shows only once (spec §8) — and
+    /// `isPremium`, which mirrors the paid entitlement.
     private func deleteAllData() {
         // Object-by-object, not `context.delete(model:)`: batch deletes bypass
         // the CloudKit export pipeline, so the synced copies would survive in
@@ -62,7 +63,8 @@ struct SettingsDeleteCard: View {
         settings.notificationsEnabled = false
         settings.iCloudSyncEnabled = false
         settings.scanCount = 0
-        settings.isPremium = false
+        // isPremium intentionally survives — wiping local data does not cancel
+        // the subscription, and a paying user must not see ads and locks.
         settings.onboardingCompleted = true
 
         MealReminderScheduler.cancelAll()
