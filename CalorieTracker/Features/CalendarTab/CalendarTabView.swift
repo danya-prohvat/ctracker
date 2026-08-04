@@ -12,6 +12,10 @@ struct CalendarTabView: View {
 
     /// Time scale of the grid; the segmented control and stat-card taps drive it.
     @State private var mode: CalendarViewMode = .month
+    /// "Today" as state, not a render-time computation — refreshed via
+    /// `onPossibleDayChange` so the grid marker survives midnight (same fix
+    /// as TodayView, 2026-07-28).
+    @State private var todayKey = DayKey.today
     /// First moment of the visible period (month-start or week-start).
     @State private var anchor: Date = CalendarTabView.periodStart(of: .month, for: Date())
     /// Last period step (-1/+1) — drives the grid's directional slide.
@@ -48,6 +52,7 @@ struct CalendarTabView: View {
                         mode: mode,
                         anchor: anchor,
                         stepDirection: stepDirection,
+                        todayKey: todayKey,
                         kcalByDay: kcalByDay,
                         calorieGoal: settings?.calorieGoal,
                         isDayLocked: { !isDayUnlocked($0) },
@@ -77,7 +82,7 @@ struct CalendarTabView: View {
             .background(AppBackground())
             .largeTitleScreen("Calendar")
             .navigationDestination(item: $selectedDayKey) { key in
-                DayView(dayKey: key, isToday: key == DayKey.today)
+                DayView(dayKey: key, isToday: key == todayKey)
             }
             .sheet(isPresented: $showingPaywall) {
                 PaywallView()
@@ -97,7 +102,16 @@ struct CalendarTabView: View {
                 }
                 refetch()
             }
+            .onPossibleDayChange(perform: dayChanged)
         }
+    }
+
+    /// Midnight (or a return from suspension) moved "today": refresh the grid
+    /// marker and re-aggregate — the 30-day window shifts with the day.
+    private func dayChanged() {
+        guard todayKey != DayKey.today else { return }
+        todayKey = DayKey.today
+        refetch()
     }
 
     /// Daily targets the stat cards compare their averages against.
@@ -147,35 +161,16 @@ struct CalendarTabView: View {
 
     // MARK: - Data
 
-    /// The single fetch for the visible period. `dayKey` strings ("yyyy-MM-dd")
-    /// sort lexicographically, so a string range covers the period even when it
-    /// spans two Gregorian months.
+    /// One fetch + aggregation per visible period (`CalendarPeriodData`).
     private func refetch() {
-        guard let interval = Calendar.current.dateInterval(of: mode.component, for: anchor) else {
-            kcalByDay = [:]
-            periodStats = nil
-            nutrientAverages = []
-            periodFullyLocked = false
-            return
-        }
-        // Rings and averages cover only unlocked days, so a free user never sees
-        // aggregated data from days behind the 30-day wall (spec §9). Locked cells
-        // render their own lock via `isDayLocked`.
-        let entries = CalendarPeriodData.fetchEntries(in: interval, context: context)
-            .filter { isDayUnlocked($0.dayKey) }
-        var totals: [String: Double] = [:]
-        for entry in entries {
-            totals[entry.dayKey, default: 0] += entry.calories
-        }
-        kcalByDay = totals
-        periodStats = CalendarPeriodData.macroAverages(of: entries)
-        nutrientAverages = settings.map {
-            CalendarPeriodData.nutrientAverages(of: entries, settings: $0)
-        } ?? []
-        // The period is fully locked when even its newest day is out of the
-        // window (a period holding today or recent days always has one unlocked).
-        let newestKey = DayKey.string(from: interval.end.addingTimeInterval(-1))
-        periodFullyLocked = !isDayUnlocked(newestKey)
+        let snapshot = CalendarPeriodData.snapshot(
+            mode: mode, anchor: anchor, context: context,
+            settings: settings, isDayUnlocked: isDayUnlocked
+        )
+        kcalByDay = snapshot.kcalByDay
+        periodStats = snapshot.stats
+        nutrientAverages = snapshot.nutrientAverages
+        periodFullyLocked = snapshot.fullyLocked
     }
 
     /// Start of the calendar period (`.weekOfYear` or `.month`) containing `date`.

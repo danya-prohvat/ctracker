@@ -11,6 +11,10 @@ struct CalendarGridCard: View {
     /// Last period step (-1 back / +1 forward / 0 none) — picks the direction
     /// the day grid slides in from; 0 falls back to a plain crossfade.
     let stepDirection: Int
+    /// "Today" from the parent's day-change-aware state — never computed at
+    /// render time, or the marker (and the disabled "future" cells) would
+    /// freeze on yesterday past midnight.
+    let todayKey: String
     let kcalByDay: [String: Double]
     let calorieGoal: Double?
     /// Whether a day falls outside the free-tier history window (spec §9).
@@ -138,7 +142,6 @@ struct CalendarGridCard: View {
 
     private func dayCell(for day: Date) -> some View {
         let key = DayKey.string(from: day)
-        let todayKey = DayKey.today
         return CalendarDayCell(
             date: day,
             kcal: kcalByDay[key],
@@ -159,12 +162,14 @@ struct CalendarGridCard: View {
         VStack(spacing: 16) {
             CalendarGridCard(
                 mode: .month, anchor: Date(), stepDirection: 0,
+                todayKey: DayKey.today,
                 kcalByDay: [DayKey.today: 1450], calorieGoal: 2200,
                 isDayLocked: { _ in false },
                 onStep: { _ in }, onTapDay: { _ in }
             )
             CalendarGridCard(
                 mode: .week, anchor: Date(), stepDirection: 0,
+                todayKey: DayKey.today,
                 kcalByDay: [DayKey.today: 1450], calorieGoal: 2200,
                 isDayLocked: { _ in false },
                 onStep: { _ in }, onTapDay: { _ in }

@@ -33,6 +33,9 @@ extension AddFoodSheet {
     /// Free tier gets `PremiumGate.freeScanLimit` successful scans, then the
     /// paywall (spec §9; limit raised to 10 on 2026-08-03).
     func startScan() {
+        // A route left over from an earlier session must never fire when this
+        // scanner cover closes.
+        pendingScan = nil
         guard let settings else { showScanner = true; return }
         if PremiumGate.isUnlocked(.scanner, settings: settings) {
             showScanner = true

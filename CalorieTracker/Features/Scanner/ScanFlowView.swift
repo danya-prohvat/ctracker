@@ -33,6 +33,9 @@ struct ScanFlowView: View {
     @State private var didRequestPermission = false
     /// Last camera-reported code, for the same-code debounce.
     @State private var lastScan: (code: String, at: Date)?
+    /// In-flight OFF lookup — cancelled when the scanner is dismissed, so a
+    /// late response can't fire ads/callbacks over an unrelated screen.
+    @State private var lookupTask: Task<Void, Never>?
 
     private var showsViewfinder: Bool {
         switch phase {
@@ -41,18 +44,18 @@ struct ScanFlowView: View {
         }
     }
 
-    private var showsAttribution: Bool {
-        switch phase {
-        case .searching, .found, .notFound: return true
-        default: return false
-        }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             ScanFlowHeader(onBack: { dismiss() })
             centerContent
-            bottomBar
+            ScanBottomBar(
+                phase: phase,
+                manualCode: $manualCode,
+                onManualLookup: handleCode,
+                onCreateManually: onCreateManually,
+                onScanAgain: restartScanning,
+                onRetry: lookup
+            )
         }
         .background(Theme.scanBackground.ignoresSafeArea())
         // Viewfinder, status panel and action bar fade between phases.
@@ -61,6 +64,7 @@ struct ScanFlowView: View {
             await ensurePermission()
             await ScanRewardGate.preloadIfNeeded(context: context)
         }
+        .onDisappear { lookupTask?.cancel() }
     }
 
     // MARK: - Layout
@@ -79,28 +83,6 @@ struct ScanFlowView: View {
         }
         .padding(.horizontal, 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var bottomBar: some View {
-        VStack(spacing: 10) {
-            ScanActionBar(
-                phase: phase,
-                manualCode: $manualCode,
-                onManualLookup: handleCode,
-                onCreateManually: onCreateManually,
-                onScanAgain: restartScanning,
-                onRetry: lookup
-            )
-            if showsAttribution {
-                // ODbL attribution — required whenever OFF data is shown or fetched.
-                Text("Data from Open Food Facts")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.4))
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 16)
     }
 
     // MARK: - Logic
@@ -160,9 +142,11 @@ struct ScanFlowView: View {
 
     private func lookup(_ code: String) {
         phase = .searching(code)
-        Task {
+        lookupTask?.cancel()
+        lookupTask = Task {
             do {
                 let result = try await BarcodeLookupService.lookup(barcode: code)
+                guard !Task.isCancelled else { return }
                 switch result {
                 case .found(let prefill):
                     // Rewarded scan gate: the phase stays `.searching` while
@@ -176,6 +160,8 @@ struct ScanFlowView: View {
                     phase = .notFound(code)
                 }
             } catch {
+                // Our own cancel also lands here (URLSession throws on it).
+                guard !Task.isCancelled else { return }
                 phase = .offline(code)
             }
         }

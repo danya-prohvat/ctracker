@@ -6,11 +6,8 @@ import SwiftData
 ///
 /// The day key is state, not a one-shot computation: an app left open (or
 /// resumed from suspension) across midnight must start logging into the new
-/// day, so the key refreshes on the calendar-day-change notification and on
-/// every scene activation.
+/// day, so the key refreshes via `onPossibleDayChange`.
 struct TodayView: View {
-    @Environment(\.scenePhase) private var scenePhase
-
     @State private var dayKey = DayKey.today
 
     var body: some View {
@@ -20,16 +17,7 @@ struct TodayView: View {
                 // the day key in init and don't follow later param changes.
                 .id(dayKey)
         }
-        .task {
-            for await _ in NotificationCenter.default.notifications(named: .NSCalendarDayChanged) {
-                dayKey = DayKey.today
-            }
-        }
-        .onChange(of: scenePhase) { _, phase in
-            // The day-changed notification isn't replayed after a suspension,
-            // so re-check whenever the app comes back to the foreground.
-            if phase == .active { dayKey = DayKey.today }
-        }
+        .onPossibleDayChange { dayKey = DayKey.today }
     }
 }
 
