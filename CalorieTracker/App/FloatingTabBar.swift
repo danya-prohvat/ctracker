@@ -30,6 +30,7 @@ struct FloatingTabBar: View {
                     .frame(height: 24)
                 Text(label)
                     .font(.caption2.weight(isSelected ? .semibold : .medium))
+                    .ctaFit()
             }
             .foregroundStyle(isSelected ? Theme.accent : Theme.textSecondary)
             .frame(maxWidth: .infinity)

@@ -42,12 +42,13 @@ enum ReengagementNotificationService {
             cancelAll()
             return
         }
+        let bundle = AppLanguage.bundle(for: settings.languageCode)
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { permission in
             guard permission.authorizationStatus == .authorized
                 || permission.authorizationStatus == .provisional else { return }
             center.removePendingNotificationRequests(withIdentifiers: allIDs)
-            requests(from: Date()).forEach { center.add($0) }
+            requests(from: Date(), bundle: bundle).forEach { center.add($0) }
         }
     }
 
@@ -59,7 +60,7 @@ enum ReengagementNotificationService {
 
     // MARK: - Planning
 
-    private static func requests(from now: Date) -> [UNNotificationRequest] {
+    private static func requests(from now: Date, bundle: Bundle) -> [UNNotificationRequest] {
         let calendar = Calendar.current
         return steps.compactMap { step in
             guard let fire = fireDate(day: step.day, from: now, calendar: calendar) else {
@@ -71,6 +72,7 @@ enum ReengagementNotificationService {
             return request(
                 day: step.day,
                 bodyKey: step.bodyKey,
+                bundle: bundle,
                 trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             )
         }
@@ -96,11 +98,12 @@ enum ReengagementNotificationService {
     }
 
     private static func request(
-        day: Int, bodyKey: String.LocalizationValue, trigger: UNNotificationTrigger
+        day: Int, bodyKey: String.LocalizationValue, bundle: Bundle,
+        trigger: UNNotificationTrigger
     ) -> UNNotificationRequest {
         let content = UNMutableNotificationContent()
         // Title stays empty on purpose — iOS shows the app name instead.
-        content.body = String(localized: bodyKey)
+        content.body = String(localized: bodyKey, bundle: bundle)
         content.sound = .default
         return UNNotificationRequest(
             identifier: idPrefix + "day\(day)",
@@ -112,7 +115,8 @@ enum ReengagementNotificationService {
     #if DEBUG
     /// Manual-testing variant: same series, texts and identifiers, but
     /// "day N" fires N minutes from now instead of N days.
-    static func scheduleTestSeriesMinutes() {
+    static func scheduleTestSeriesMinutes(languageCode: String?) {
+        let bundle = AppLanguage.bundle(for: languageCode)
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { permission in
             guard permission.authorizationStatus == .authorized
@@ -122,6 +126,7 @@ enum ReengagementNotificationService {
                 center.add(request(
                     day: step.day,
                     bodyKey: step.bodyKey,
+                    bundle: bundle,
                     trigger: UNTimeIntervalNotificationTrigger(
                         timeInterval: TimeInterval(step.day * 60), repeats: false
                     )

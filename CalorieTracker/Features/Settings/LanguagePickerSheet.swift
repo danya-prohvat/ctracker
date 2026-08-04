@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Modal language picker: a native inset-grouped list with an always-visible
-/// search field (the catalog will grow), rows showing the English name over
-/// the endonym — the iOS Settings "Language & Region" pattern.
+/// search field (the catalog will grow), rows showing the endonym over the
+/// English name — the iOS Settings "Language & Region" pattern.
 struct LanguagePickerSheet: View {
     let selected: SettingsLanguage
     let onSelect: (SettingsLanguage) -> Void
@@ -38,13 +38,11 @@ struct LanguagePickerSheet: View {
                 Section {
                     ForEach(filtered) { language in
                         row(
-                            title: Text(verbatim: language.englishName),
-                            subtitle: Text(verbatim: language.endonym),
+                            title: Text(verbatim: language.endonym),
+                            subtitle: Text(verbatim: language.englishName),
                             isSelected: selected == language
                         ) { choose(language) }
                     }
-                } footer: {
-                    Text("Restart the app to apply the language.")
                 }
             }
             .searchable(

@@ -10,6 +10,7 @@ struct OnboardingPrimaryButton: View {
             Text(title)
                 .font(.headline)
                 .foregroundStyle(.white)
+                .ctaFit()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(RoundedRectangle(cornerRadius: 14).fill(Theme.accent))

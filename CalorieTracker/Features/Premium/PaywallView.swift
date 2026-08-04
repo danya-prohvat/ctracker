@@ -126,6 +126,7 @@ struct PaywallView: View {
             ZStack {
                 Text("Continue")
                     .font(.headline)
+                    .ctaFit()
                     .opacity(isWorking ? 0 : 1)
                 if isWorking {
                     ProgressView()

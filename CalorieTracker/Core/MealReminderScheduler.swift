@@ -50,7 +50,8 @@ enum MealReminderScheduler {
         let requests = plan(
             todayCalories: todayCalories(in: context),
             calorieGoal: settings.calorieGoal,
-            now: Date()
+            now: Date(),
+            bundle: AppLanguage.bundle(for: settings.languageCode)
         )
         let center = UNUserNotificationCenter.current()
         center.getPendingNotificationRequests { pending in
@@ -77,7 +78,7 @@ enum MealReminderScheduler {
     /// "nothing logged" variants — logging requires opening the app, which
     /// triggers a full replan anyway.
     private static func plan(
-        todayCalories: Double?, calorieGoal: Double?, now: Date
+        todayCalories: Double?, calorieGoal: Double?, now: Date, bundle: Bundle
     ) -> [UNNotificationRequest] {
         let calendar = Calendar.current
         var requests: [UNNotificationRequest] = []
@@ -94,18 +95,23 @@ enum MealReminderScheduler {
                     id: idPrefix + "afternoon." + key,
                     fire: fire,
                     calendar: calendar,
-                    body: String(localized: "You haven't logged anything today yet. Add your first meal!")
+                    body: String(
+                        localized: "You haven't logged anything today yet. Add your first meal!",
+                        bundle: bundle
+                    ),
+                    bundle: bundle
                 ))
             }
 
             if let fire = fireDate(hour: eveningHour, of: day, calendar: calendar),
                fire > now,
-               let body = eveningBody(logged: logged, goal: calorieGoal) {
+               let body = eveningBody(logged: logged, goal: calorieGoal, bundle: bundle) {
                 requests.append(request(
                     id: idPrefix + "evening." + key,
                     fire: fire,
                     calendar: calendar,
-                    body: body
+                    body: body,
+                    bundle: bundle
                 ))
             }
         }
@@ -113,13 +119,16 @@ enum MealReminderScheduler {
     }
 
     /// Nil = stay silent (at/over 80% of the goal, or logged with no goal set).
-    private static func eveningBody(logged: Double?, goal: Double?) -> String? {
+    private static func eveningBody(logged: Double?, goal: Double?, bundle: Bundle) -> String? {
         guard let logged else {
-            return String(localized: "Don't forget to log your meals for today.")
+            return String(localized: "Don't forget to log your meals for today.", bundle: bundle)
         }
         guard let goal, goal > 0, logged < goal * goalFraction else { return nil }
         let left = Format.kcal(goal - logged)
-        return String(localized: "You still have \(left) kcal left today. Log your dinner!")
+        return String(
+            localized: "You still have \(left) kcal left today. Log your dinner!",
+            bundle: bundle
+        )
     }
 
     private static func fireDate(hour: Int, of day: Date, calendar: Calendar) -> Date? {
@@ -127,11 +136,11 @@ enum MealReminderScheduler {
     }
 
     private static func request(
-        id: String, fire: Date, calendar: Calendar, body: String
+        id: String, fire: Date, calendar: Calendar, body: String, bundle: Bundle
     ) -> UNNotificationRequest {
         let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fire)
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Meal reminder")
+        content.title = String(localized: "Meal reminder", bundle: bundle)
         content.body = body
         content.sound = .default
         return UNNotificationRequest(

@@ -29,6 +29,7 @@ struct QuantityActionBar: View {
                 Text(ctaTitle)
                     .font(.body.bold())
                     .foregroundStyle(.white)
+                    .ctaFit()
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
                     .background(

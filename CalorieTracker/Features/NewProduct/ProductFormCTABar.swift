@@ -12,6 +12,7 @@ struct ProductFormCTABar: View {
             Text(title)
                 .font(.body.bold())
                 .foregroundStyle(.white)
+                .ctaFit()
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(

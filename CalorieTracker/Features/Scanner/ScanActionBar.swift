@@ -54,6 +54,7 @@ struct ScanActionBar: View {
         Text(title)
             .font(.body.bold())
             .foregroundStyle(.white)
+            .ctaFit()
             .frame(maxWidth: .infinity)
             .frame(height: 54)
             .background(
@@ -70,6 +71,7 @@ struct ScanActionBar: View {
             Text(title)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.white)
+                .ctaFit()
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
                 .background(

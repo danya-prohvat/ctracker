@@ -37,7 +37,7 @@ struct AddFoodActionCards: View {
                 Text("Create a food with your own values")
                     .font(.footnote)
                     .foregroundStyle(Theme.textSecondary)
-                    .lineLimit(1)
+                    .lineLimit(2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -53,6 +53,7 @@ struct AddFoodActionCards: View {
             Text("Scan")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Theme.accentDeep)
+                .ctaFit()
         }
         .frame(width: 84)
         .frame(maxHeight: .infinity)

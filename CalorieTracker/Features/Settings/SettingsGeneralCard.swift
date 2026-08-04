@@ -49,16 +49,9 @@ struct SettingsGeneralCard: View {
             showLanguagePicker = true
         } label: {
             HStack(spacing: 5) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Language")
-                        .font(.callout)
-                        .foregroundStyle(Theme.textPrimary)
-                    if AppLanguage.needsRestart(chosen: settings.languageCode) {
-                        Text("Applies after restarting the app")
-                            .font(.caption2)
-                            .foregroundStyle(Theme.textTertiary)
-                    }
-                }
+                Text("Language")
+                    .font(.callout)
+                    .foregroundStyle(Theme.textPrimary)
                 Spacer(minLength: 12)
                 SettingsLanguage(code: settings.languageCode).title
                     .font(.subheadline)
@@ -114,6 +107,10 @@ struct SettingsGeneralCard: View {
             UserDefaults.standard.removeObject(forKey: "AppleLanguages")
         }
         try? context.save()
+        // Pending notifications were baked in the previous language — replan
+        // both series right away so they fire in the newly chosen one.
+        MealReminderScheduler.reschedule(in: context)
+        ReengagementNotificationService.reschedule(in: context)
     }
 
     private var notificationsBinding: Binding<Bool> {

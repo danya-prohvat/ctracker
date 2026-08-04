@@ -26,6 +26,7 @@ struct PaywallPlanRow: View {
                             Text("BEST VALUE")
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(.white)
+                                .badgeFit()
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)
                                 .background(Capsule().fill(Theme.accent))

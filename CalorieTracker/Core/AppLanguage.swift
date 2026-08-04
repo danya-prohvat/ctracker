@@ -8,11 +8,15 @@ import SwiftUI
 /// current session `appLanguage(_:)` pushes the locale and layout direction
 /// into the SwiftUI environment, so every `Text` switches immediately.
 enum AppLanguage {
-    /// True while non-view strings still run in the language the process was
-    /// launched with — the settings row shows the restart footnote until then.
-    static func needsRestart(chosen: String?) -> Bool {
-        guard let chosen else { return false }
-        return Bundle.main.preferredLocalizations.first != chosen
+    /// Bundle that serves `String(localized:)` lookups in the chosen language
+    /// before the process itself restarts into it. Needed wherever strings are
+    /// baked outside the SwiftUI environment — notification texts are built at
+    /// scheduling time. `nil` or unknown code → `.main` (process language).
+    static func bundle(for code: String?) -> Bundle {
+        guard let code,
+              let path = Bundle.main.path(forResource: code, ofType: "lproj"),
+              let bundle = Bundle(path: path) else { return .main }
+        return bundle
     }
 
     static func isRTL(_ code: String) -> Bool {

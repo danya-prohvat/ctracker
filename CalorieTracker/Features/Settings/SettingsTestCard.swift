@@ -55,7 +55,8 @@ struct SettingsTestCard: View {
             }
             SettingsRowDivider()
             actionRow("Test re-engagement (minutes)", note: nil) {
-                ReengagementNotificationService.scheduleTestSeriesMinutes()
+                ReengagementNotificationService
+                    .scheduleTestSeriesMinutes(languageCode: settings.languageCode)
             }
             SettingsRowDivider()
             actionRow(

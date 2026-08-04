@@ -28,6 +28,7 @@ struct CalendarHistoryLockedCard: View {
                 Text("Unlock history")
                     .font(.headline)
                     .foregroundStyle(.white)
+                    .ctaFit()
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
                     .background(

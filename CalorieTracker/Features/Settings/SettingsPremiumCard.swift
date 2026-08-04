@@ -86,6 +86,7 @@ struct SettingsPremiumCard: View {
                 Text("Upgrade")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.accentDeep)
+                    .badgeFit()
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(Capsule().fill(Theme.accentSoft))
