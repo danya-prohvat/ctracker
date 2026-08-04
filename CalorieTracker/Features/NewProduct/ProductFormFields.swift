@@ -1,9 +1,11 @@
 import Foundation
 
 /// The product form's editable field state plus every derivation on it
-/// (parsing, dirtiness, per-100 normalization). A plain value held in a single
-/// `@State`, so `NewProductForm` stays about layout, routing and persistence.
-struct ProductFormFields {
+/// (parsing, per-100 normalization). A plain value held in a single `@State`,
+/// so `NewProductForm` stays about layout, routing and persistence. Equatable
+/// so the form can detect real edits by comparing against the state captured
+/// right after the initial load (blank, prefilled or loaded product alike).
+struct ProductFormFields: Equatable {
     var name = ""
     var basis: Basis = .per100g
     var perAmountText = "100"
@@ -28,13 +30,6 @@ struct ProductFormFields {
 
     var canSubmit: Bool {
         !trimmedName.isEmpty && caloriesValue != nil && perAmount != nil
-    }
-
-    var isDirty: Bool {
-        !name.isEmpty || !caloriesText.isEmpty || !proteinText.isEmpty
-            || !fatText.isEmpty || !carbsText.isEmpty
-            || perAmountText != "100"
-            || microTexts.values.contains { !$0.isEmpty }
     }
 
     var trimmedName: String { name.trimmingCharacters(in: .whitespaces) }

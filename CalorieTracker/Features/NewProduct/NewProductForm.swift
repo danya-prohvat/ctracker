@@ -16,11 +16,17 @@ struct NewProductForm: View {
     var onContinue: (LoggableFood) -> Void = { _ in }
 
     @State private var fields = ProductFormFields()
+    // Snapshot taken right after the initial load — "dirty" means the user
+    // actually changed something, not "the form has content" (in editing mode
+    // every field starts filled, so the latter would always be true).
+    @State private var loadedFields = ProductFormFields()
     @State private var saveToMyProducts = true
     @State private var barcode: String? = nil
 
     @State private var didLoad = false
     @State private var showDiscard = false
+
+    private var isDirty: Bool { fields != loadedFields }
 
     private var isLogging: Bool { if case .logging = mode { return true }; return false }
     private var isEditing: Bool { if case .editing = mode { return true }; return false }
@@ -62,8 +68,11 @@ struct NewProductForm: View {
             .detailNavBar(
                 backLabel: Text("Back"),
                 title: isEditing ? Text("Edit product") : Text("New product"),
-                onBack: { if fields.isDirty { showDiscard = true } else { cancel() } }
+                onBack: { if isDirty { showDiscard = true } else { cancel() } }
             )
+            // Unsaved edits must not be lost to a swipe-down — the sheet then
+            // only closes via Back, which shows the discard alert.
+            .interactiveDismissDisabled(isDirty)
             .alert("Discard changes?", isPresented: $showDiscard) {
                 Button("Keep editing", role: .cancel) {}
                 Button("Discard", role: .destructive) { cancel() }
@@ -83,6 +92,7 @@ struct NewProductForm: View {
             fields.load(prefill: prefill)
         }
         if let prefillBarcode { barcode = prefillBarcode }
+        loadedFields = fields
     }
 
     private func submit() {
