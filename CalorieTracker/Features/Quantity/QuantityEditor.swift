@@ -23,6 +23,9 @@ struct QuantityEditor: View {
     let onCommit: (Double) -> Void   // receives canonical quantity (g / ml)
 
     @State private var text: String
+    // Untouched-keypad detection (see commit()): exact amount + its prefill string.
+    private let initialCanonical: Double
+    private let initialText: String
 
     init(
         name: String,
@@ -56,7 +59,9 @@ struct QuantityEditor: View {
         self.onDelete = onDelete
         self.onCommit = onCommit
 
-        _text = State(initialValue: Self.inputString(fromCanonical: initialCanonical, unit: unitSystem.defaultUnit(for: basis)))
+        self.initialCanonical = initialCanonical
+        self.initialText = Self.inputString(fromCanonical: initialCanonical, unit: unitSystem.defaultUnit(for: basis))
+        _text = State(initialValue: initialText)
     }
 
     /// Quantity in canonical units (g / ml).
@@ -136,10 +141,12 @@ struct QuantityEditor: View {
 
     // MARK: - Commit
 
-    /// Writes the canonical quantity, with a success haptic on confirm.
+    /// Writes the canonical quantity, with a success haptic on confirm. An
+    /// untouched keypad commits the exact initial amount — re-parsing the
+    /// 1-decimal prefill drifts it (100 g → "3.5 oz" → 99.2 g).
     private func commit() {
         Haptics.success()
-        onCommit(canonical)
+        onCommit(text == initialText ? initialCanonical : canonical)
     }
 
     // MARK: - Editing model (prototype key handling)
