@@ -18,19 +18,23 @@ struct PaywallPlanRow: View {
                     .foregroundStyle(isSelected ? Theme.accent : Theme.textTertiary)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
-                        titleText
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        if plan == .yearly {
-                            Text("BEST VALUE")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(.white)
-                                .badgeFit()
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Theme.accent))
+                    if plan == .yearly {
+                        // SE-width screens: title + pill + price don't fit on
+                        // one line, and the fixed pill would squeeze the title
+                        // into letter-per-line wrapping — drop the pill under
+                        // the title instead.
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 8) {
+                                titleLabel
+                                bestValueBadge
+                            }
+                            VStack(alignment: .leading, spacing: 4) {
+                                titleLabel
+                                bestValueBadge
+                            }
                         }
+                    } else {
+                        titleLabel
                     }
                     if plan == .lifetime {
                         Text("One-time purchase")
@@ -72,6 +76,22 @@ struct PaywallPlanRow: View {
         } else {
             Text(plan.displayName)
         }
+    }
+
+    private var titleLabel: some View {
+        titleText
+            .font(.body.weight(.semibold))
+            .foregroundStyle(Theme.textPrimary)
+    }
+
+    private var bestValueBadge: some View {
+        Text("BEST VALUE")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .badgeFit()
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(Theme.accent))
     }
 
     @ViewBuilder private var price: some View {
