@@ -118,6 +118,9 @@ struct AddFoodSheet: View {
             }
             .padding(.top, 8)
             .padding(.bottom, 40)
+            // Recents stay full-bleed within the column: on iPad the chips
+            // clip at the column edge instead of the screen edge.
+            .contentColumn()
         }
     }
 

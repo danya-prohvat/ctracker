@@ -88,6 +88,7 @@ struct OnboardingFlow: View {
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 4)
+        .contentColumn()
     }
 
     // MARK: - Steps

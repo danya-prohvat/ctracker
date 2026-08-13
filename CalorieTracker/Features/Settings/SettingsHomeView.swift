@@ -88,6 +88,7 @@ struct SettingsHomeView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
+            .contentColumn()
         }
         .contentMargins(.bottom, 110, for: .scrollContent)
         .sheet(isPresented: $showPaywall) {

@@ -12,6 +12,11 @@ struct FloatingTabBar: View {
             tab(.calendar, label: "Calendar", symbol: "calendar")
             tab(.settings, label: "Settings", symbol: "gearshape")
         }
+        // iPad: keep the capsule compact instead of spanning the screen. The
+        // cap sits above the widest iPhone layout (376 pt), so no-op there.
+        // Not `.contentColumn` — the capsule background must wrap the capped
+        // bar, and that modifier would re-expand the view first.
+        .frame(maxWidth: 380)
         .frame(height: 64)
         .glassCapsuleBackground()
         .sensoryFeedback(.selection, trigger: selection)

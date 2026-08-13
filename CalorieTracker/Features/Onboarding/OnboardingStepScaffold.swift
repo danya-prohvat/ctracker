@@ -42,6 +42,7 @@ extension OnboardingFlow {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 12)
         }
+        .contentColumn()
     }
 
     // MARK: - Picker bindings (metric stored internally, imperial converted)

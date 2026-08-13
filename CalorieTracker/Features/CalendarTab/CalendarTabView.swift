@@ -77,6 +77,7 @@ struct CalendarTabView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .contentColumn()
             }
             .contentMargins(.bottom, 110, for: .scrollContent)
             .background(AppBackground())

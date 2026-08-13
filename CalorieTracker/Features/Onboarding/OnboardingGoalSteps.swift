@@ -135,6 +135,7 @@ extension OnboardingFlow {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
+                .contentColumn()
             }
             .dismissesKeyboardOnTap()
 
@@ -147,6 +148,9 @@ extension OnboardingFlow {
                 }
             }
             .padding(20)
+            // Cap before the background so the material bar spans the screen
+            // while the button stays on the column.
+            .contentColumn()
             .background(.ultraThinMaterial)
         }
     }

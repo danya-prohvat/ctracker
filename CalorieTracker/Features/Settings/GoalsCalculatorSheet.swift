@@ -64,11 +64,11 @@ struct GoalsCalculatorSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply") { apply() }
-                        .disabled(!canApply)
-                        .fontWeight(.semibold)
-                }
+            }
+            // Apply lives in a bottom CTA bar, not the nav bar: two asymmetric
+            // toolbar buttons push the inline title off screen-center.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                ProductFormCTABar(title: "Apply", enabled: canApply) { apply() }
             }
             .tint(Theme.accentLabel)
         }

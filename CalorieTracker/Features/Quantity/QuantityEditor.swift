@@ -92,12 +92,17 @@ struct QuantityEditor: View {
                     carbs: NutritionMath.scaled(per100: per100Carbs, quantity: canonical)
                 )
 
+                // The 400 cap keeps calculator-style key proportions inside
+                // an iPad form sheet; equals the widest iPhone width, so no-op
+                // there. The header and live card stay at content width.
                 QuantityQuickChips(unit: unit) { picked in
                     text = picked
                 }
+                .contentColumn(400)
                 .padding(.top, 16)
 
                 QuantityKeypad(onKey: handleKey)
+                    .contentColumn(400)
                     .padding(.top, 12)
             }
             .padding(.horizontal, 20)

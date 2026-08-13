@@ -30,7 +30,12 @@ private struct ScannerCameraView: UIViewRepresentable {
     func makeUIView(context: Context) -> ScannerPreviewUIView {
         let view = ScannerPreviewUIView()
         view.backgroundColor = .clear
-        context.coordinator.configure(previewLayer: view.previewLayer)
+        // The preview connection only exists once the session is configured,
+        // which happens after the first layout pass — re-apply the rotation
+        // then, or a scanner opened in landscape would start sideways.
+        context.coordinator.configure(previewLayer: view.previewLayer) { [weak view] in
+            view?.applyRotationAngle()
+        }
         return view
     }
 
@@ -51,7 +56,8 @@ private struct ScannerCameraView: UIViewRepresentable {
             self.onCode = onCode
         }
 
-        func configure(previewLayer: AVCaptureVideoPreviewLayer) {
+        func configure(previewLayer: AVCaptureVideoPreviewLayer,
+                       onReady: @escaping () -> Void) {
             previewLayer.session = session
             previewLayer.videoGravity = .resizeAspectFill
 
@@ -80,6 +86,7 @@ private struct ScannerCameraView: UIViewRepresentable {
                 if !self.session.inputs.isEmpty {
                     self.session.startRunning()
                 }
+                DispatchQueue.main.async(execute: onReady)
             }
         }
 
@@ -120,5 +127,27 @@ private final class ScannerPreviewUIView: UIView {
             fatalError("Backing layer is not AVCaptureVideoPreviewLayer")
         }
         return layer
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        applyRotationAngle()
+    }
+
+    /// The preview connection defaults to portrait (90°); iPad allows
+    /// landscape, so map the interface orientation explicitly. Rotation is a
+    /// main-thread layout concern — the session's queue is not involved.
+    func applyRotationAngle() {
+        guard let connection = previewLayer.connection,
+              let orientation = window?.windowScene?.interfaceOrientation else { return }
+        let angle: CGFloat = switch orientation {
+        case .landscapeRight: 0
+        case .landscapeLeft: 180
+        case .portraitUpsideDown: 270
+        default: 90
+        }
+        if connection.isVideoRotationAngleSupported(angle) {
+            connection.videoRotationAngle = angle
+        }
     }
 }

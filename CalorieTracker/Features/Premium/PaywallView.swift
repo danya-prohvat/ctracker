@@ -35,6 +35,7 @@ struct PaywallView: View {
             .padding(.horizontal, 20)
             .padding(.top, 56)
             .padding(.bottom, 24)
+            .contentColumn()
         }
         .background(AppBackground())
         // Presented as a sheet from several places — the grabber lives here

@@ -65,6 +65,7 @@ struct DayView: View {
             content
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
+                .contentColumn()
                 // Diary rows slide in/out and the empty state swaps smoothly
                 // when entries are logged or deleted.
                 .animation(.snappy(duration: 0.35), value: entries.count)
@@ -73,13 +74,16 @@ struct DayView: View {
         .background(AppBackground())
         .modifier(navigationChrome)
         .hidesFloatingTabBar(isPresented)
-        .overlay(alignment: .bottomTrailing) {
+        .overlay(alignment: .bottom) {
             // Day details keep an in-card add footer instead of the FAB, so
             // any day stays fully editable from the Calendar too (spec §5).
+            // The 640 frame pins the FAB to the content column's trailing
+            // edge on iPad instead of the screen corner.
             if showsAddButton {
                 FloatingAddButton { showingAdd = true }
                     .padding(.trailing, 26)
                     .padding(.bottom, 88)
+                    .frame(maxWidth: 640, alignment: .bottomTrailing)
             }
         }
         // Today keeps the full-screen add flow under the FAB; a pushed calendar

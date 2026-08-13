@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Expandable "Vitamins & minerals" block at the bottom of the day summary
+/// Expandable "Nutrients" block at the bottom of the day summary
 /// card (spec §2.5/§4). Collapsed it shows how many nutrients are tracked;
 /// expanded it lists each enabled nutrient with the consumed total and, when
 /// a goal exists, a thin progress bar (prototype style). Embed inside the
@@ -47,7 +47,7 @@ struct VitaminsMineralsSection: View {
         } label: {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Vitamins & minerals")
+                    Text("Nutrients")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.textPrimary)
                     Text("\(defs.count) tracked")
@@ -71,7 +71,7 @@ struct VitaminsMineralsSection: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Vitamins and minerals")
+        .accessibilityLabel("Nutrients")
         .accessibilityHint(isExpanded ? "Collapses the list" : "Expands the list")
     }
 

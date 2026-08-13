@@ -25,6 +25,7 @@ struct ProductFormCTABar: View {
         .opacity(enabled ? 1 : 0.5)
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
+        .contentColumn()
     }
 }
 

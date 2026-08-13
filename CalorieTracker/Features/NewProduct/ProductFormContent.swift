@@ -55,6 +55,7 @@ struct ProductFormContent: View {
             .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 20)
+            .contentColumn()
         }
         .scrollDismissesKeyboard(.interactively)
         .dismissesKeyboardOnTap()

@@ -44,6 +44,7 @@ struct QuantityActionBar: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
+        .contentColumn()
     }
 }
 

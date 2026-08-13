@@ -34,6 +34,9 @@ struct ScanBottomBar: View {
                     .foregroundStyle(.white.opacity(0.4))
             }
         }
+        // Cap sits inside the gutters: equals the widest iPhone layout, so
+        // buttons keep their size there and stop stretching on iPad.
+        .contentColumn(400)
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 16)

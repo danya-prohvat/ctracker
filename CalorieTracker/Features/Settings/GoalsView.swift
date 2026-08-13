@@ -34,6 +34,7 @@ struct GoalsView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 4)
+            .contentColumn()
         }
         .dismissesKeyboardOnTap()
         .contentMargins(.bottom, 110, for: .scrollContent)
