@@ -14,8 +14,11 @@ struct ScanActionBar: View {
     var body: some View {
         switch phase {
         case .scanning:
-            #if targetEnvironment(simulator)
+            #if targetEnvironment(simulator) && DEBUG
             // The simulator has no camera — allow typing a barcode by hand.
+            // Hidden in mock-photo screenshot mode (`-scanMockPhoto <path>`).
+            if !ScanMockPhoto.isActive { manualLookupBar }
+            #elseif targetEnvironment(simulator)
             manualLookupBar
             #else
             EmptyView()
@@ -32,7 +35,7 @@ struct ScanActionBar: View {
                 }
                 secondaryButton("Add manually instead") { onCreateManually("") }
             }
-        case .offline(let code):
+        case .offline(let code), .serverError(let code):
             VStack(spacing: 10) {
                 primaryButton("Retry") { onRetry(code) }
                 secondaryButton("Scan again", action: onScanAgain)

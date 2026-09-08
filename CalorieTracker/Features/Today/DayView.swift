@@ -9,9 +9,15 @@ struct DayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
+    // In-app language switch: eager `formatted(...)` strings must follow the
+    // environment locale, not the launch-frozen `Locale.current`.
+    @Environment(\.locale) private var locale
 
     let dayKey: String
     let isToday: Bool
+    /// Reported to TodayView so a midnight day-key refresh is deferred while
+    /// an add/edit flow is open (see TodayView). Nil on calendar day details.
+    private let modalFlowActive: Binding<Bool>?
 
     @Query private var entries: [DiaryEntry]
     @Query private var settingsList: [UserSettings]
@@ -22,9 +28,10 @@ struct DayView: View {
     /// logged entry is irreversible, so we always ask first.
     @State private var pendingDelete: DiaryEntry?
 
-    init(dayKey: String, isToday: Bool) {
+    init(dayKey: String, isToday: Bool, modalFlowActive: Binding<Bool>? = nil) {
         self.dayKey = dayKey
         self.isToday = isToday
+        self.modalFlowActive = modalFlowActive
         let key = dayKey
         _entries = Query(
             filter: #Predicate<DiaryEntry> { $0.dayKey == key },
@@ -35,11 +42,13 @@ struct DayView: View {
     private var settings: UserSettings? { settingsList.first }
     private var totalCalories: Double { entries.reduce(0) { $0 + $1.calories } }
     private var dayDate: Date { DayKey.date(from: dayKey) ?? Date() }
-    private var dayLabel: String { dayDate.formatted(.dateTime.month(.wide).day()) }
+    private var dayLabel: String { dayDate.formatted(.dateTime.month(.wide).day().locale(locale)) }
     /// Native large-title subtitle for the Today root, e.g. "Wednesday, 8 July".
     private var daySubtitle: String {
-        dayDate.formatted(.dateTime.weekday(.wide).month(.wide).day())
+        dayDate.formatted(.dateTime.weekday(.wide).month(.wide).day().locale(locale))
     }
+    /// True while any add/edit modal of this screen is up.
+    private var hasModalFlow: Bool { showingAdd || editing != nil }
 
     /// The Today root shows the floating "+"; the pushed day-detail doesn't.
     private var showsAddButton: Bool { isToday && !isPresented }
@@ -53,7 +62,7 @@ struct DayView: View {
     private var navigationChrome: DayNavigationChrome {
         DayNavigationChrome(
             isPresented: isPresented,
-            monthLabel: dayDate.formatted(.dateTime.month(.wide)),
+            monthLabel: dayDate.formatted(.dateTime.month(.wide).locale(locale)),
             dayLabel: dayLabel,
             subtitle: daySubtitle,
             onBack: { dismiss() }
@@ -99,10 +108,11 @@ struct DayView: View {
             }
             #endif
         }
-        .sheet(item: $editing) { wrapper in
+        .adaptiveSheet(item: $editing) { wrapper in
             QuantityEditSheet(entry: wrapper.entry)
         }
         .confirmDeleteEntry($pendingDelete, onConfirm: delete)
+        .onChange(of: hasModalFlow) { _, active in modalFlowActive?.wrappedValue = active }
     }
 
     @ViewBuilder

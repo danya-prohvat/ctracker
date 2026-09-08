@@ -91,7 +91,7 @@ struct SettingsHomeView: View {
             .contentColumn()
         }
         .contentMargins(.bottom, 110, for: .scrollContent)
-        .sheet(isPresented: $showPaywall) {
+        .adaptiveSheet(isPresented: $showPaywall) {
             PaywallView()
         }
     }

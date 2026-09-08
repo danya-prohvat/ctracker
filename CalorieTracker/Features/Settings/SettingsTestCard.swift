@@ -73,7 +73,7 @@ struct SettingsTestCard: View {
             }
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
-        .sheet(isPresented: $showScheduled) {
+        .adaptiveSheet(isPresented: $showScheduled) {
             PendingNotificationsSheet()
         }
     }
@@ -118,7 +118,9 @@ struct SettingsTestCard: View {
         Binding(
             get: { settings.isPremium },
             set: { newValue in
-                settings.isPremium = newValue
+                // Same path as a real entitlement change, so toggling the
+                // override off also trims tracked nutrients to the free set.
+                PremiumGate.applyEntitlement(newValue, settings: settings)
                 try? context.save()
             }
         )

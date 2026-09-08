@@ -37,17 +37,14 @@ struct ScanFlowView: View {
     /// late response can't fire ads/callbacks over an unrelated screen.
     @State private var lookupTask: Task<Void, Never>?
 
-    private var showsViewfinder: Bool {
-        switch phase {
-        case .scanning, .searching: return true
-        default: return false
-        }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             ScanFlowHeader(onBack: { dismiss() })
-            centerContent
+            ScanCenterContent(
+                phase: phase,
+                scanToken: scanToken,
+                onScannedCode: handleScannedCode
+            )
             ScanBottomBar(
                 phase: phase,
                 manualCode: $manualCode,
@@ -63,26 +60,17 @@ struct ScanFlowView: View {
         .task {
             await ensurePermission()
             await ScanRewardGate.preloadIfNeeded(context: context)
+            #if DEBUG
+            // Screenshot flow: `-scanAutoLookup <code>` fires the lookup as if
+            // that barcode was just scanned (pairs with `-scanMockPhoto`).
+            if let code = UserDefaults.standard.string(forKey: "scanAutoLookup"),
+               !code.isEmpty {
+                try? await Task.sleep(for: .milliseconds(800))
+                handleCode(code)
+            }
+            #endif
         }
         .onDisappear { lookupTask?.cancel() }
-    }
-
-    // MARK: - Layout
-
-    private var centerContent: some View {
-        VStack(spacing: 26) {
-            if showsViewfinder {
-                ScanViewfinder {
-                    if case .scanning = phase {
-                        BarcodeScannerScreen(onCode: handleScannedCode)
-                            .id(scanToken)
-                    }
-                }
-            }
-            ScanStatusPanel(phase: phase)
-        }
-        .padding(.horizontal, 32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Logic
@@ -142,10 +130,14 @@ struct ScanFlowView: View {
 
     private func lookup(_ code: String) {
         phase = .searching(code)
+        // In-app language for the prefilled product name — `Locale.current` is
+        // frozen at launch and lags an in-session language switch.
+        let languageCode = UserSettings.current(in: context).languageCode
         lookupTask?.cancel()
         lookupTask = Task {
             do {
-                let result = try await BarcodeLookupService.lookup(barcode: code)
+                let result = try await BarcodeLookupService.lookup(barcode: code,
+                                                                   languageCode: languageCode)
                 guard !Task.isCancelled else { return }
                 switch result {
                 case .found(let prefill):
@@ -162,7 +154,11 @@ struct ScanFlowView: View {
             } catch {
                 // Our own cancel also lands here (URLSession throws on it).
                 guard !Task.isCancelled else { return }
-                phase = .offline(code)
+                if case LookupError.serverError = error {
+                    phase = .serverError(code)
+                } else {
+                    phase = .offline(code)
+                }
             }
         }
     }

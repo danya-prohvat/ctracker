@@ -62,4 +62,28 @@ enum PremiumGate {
     static func remainingFreeScans(settings: UserSettings) -> Int {
         max(0, freeScanLimit - settings.scanCount)
     }
+
+    /// The single writer of `settings.isPremium`: mirrors a definitive
+    /// entitlement verdict (purchase, restore, sync, DEBUG override). On a true
+    /// premium→free transition the tracked-nutrient set is trimmed forward to
+    /// the free set (spec §2.1 forward rule) — never on a plain launch for a
+    /// user who was already free. Callers with no verdict (offline fetch
+    /// failed) must not call this at all.
+    static func applyEntitlement(_ isPremium: Bool, settings: UserSettings) {
+        let lostPremium = settings.isPremium && !isPremium
+        settings.isPremium = isPremium
+        if lostPremium { trimNutrientsToFreeSet(settings: settings) }
+    }
+
+    /// Intersect the current set with the free set through the tracking log
+    /// (baseline first, then record — past days keep what they tracked then).
+    /// Free nutrients the user had switched off stay off, and stored goal
+    /// overrides for trimmed nutrients are kept for a future re-enable.
+    private static func trimNutrientsToFreeSet(settings: UserSettings) {
+        guard settings.enabledNutrients.contains(where: { !freeNutrientIDs.contains($0) })
+        else { return }
+        settings.ensureNutrientTrackingBaseline()
+        settings.enabledNutrients.removeAll { !freeNutrientIDs.contains($0) }
+        settings.recordNutrientTrackingChange()
+    }
 }

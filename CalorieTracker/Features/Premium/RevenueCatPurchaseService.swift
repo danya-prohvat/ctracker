@@ -124,8 +124,13 @@ final class RevenueCatPurchaseService: PurchaseService {
     }
 
     private func apply(_ info: CustomerInfo) {
-        settings.isPremium =
-            info.entitlements[PurchasesConfig.premiumEntitlementID]?.isActive == true
+        // The gate detects a premium→free transition and trims the tracked
+        // nutrient set forward to the free one; offline fetches never reach
+        // here (see `syncEntitlement`), so premium is never stripped blindly.
+        PremiumGate.applyEntitlement(
+            info.entitlements[PurchasesConfig.premiumEntitlementID]?.isActive == true,
+            settings: settings
+        )
     }
 }
 #endif

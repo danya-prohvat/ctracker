@@ -19,6 +19,8 @@ struct ScanStatusPanel: View {
             denied
         case .offline:
             offline
+        case .serverError:
+            serverError
         case .requestingPermission, .handedOff:
             EmptyView()
         }
@@ -114,6 +116,21 @@ struct ScanStatusPanel: View {
             message(
                 title: "No connection",
                 body: "You're offline. Internet is needed only to look up scanned barcodes.",
+                maxWidth: 250
+            )
+        }
+    }
+
+    private var serverError: some View {
+        VStack(spacing: 16) {
+            statusCircle {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.title.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+            message(
+                title: "Something went wrong",
+                body: "Couldn't reach the food database. Please try again.",
                 maxWidth: 250
             )
         }

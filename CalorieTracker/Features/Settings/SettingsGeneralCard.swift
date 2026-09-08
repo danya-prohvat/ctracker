@@ -24,7 +24,7 @@ struct SettingsGeneralCard: View {
             iCloudRow
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
-        .sheet(isPresented: $showLanguagePicker) {
+        .adaptiveSheet(isPresented: $showLanguagePicker) {
             LanguagePickerSheet(
                 selected: SettingsLanguage(code: settings.languageCode),
                 onSelect: apply

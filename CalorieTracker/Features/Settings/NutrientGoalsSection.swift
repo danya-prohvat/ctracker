@@ -17,7 +17,7 @@ struct NutrientGoalsSection: View {
                 groupCard(group)
             }
         }
-        .sheet(isPresented: $showPaywall) {
+        .adaptiveSheet(isPresented: $showPaywall) {
             PaywallView()
         }
     }

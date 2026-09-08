@@ -50,8 +50,8 @@ struct GoalsView: View {
         .onChange(of: protein) { persistGoals() }
         .onChange(of: fat) { persistGoals() }
         .onChange(of: carbs) { persistGoals() }
-        .sheet(isPresented: $showCalculator) {
-            GoalsCalculatorSheet { plan in
+        .adaptiveSheet(isPresented: $showCalculator) {
+            GoalsCalculatorSheet(unitSystem: settings?.unitSystem ?? .metric) { plan in
                 calories = plan.calories
                 protein = plan.protein
                 fat = plan.fat
@@ -85,14 +85,18 @@ struct GoalsView: View {
         didLoad = true
     }
 
-    /// Soft validation: only positive values are written back; anything else
-    /// leaves the stored goal untouched.
+    /// Soft validation: calories must stay positive, but a macro of 0 is a
+    /// legitimate goal (e.g. zero-carb) and persists — the editor recomputes
+    /// calories from macros, so dropping the 0 would break the kcal = P·4 +
+    /// F·9 + C·4 identity on the next open. Ring/progress code treats a
+    /// non-positive goal like a missing one (guards on `goal > 0`), so 0 never
+    /// divides.
     private func persistGoals() {
         guard didLoad, let settings else { return }
         if calories > 0 { settings.calorieGoal = calories }
-        if protein > 0 { settings.proteinGoal = protein }
-        if fat > 0 { settings.fatGoal = fat }
-        if carbs > 0 { settings.carbGoal = carbs }
+        if protein >= 0 { settings.proteinGoal = protein }
+        if fat >= 0 { settings.fatGoal = fat }
+        if carbs >= 0 { settings.carbGoal = carbs }
         try? context.save()
     }
 }

@@ -7,20 +7,37 @@ import SwiftUI
 struct GoalsCalculatorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
+    /// Drives the input units (cm·kg vs ft·lbs) the same way onboarding does;
+    /// conversion happens once on Apply (`BodyUnits`), math stays metric.
+    let unitSystem: UnitSystem
     let onApply: (MacroPlan) -> Void
 
     @State private var sex: CalcSex = .unspecified
     @State private var age: Int = 25
     @State private var heightText = ""
+    @State private var feetText = ""
+    @State private var inchesText = ""
     @State private var weightText = ""
     @State private var activity: CalcActivity = .light
     @State private var direction: CalcGoalDirection = .maintain
 
     private let directions: [CalcGoalDirection] = [.lose, .maintain, .gain]
 
-    private var height: Double? { Format.parse(heightText) }
-    private var weight: Double? { Format.parse(weightText) }
-    private var canApply: Bool { (height ?? 0) > 0 && (weight ?? 0) > 0 }
+    private var isImperial: Bool { unitSystem == .us }
+
+    private var heightCm: Double? {
+        guard isImperial else { return Format.parse(heightText) }
+        let inches = (Format.parse(feetText) ?? 0) * BodyUnits.inchesPerFoot
+            + (Format.parse(inchesText) ?? 0)
+        return inches > 0 ? BodyUnits.cm(fromInches: inches) : nil
+    }
+
+    private var weightKg: Double? {
+        guard let value = Format.parse(weightText) else { return nil }
+        return isImperial ? BodyUnits.kg(fromLbs: value) : value
+    }
+
+    private var canApply: Bool { (heightCm ?? 0) > 0 && (weightKg ?? 0) > 0 }
 
     var body: some View {
         NavigationStack {
@@ -36,8 +53,13 @@ struct GoalsCalculatorSheet: View {
                             Text("\(years)").tag(years)
                         }
                     }
-                    measurementField("Height", text: $heightText, unit: "cm")
-                    measurementField("Weight", text: $weightText, unit: "kg")
+                    if isImperial {
+                        imperialHeightRow
+                        measurementField("Weight", text: $weightText, unit: "lbs")
+                    } else {
+                        measurementField("Height", text: $heightText, unit: "cm")
+                        measurementField("Weight", text: $weightText, unit: "kg")
+                    }
                 }
 
                 Section("Activity") {
@@ -92,10 +114,33 @@ struct GoalsCalculatorSheet: View {
         }
     }
 
+    /// US height entry as feet + inches; the ′/″ marks are the same verbatim
+    /// symbols the onboarding height wheel shows.
+    private var imperialHeightRow: some View {
+        HStack(spacing: 4) {
+            Text("Height")
+            Spacer()
+            TextField("0", text: $feetText)
+                .keyboardType(.decimalPad)
+                .numericInputLimit($feetText, maxDigits: 1)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 44)
+            Text(verbatim: "′")
+                .foregroundStyle(Theme.textSecondary)
+            TextField("0", text: $inchesText)
+                .keyboardType(.decimalPad)
+                .numericInputLimit($inchesText, maxDigits: 2)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 52)
+            Text(verbatim: "″")
+                .foregroundStyle(Theme.textSecondary)
+        }
+    }
+
     /// The calculator derives lose/maintain/gain from the current→target
     /// difference, so encode the chosen direction as a ±5 kg target offset.
     private func apply() {
-        guard let heightCm = height, let weightKg = weight else { return }
+        guard let heightCm, let weightKg else { return }
         let targetWeightKg: Double
         switch direction {
         case .lose: targetWeightKg = weightKg - 5
@@ -140,6 +185,10 @@ struct GoalsCalculatorSheet: View {
     }
 }
 
-#Preview {
-    GoalsCalculatorSheet { _ in }
+#Preview("Metric") {
+    GoalsCalculatorSheet(unitSystem: .metric) { _ in }
+}
+
+#Preview("US") {
+    GoalsCalculatorSheet(unitSystem: .us) { _ in }
 }

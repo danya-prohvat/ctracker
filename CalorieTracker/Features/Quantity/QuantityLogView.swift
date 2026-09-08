@@ -11,6 +11,9 @@ struct QuantityLogView: View {
     let dayKey: String
     let unitSystem: UnitSystem
     let onLogged: () -> Void
+    /// "Today" as state, refreshed via `onPossibleDayChange` — the CTA copy
+    /// must stay honest if the sheet sits open across midnight.
+    @State private var todayKey = DayKey.today
 
     var body: some View {
         QuantityEditor(
@@ -26,11 +29,14 @@ struct QuantityLogView: View {
             // decision 2026-07-14) — not from the last logged quantity.
             initialCanonical: 100,
             title: "Add quantity",
-            ctaTitle: "Add to today",
+            // Day-aware CTA: logging into a past day from the calendar must
+            // not promise "today" (fix 2026-09-07).
+            ctaTitle: dayKey == todayKey ? "Add to today" : "Add",
             onBack: { dismiss() },      // pop back to the add list
             onCommit: log
         )
         .background(AppBackground())
+        .onPossibleDayChange { todayKey = DayKey.today }
     }
 
     private func log(_ canonical: Double) {

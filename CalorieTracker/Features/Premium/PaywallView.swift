@@ -50,7 +50,7 @@ struct PaywallView: View {
             quotes = PaywallQuotesCache.cached
             quotes = await PaywallQuotesCache.load(settings: currentSettings)
         }
-        .sheet(item: $legal) { page in
+        .adaptiveSheet(item: $legal) { page in
             SafariWebView(url: page.url)
                 .ignoresSafeArea()
                 .presentationDragIndicator(.visible)

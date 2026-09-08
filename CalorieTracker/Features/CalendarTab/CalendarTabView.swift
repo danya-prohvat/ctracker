@@ -17,7 +17,8 @@ struct CalendarTabView: View {
     /// as TodayView, 2026-07-28).
     @State private var todayKey = DayKey.today
     /// First moment of the visible period (month-start or week-start).
-    @State private var anchor: Date = CalendarTabView.periodStart(of: .month, for: Date())
+    /// Initial value honours the `-calendarMonthsBack` DEBUG screenshot arg.
+    @State private var anchor: Date = CalendarAnchorMath.initialAnchor()
     /// Last period step (-1/+1) — drives the grid's directional slide.
     @State private var stepDirection = 0
     /// kcal totals per dayKey for the visible period. One fetch per period.
@@ -85,7 +86,7 @@ struct CalendarTabView: View {
             .navigationDestination(item: $selectedDayKey) { key in
                 DayView(dayKey: key, isToday: key == todayKey)
             }
-            .sheet(isPresented: $showingPaywall) {
+            .adaptiveSheet(isPresented: $showingPaywall) {
                 PaywallView()
             }
             .onAppear { refetch() }
@@ -94,12 +95,16 @@ struct CalendarTabView: View {
                 // of leaving stale locked-state @State until the next refetch.
                 refetch()
             }
-            .onChange(of: mode) {
+            .onChange(of: mode) { oldMode, newMode in
                 // Scale change is not a step — crossfade, don't slide.
                 stepDirection = 0
-                // Keep the user near where they were when the scale changes.
+                // Re-anchor on today when it was on screen; otherwise keep the
+                // user near where they were (see CalendarAnchorMath).
                 withAnimation(.easeInOut(duration: 0.2)) {
-                    anchor = Self.periodStart(of: mode.component, for: anchor)
+                    anchor = CalendarAnchorMath.switchAnchor(
+                        from: oldMode, to: newMode,
+                        anchor: anchor, todayKey: todayKey
+                    )
                 }
                 refetch()
             }
@@ -155,7 +160,7 @@ struct CalendarTabView: View {
         ) else { return }
         stepDirection = delta
         withAnimation(.easeInOut(duration: 0.25)) {
-            anchor = Self.periodStart(of: mode.component, for: shifted)
+            anchor = CalendarAnchorMath.periodStart(of: mode.component, for: shifted)
         }
         refetch()
     }
@@ -172,11 +177,6 @@ struct CalendarTabView: View {
         periodStats = snapshot.stats
         nutrientAverages = snapshot.nutrientAverages
         periodFullyLocked = snapshot.fullyLocked
-    }
-
-    /// Start of the calendar period (`.weekOfYear` or `.month`) containing `date`.
-    private static func periodStart(of component: Calendar.Component, for date: Date) -> Date {
-        Calendar.current.dateInterval(of: component, for: date)?.start ?? date
     }
 }
 

@@ -21,7 +21,7 @@ struct SettingsAboutCard: View {
             row("Terms of Use") { webLink = SettingsWebLink(url: AppLinks.termsURL) }
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
-        .sheet(item: $webLink) { link in
+        .adaptiveSheet(item: $webLink) { link in
             SafariWebView(url: link.url)
                 .ignoresSafeArea()
                 .presentationDragIndicator(.visible)

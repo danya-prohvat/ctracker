@@ -13,7 +13,13 @@ struct VitaminsMineralsSection: View {
     /// day, not the current global set, so history stays truthful (spec §2.1).
     let dayKey: String
 
+    #if DEBUG
+    // Screenshot launches (`-seedScreenshotDay 1`) start with the list open,
+    // so the vitamins/minerals frame needs no manual tap.
+    @State private var isExpanded = UserDefaults.standard.bool(forKey: "seedScreenshotDay")
+    #else
     @State private var isExpanded = false
+    #endif
 
     private var defs: [NutrientDef] { settings.enabledNutrientDefs(on: dayKey) }
 

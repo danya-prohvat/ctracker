@@ -30,11 +30,18 @@ private struct ScannerCameraView: UIViewRepresentable {
     func makeUIView(context: Context) -> ScannerPreviewUIView {
         let view = ScannerPreviewUIView()
         view.backgroundColor = .clear
+        let coordinator = context.coordinator
+        // Size or rotation changes shift the layer↔camera mapping — keep the
+        // detection window in sync with every layout pass.
+        view.onLayoutChange = { [weak coordinator] in
+            coordinator?.updateRectOfInterest()
+        }
         // The preview connection only exists once the session is configured,
         // which happens after the first layout pass — re-apply the rotation
         // then, or a scanner opened in landscape would start sideways.
-        context.coordinator.configure(previewLayer: view.previewLayer) { [weak view] in
+        coordinator.configure(previewLayer: view.previewLayer) { [weak view] in
             view?.applyRotationAngle()
+            coordinator.updateRectOfInterest()
         }
         return view
     }
@@ -51,6 +58,13 @@ private struct ScannerCameraView: UIViewRepresentable {
         private let sessionQueue = DispatchQueue(label: "ScannerCameraView.session")
         /// Main-queue only (delegate callbacks are delivered on main).
         private var hasReported = false
+        /// Main-queue only: layer→camera conversion is garbage before the
+        /// session runs, so rect-of-interest updates wait for this flag.
+        private var isSessionReady = false
+        private weak var previewLayer: AVCaptureVideoPreviewLayer?
+        /// Set once during configuration on the session queue; rect-of-interest
+        /// writes happen on that same queue.
+        private var metadataOutput: AVCaptureMetadataOutput?
 
         init(onCode: @escaping (String) -> Void) {
             self.onCode = onCode
@@ -58,6 +72,7 @@ private struct ScannerCameraView: UIViewRepresentable {
 
         func configure(previewLayer: AVCaptureVideoPreviewLayer,
                        onReady: @escaping () -> Void) {
+            self.previewLayer = previewLayer
             previewLayer.session = session
             previewLayer.videoGravity = .resizeAspectFill
 
@@ -79,14 +94,36 @@ private struct ScannerCameraView: UIViewRepresentable {
                     output.metadataObjectTypes = wanted.filter {
                         output.availableMetadataObjectTypes.contains($0)
                     }
+                    self.metadataOutput = output
                 }
 
                 self.session.commitConfiguration()
                 // No camera (simulator / no permission) → leave the clear view.
-                if !self.session.inputs.isEmpty {
+                let hasCamera = !self.session.inputs.isEmpty
+                if hasCamera {
                     self.session.startRunning()
                 }
-                DispatchQueue.main.async(execute: onReady)
+                DispatchQueue.main.async { [weak self] in
+                    self?.isSessionReady = hasCamera
+                    onReady()
+                }
+            }
+        }
+
+        /// Restricts detection to the visible viewfinder: the preview crops the
+        /// camera frame with `resizeAspectFill`, so without a rect of interest
+        /// barcodes decode anywhere in the frame — including areas the user
+        /// cannot see. Converts the layer's bounds (plus a small margin) into
+        /// camera space. Main thread; no-op until the session is running.
+        func updateRectOfInterest() {
+            guard isSessionReady, let previewLayer else { return }
+            let visible = previewLayer.bounds.insetBy(dx: -16, dy: -16)
+            let region = previewLayer
+                .metadataOutputRectConverted(fromLayerRect: visible)
+                .intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+            guard !region.isNull, region.width > 0, region.height > 0 else { return }
+            sessionQueue.async { [weak self] in
+                self?.metadataOutput?.rectOfInterest = region
             }
         }
 
@@ -129,9 +166,14 @@ private final class ScannerPreviewUIView: UIView {
         return layer
     }
 
+    /// Fired after each layout pass, once rotation is applied, so the
+    /// coordinator can keep the metadata rect of interest in sync.
+    var onLayoutChange: (() -> Void)?
+
     override func layoutSubviews() {
         super.layoutSubviews()
         applyRotationAngle()
+        onLayoutChange?()
     }
 
     /// The preview connection defaults to portrait (90°); iPad allows

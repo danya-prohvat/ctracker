@@ -34,6 +34,7 @@ struct NewProductLogSheet: View {
             NewProductForm(mode: .logging,
                            prefill: route.prefill,
                            prefillBarcode: route.barcode,
+                           dayKey: dayKey,
                            onContinue: logOnce)
         }
     }

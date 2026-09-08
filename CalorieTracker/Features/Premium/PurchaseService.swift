@@ -55,12 +55,12 @@ final class StubPurchaseService: PurchaseService {
 
     func purchase(_ plan: PaywallPlan) async throws {
         try await Task.sleep(nanoseconds: 800_000_000)
-        settings.isPremium = true
+        PremiumGate.applyEntitlement(true, settings: settings)
     }
 
     func restore() async throws {
         try await Task.sleep(nanoseconds: 800_000_000)
-        settings.isPremium = true
+        PremiumGate.applyEntitlement(true, settings: settings)
     }
 
     // No backend to ask — whatever the debug toggle / stub purchase set stands.

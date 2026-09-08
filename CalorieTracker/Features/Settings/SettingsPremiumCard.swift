@@ -76,7 +76,9 @@ struct SettingsPremiumCard: View {
                     Text("Try Premium")
                         .font(.headline)
                         .foregroundStyle(Theme.textPrimary)
-                    Text("All nutrients, scanner, iCloud sync & full history")
+                    // iCloud sync is a free feature since 2026-07-28 — the
+                    // upsell must not sell it as premium.
+                    Text("All nutrients, scanner & full history")
                         .font(.footnote)
                         .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.leading)

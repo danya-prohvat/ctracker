@@ -80,7 +80,16 @@ struct RootView: View {
                     // Re-mirror the paid entitlement — purchase() and restore()
                     // are otherwise the only reads, so without this an expired
                     // subscription would keep premium forever.
-                    await PurchaseServices.make(settings: settings).syncEntitlement()
+                    #if DEBUG
+                    // Screenshot launches pin the seeded premium override —
+                    // a live RevenueCat answer would revoke it mid-frame.
+                    let skipSync = UserDefaults.standard.bool(forKey: "seedScreenshotDay")
+                    #else
+                    let skipSync = false
+                    #endif
+                    if !skipSync {
+                        await PurchaseServices.make(settings: settings).syncEntitlement()
+                    }
                     try? context.save()
                     // Warm the paywall price cache so plan rows render instantly
                     // whenever the paywall opens (user decision 2026-08-03).
@@ -101,6 +110,9 @@ struct RootView: View {
             let settings = UserSettings.current(in: context)
             Seeder.seedIfRequested(context)
             #if DEBUG
+            // Launch with `-seedScreenshotDay 1` to rebuild today as the fixed
+            // App Store screenshot day (see ScreenshotSeeder).
+            ScreenshotSeeder.seedIfRequested(context)
             // Launch with `-resetOnboarding 1` to re-run the first-launch flow,
             // or `-skipOnboarding 1` to force the main UI for verification.
             if UserDefaults.standard.bool(forKey: "resetOnboarding") {

@@ -9,7 +9,13 @@ struct MicroFieldsSection: View {
 
     @Query private var settingsList: [UserSettings]
 
+    #if DEBUG
+    // Screenshot launches (`-seedScreenshotDay 1`) start with the fields open,
+    // so the scanned-card frame shows the OFF vitamins/minerals immediately.
+    @State private var isExpanded = UserDefaults.standard.bool(forKey: "seedScreenshotDay")
+    #else
     @State private var isExpanded = false
+    #endif
     @State private var showNutrientSettings = false
 
     init(microTexts: Binding<[String: String]>) {
@@ -63,7 +69,7 @@ struct MicroFieldsSection: View {
             }
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
-        .sheet(isPresented: $showNutrientSettings) {
+        .adaptiveSheet(isPresented: $showNutrientSettings) {
             NavigationStack {
                 NutrientsSettingsView()
             }

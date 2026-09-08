@@ -16,7 +16,7 @@ struct AddFoodPresentation: ViewModifier {
 
     func body(content: Content) -> some View {
         if asSheet {
-            content.sheet(isPresented: $isActive) {
+            content.adaptiveSheet(isPresented: $isActive) {
                 flow.presentationDragIndicator(.visible)
             }
         } else {

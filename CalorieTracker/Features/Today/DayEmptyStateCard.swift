@@ -23,11 +23,19 @@ struct DayEmptyStateCard: View {
                 Text("Nothing logged yet")
                     .font(.headline)
                     .foregroundStyle(Theme.textPrimary)
-                Text("Tap the + button to add your first meal of the day.")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 220)
+                // The "+" hint only where the FAB exists (Today root); the
+                // pushed today detail shows the inline Add food button instead.
+                Group {
+                    if onAdd == nil {
+                        Text("Tap the + button to add your first meal of the day.")
+                    } else {
+                        Text("Tap Add food below to log your first meal of the day.")
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 220)
             } else {
                 Text("Nothing logged this day")
                     .font(.headline)
@@ -60,6 +68,7 @@ struct DayEmptyStateCard: View {
         AppBackground()
         VStack(spacing: 20) {
             DayEmptyStateCard(isToday: true, dateLabel: "July 4")
+            DayEmptyStateCard(isToday: true, dateLabel: "July 4") {}
             DayEmptyStateCard(isToday: false, dateLabel: "July 4") {}
         }
         .padding(20)

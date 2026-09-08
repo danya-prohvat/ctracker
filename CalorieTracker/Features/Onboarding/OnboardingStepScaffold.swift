@@ -56,8 +56,8 @@ extension OnboardingFlow {
 
     var heightInchesSelection: Binding<Int> {
         Binding(
-            get: { onboardingClamp(Int((heightCm / 2.54).rounded()), 48, 84) },
-            set: { heightCm = Double($0) * 2.54 }
+            get: { onboardingClamp(Int(BodyUnits.inches(fromCm: heightCm).rounded()), 48, 84) },
+            set: { heightCm = BodyUnits.cm(fromInches: Double($0)) }
         )
     }
 
@@ -70,8 +70,8 @@ extension OnboardingFlow {
 
     var weightLbsSelection: Binding<Int> {
         Binding(
-            get: { onboardingClamp(Int((weightKg * 2.20462).rounded()), 77, 440) },
-            set: { weightKg = Double($0) / 2.20462 }
+            get: { onboardingClamp(Int(BodyUnits.lbs(fromKg: weightKg).rounded()), 77, 440) },
+            set: { weightKg = BodyUnits.kg(fromLbs: Double($0)) }
         )
     }
 
@@ -84,8 +84,8 @@ extension OnboardingFlow {
 
     var targetLbsSelection: Binding<Int> {
         Binding(
-            get: { onboardingClamp(Int((targetWeightKg * 2.20462).rounded()), 77, 440) },
-            set: { targetWeightKg = Double($0) / 2.20462 }
+            get: { onboardingClamp(Int(BodyUnits.lbs(fromKg: targetWeightKg).rounded()), 77, 440) },
+            set: { targetWeightKg = BodyUnits.kg(fromLbs: Double($0)) }
         )
     }
 }

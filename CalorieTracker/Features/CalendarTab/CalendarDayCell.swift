@@ -70,7 +70,7 @@ struct CalendarDayCell: View {
     private var content: some View {
         if isLocked {
             VStack(spacing: 3) {
-                Text(date, format: .dateTime.day())
+                dayNumber
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.calendarDayMuted)
                 Image(systemName: "lock.fill")
@@ -98,11 +98,19 @@ struct CalendarDayCell: View {
                         trackColor: Self.ringTrack
                     )
                 }
-                Text(date, format: .dateTime.day())
+                dayNumber
                     .font(isToday ? .headline.weight(.bold) : .subheadline.weight(.semibold))
                     .foregroundStyle(numberColor)
             }
         }
+    }
+
+    /// Bare day-of-month for the grid cell. `.dateTime.day()` appends a unit
+    /// in CJK locales ("8日") and overflows the ring, so the cell shows just
+    /// the localized number — like the system Calendar's month grid. VoiceOver
+    /// keeps the full date wording below.
+    private var dayNumber: Text {
+        Text(Calendar.current.component(.day, from: date), format: .number.grouping(.never))
     }
 
     /// VoiceOver label: date, calories vs. target, and the state word so color

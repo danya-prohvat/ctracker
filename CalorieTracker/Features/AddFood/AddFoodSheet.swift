@@ -10,6 +10,9 @@ struct AddFoodSheet: View {
     // Internal (not private): AddFoodScanFlow.swift extends this type.
     @Environment(\.modelContext) var context
     @Environment(\.dismiss) private var dismiss
+    // In-app language switch: the eager back-label string must follow the
+    // environment locale, not the launch-frozen `Locale.current`.
+    @Environment(\.locale) private var locale
 
     let dayKey: String
 
@@ -54,19 +57,19 @@ struct AddFoodSheet: View {
                 onBack: { dismiss() }
             )
             .hidesFloatingTabBar()
-            .sheet(item: $addSheet, onDismiss: popIfNeeded) {
+            .adaptiveSheet(item: $addSheet, onDismiss: popIfNeeded) {
                 addStep($0.kind)
                     .presentationDragIndicator(.visible)
             }
-            .sheet(item: $editingProduct) { product in
+            .adaptiveSheet(item: $editingProduct) { product in
                 NavigationStack { NewProductForm(mode: .editing(product)) }
                     .presentationDragIndicator(.visible)
             }
-            .sheet(isPresented: $creatingProduct) {
+            .adaptiveSheet(isPresented: $creatingProduct) {
                 NavigationStack { NewProductForm(mode: .saving) }
                     .presentationDragIndicator(.visible)
             }
-            .sheet(isPresented: $showPaywall) { PaywallView() }
+            .adaptiveSheet(isPresented: $showPaywall) { PaywallView() }
             .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) { scanFlow }
             .confirmDeleteProduct($productToDelete, onConfirm: delete)
             .task { applyDebugRoute() }
@@ -126,7 +129,7 @@ struct AddFoodSheet: View {
 
     /// Back label = the day this page was pushed from, e.g. "9 July".
     private var dayLabel: String {
-        (DayKey.date(from: dayKey) ?? Date()).formatted(.dateTime.month(.wide).day())
+        (DayKey.date(from: dayKey) ?? Date()).formatted(.dateTime.month(.wide).day().locale(locale))
     }
 
     // MARK: - Actions (scan wiring lives in AddFoodScanFlow.swift)

@@ -13,7 +13,12 @@ struct NewProductForm: View {
     let mode: ProductFormMode
     var prefill: LoggableFood? = nil          // e.g. from a barcode scan result
     var prefillBarcode: String? = nil         // barcode to attach (scan flow)
+    var dayKey: String? = nil                 // logging target day; nil = today
     var onContinue: (LoggableFood) -> Void = { _ in }
+
+    /// "Today" as state, refreshed via `onPossibleDayChange` — the CTA copy
+    /// must stay honest if the form sits open across midnight.
+    @State private var todayKey = DayKey.today
 
     @State private var fields = ProductFormFields()
     // Snapshot taken right after the initial load — "dirty" means the user
@@ -42,7 +47,11 @@ struct NewProductForm: View {
 
     private var primaryTitle: LocalizedStringKey {
         switch mode {
-        case .logging: return saveToMyProducts ? "Save" : "Add to today"
+        case .logging:
+            // Day-aware CTA: log-once into a past day from the calendar must
+            // not promise "today" (fix 2026-09-08, same rule as QuantityLogView).
+            let logsToday = (dayKey ?? todayKey) == todayKey
+            return saveToMyProducts ? "Save" : (logsToday ? "Add to today" : "Add")
         case .saving, .editing: return "Save"
         }
     }
@@ -70,15 +79,17 @@ struct NewProductForm: View {
                 title: isEditing ? Text("Edit product") : Text("New product"),
                 onBack: { if isDirty { showDiscard = true } else { cancel() } }
             )
-            // Unsaved edits must not be lost to a swipe-down — the sheet then
-            // only closes via Back, which shows the discard alert.
-            .interactiveDismissDisabled(isDirty)
+            // Unsaved edits must not be lost to a swipe-down, backdrop tap or
+            // grabber flick: on iPhone this disables interactive dismiss, on
+            // iPad PadSheetChrome routes close attempts to the discard alert.
+            .adaptiveSheetDismissGuard(isDirty) { showDiscard = true }
             .alert("Discard changes?", isPresented: $showDiscard) {
                 Button("Keep editing", role: .cancel) {}
                 Button("Discard", role: .destructive) { cancel() }
             } message: {
                 Text("What you've entered won't be saved.")
             }
+            .onPossibleDayChange { todayKey = DayKey.today }
             .onAppear(perform: loadOnce)
     }
 
