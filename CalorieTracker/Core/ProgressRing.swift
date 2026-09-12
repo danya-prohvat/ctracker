@@ -3,6 +3,9 @@ import SwiftUI
 /// Circular progress ring used across Today, Calendar and Goals:
 /// a light track plus a round-capped arc starting at 12 o'clock.
 /// The arc springs in from zero on first appearance (Fitness-style fill-in).
+/// Deliberately NOT mirrored under RTL: the fill stays clockwise everywhere,
+/// matching Apple's Fitness/Activity rings (`rotationEffect` doesn't flip,
+/// which is exactly the behavior we want — don't "fix" for layoutDirection).
 struct ProgressRing: View {
     var progress: Double
     var lineWidth: CGFloat

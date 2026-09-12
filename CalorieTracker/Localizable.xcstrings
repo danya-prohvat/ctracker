@@ -29335,9 +29335,21 @@
           }
         },
         "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Goal: gain %1$@ · about %2$lld weeks"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Goal: gain %1$@ · about %2$lld week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Goal: gain %1$@ · about %2$lld weeks"
+                }
+              }
+            }
           }
         },
         "es-ES" : {
@@ -29875,9 +29887,21 @@
           }
         },
         "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Goal: lose %1$@ · about %2$lld weeks"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Goal: lose %1$@ · about %2$lld week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Goal: lose %1$@ · about %2$lld weeks"
+                }
+              }
+            }
           }
         },
         "es-ES" : {

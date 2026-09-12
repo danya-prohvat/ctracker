@@ -20,6 +20,19 @@ enum AppLanguage {
         return bundle
     }
 
+    /// Same bundle for `String(localized:)` call sites that cannot reach
+    /// `UserSettings` (unit symbols, enum state names, purchase errors —
+    /// values baked as `String`, which the SwiftUI environment locale does
+    /// not re-resolve). Reads the app-domain `AppleLanguages` override that
+    /// the language picker writes together with `settings.languageCode`, so
+    /// the two never diverge; System (no override) resolves the stale-process
+    /// case exactly like `effectiveOverride(nil)`.
+    static var current: Bundle {
+        let appDomain = Bundle.main.bundleIdentifier
+            .flatMap { UserDefaults.standard.persistentDomain(forName: $0) }
+        return bundle(for: (appDomain?["AppleLanguages"] as? [String])?.first)
+    }
+
     static func isRTL(_ code: String) -> Bool {
         Locale.Language(identifier: code).characterDirection == .rightToLeft
     }

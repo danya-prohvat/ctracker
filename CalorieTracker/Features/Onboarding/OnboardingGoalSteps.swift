@@ -66,8 +66,8 @@ extension OnboardingFlow {
         // Safe default pace of 0.5 kg per week (spec §8).
         let weeks = max(1, Int((diffKg / 0.5).rounded(.up)))
         let amount = useImperial
-            ? String(localized: "\(Format.amount((diffKg * 2.20462).rounded())) lbs")
-            : String(localized: "\(Format.amount(diffKg)) kg")
+            ? String(localized: "\(Format.amount((diffKg * 2.20462).rounded())) lbs", bundle: AppLanguage.current)
+            : String(localized: "\(Format.amount(diffKg)) kg", bundle: AppLanguage.current)
 
         return Group {
             switch direction {

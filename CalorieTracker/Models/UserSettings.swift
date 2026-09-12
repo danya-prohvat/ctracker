@@ -35,14 +35,17 @@ final class UserSettings {
     var notificationsEnabled: Bool = false
     var iCloudSyncEnabled: Bool = false
 
-    /// Barcode scans used by a free user (3 free, then paywall — spec §9).
+    /// Successful OFF-lookup scans used by a free user (10 free, then paywall —
+    /// user decision 2026-08-03; local re-scans and not-found don't count).
     var scanCount: Int = 0
 
     var onboardingCompleted: Bool = false
     /// Resume point if onboarding is interrupted (spec §8).
     var onboardingStep: Int = 0
 
-    /// Local premium override for development until RevenueCat is wired (spec §9).
+    /// Local mirror of the RevenueCat "pro" entitlement, kept in sync by
+    /// `PurchaseService.syncEntitlement()` on every scene activation. The rest
+    /// of the app reads it only through `PremiumGate`.
     var isPremium: Bool = false
 
     var unitSystem: UnitSystem {

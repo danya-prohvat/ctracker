@@ -24,10 +24,10 @@ enum FoodUnit: String, Codable, CaseIterable, Identifiable {
     /// letters (e.g. Arabic); the enum raw values stay the stable storage keys.
     var label: String {
         switch self {
-        case .g: return String(localized: "g", comment: "Unit symbol: grams")
-        case .oz: return String(localized: "oz", comment: "Unit symbol: ounces")
-        case .ml: return String(localized: "ml", comment: "Unit symbol: milliliters")
-        case .floz: return String(localized: "fl oz", comment: "Unit symbol: fluid ounces")
+        case .g: return String(localized: "g", bundle: AppLanguage.current, comment: "Unit symbol: grams")
+        case .oz: return String(localized: "oz", bundle: AppLanguage.current, comment: "Unit symbol: ounces")
+        case .ml: return String(localized: "ml", bundle: AppLanguage.current, comment: "Unit symbol: milliliters")
+        case .floz: return String(localized: "fl oz", bundle: AppLanguage.current, comment: "Unit symbol: fluid ounces")
         }
     }
 }

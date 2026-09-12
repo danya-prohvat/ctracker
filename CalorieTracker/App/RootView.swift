@@ -50,9 +50,6 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.22), value: tabBarHidden)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .tint(Theme.accent)
-        // In-app language override takes effect immediately (locale + RTL);
-        // AppleLanguages completes the switch on the next launch.
-        .appLanguage(settingsList.first?.languageCode)
         // The palette is light-only for now; without this, system materials
         // and sheets would flip dark while cards/text stay light.
         .preferredColorScheme(.light)
@@ -140,6 +137,12 @@ struct RootView: View {
             }
         }
         .fullScreenCover(isPresented: $postOnboardingPaywall) { PaywallView() }
+        // In-app language override takes effect immediately (locale + RTL);
+        // AppleLanguages completes the switch on the next launch. Outermost
+        // on purpose: presented covers inherit the environment only from
+        // modifiers ABOVE their attachment point, so `.appLanguage` below the
+        // `.fullScreenCover`s would leave onboarding/paywall un-overridden.
+        .appLanguage(settingsList.first?.languageCode)
     }
 }
 

@@ -29,10 +29,10 @@ enum Basis: String, Codable, CaseIterable, Identifiable {
     /// Localized so the unit symbol can follow the script (e.g. Arabic).
     func per100Compact(_ unitSystem: UnitSystem) -> String {
         switch (unitSystem, isVolume) {
-        case (.metric, false): return String(localized: "100 g", comment: "Reference amount: 100 grams")
-        case (.metric, true): return String(localized: "100 ml", comment: "Reference amount: 100 milliliters")
-        case (.us, false): return String(localized: "3.5 oz", comment: "Reference amount: 3.5 ounces (= 100 g)")
-        case (.us, true): return String(localized: "3.4 fl oz", comment: "Reference amount: 3.4 fluid ounces (= 100 ml)")
+        case (.metric, false): return String(localized: "100 g", bundle: AppLanguage.current, comment: "Reference amount: 100 grams")
+        case (.metric, true): return String(localized: "100 ml", bundle: AppLanguage.current, comment: "Reference amount: 100 milliliters")
+        case (.us, false): return String(localized: "3.5 oz", bundle: AppLanguage.current, comment: "Reference amount: 3.5 ounces (= 100 g)")
+        case (.us, true): return String(localized: "3.4 fl oz", bundle: AppLanguage.current, comment: "Reference amount: 3.4 fluid ounces (= 100 ml)")
         }
     }
 }

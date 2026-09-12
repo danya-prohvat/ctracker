@@ -10,9 +10,9 @@ enum NutrientUnit: String, Codable {
     /// letters (e.g. Arabic); the enum raw values stay the stable storage keys.
     var label: String {
         switch self {
-        case .g: return String(localized: "g", comment: "Unit symbol: grams")
-        case .mg: return String(localized: "mg", comment: "Unit symbol: milligrams")
-        case .mcg: return String(localized: "µg", comment: "Unit symbol: micrograms")
+        case .g: return String(localized: "g", bundle: AppLanguage.current, comment: "Unit symbol: grams")
+        case .mg: return String(localized: "mg", bundle: AppLanguage.current, comment: "Unit symbol: milligrams")
+        case .mcg: return String(localized: "µg", bundle: AppLanguage.current, comment: "Unit symbol: micrograms")
         }
     }
 }

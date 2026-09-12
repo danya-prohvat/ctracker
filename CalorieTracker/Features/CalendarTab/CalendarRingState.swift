@@ -47,9 +47,9 @@ enum CalendarRingState {
     /// Localized state word, reused by the legend and the VoiceOver day label.
     var name: String {
         switch self {
-        case .under: String(localized: "under")
-        case .onTarget: String(localized: "on target")
-        case .over: String(localized: "over")
+        case .under: String(localized: "under", bundle: AppLanguage.current)
+        case .onTarget: String(localized: "on target", bundle: AppLanguage.current)
+        case .over: String(localized: "over", bundle: AppLanguage.current)
         }
     }
 }

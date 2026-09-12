@@ -122,7 +122,7 @@ struct CalendarDayCell: View {
             return Text("\(day), locked. Upgrade to view older history.")
         }
         if isToday {
-            let today = String(localized: "today, in progress")
+            let today = String(localized: "today, in progress", bundle: AppLanguage.current)
             guard let kcal else { return Text("\(day), \(today)") }
             guard let goal = calorieGoal, goal > 0 else {
                 return Text("\(day), \(Format.kcal(kcal)) calories so far, \(today)")

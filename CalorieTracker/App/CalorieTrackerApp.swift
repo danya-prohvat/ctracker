@@ -7,10 +7,11 @@ struct CalorieTrackerApp: App {
 
     init() {
         let schema = Schema(versionedSchema: AppSchemaV1.self)
-        // CloudKit-backed store only when the user enabled sync AND premium is
-        // active (mirrored to UserDefaults — see CloudSync); the toggle takes
-        // effect on the next launch. If the cloud store can't open (capability
-        // missing, iCloud unavailable), fall back to local instead of crashing.
+        // CloudKit-backed store only when the user enabled iCloud sync — a free
+        // feature, no premium required (user decision 2026-07-28). Mirrored to
+        // UserDefaults (see CloudSync); the toggle takes effect on the next
+        // launch. If the cloud store can't open (capability missing, iCloud
+        // unavailable), fall back to local instead of crashing.
         if CloudSync.activeThisLaunch,
            let cloud = try? Self.makeContainer(schema: schema, cloud: true) {
             container = cloud
