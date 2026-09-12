@@ -13,8 +13,16 @@ enum CloudSync {
     private static let mirrorKey = "iCloudSyncActive"
 
     /// What this launch actually runs with — read once at startup, before the
-    /// container is created.
-    static let activeThisLaunch = UserDefaults.standard.bool(forKey: mirrorKey)
+    /// container is created. No mirror yet (first launch after install) means
+    /// the default: ON (user decision 2026-09-12).
+    static let activeThisLaunch = (UserDefaults.standard.object(forKey: mirrorKey) as? Bool) ?? true
+
+    /// Whether THIS launch actually opened the CloudKit-backed store — the
+    /// mirror can be on while the cloud store failed to open (no iCloud
+    /// account, capability missing) and the app silently fell back to local.
+    /// Set once by `CalorieTrackerApp`; gates the reinstall-restore probe.
+    private(set) static var cloudStoreOpened = false
+    static func markCloudStoreOpened() { cloudStoreOpened = true }
 
     /// Recompute the mirror from settings. Call on every app activation and
     /// after the toggle changes.

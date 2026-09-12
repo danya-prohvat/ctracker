@@ -11,6 +11,10 @@ struct RootView: View {
     @Query private var settingsList: [UserSettings]
 
     @State private var showOnboarding = false
+    /// True while the reinstall probe asks CloudKit whether this account
+    /// already has data (cloud store open + local onboarding not completed).
+    /// Shows a brief "Checking iCloud" splash instead of flashing onboarding.
+    @State private var checkingCloudRestore = false
     @State private var postOnboardingPaywall = false
     @State private var tabBarHidden = false
     @State private var selectedTab: AppTab = {
@@ -46,7 +50,13 @@ struct RootView: View {
                     .padding(.bottom, 8)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+
+            if checkingCloudRestore {
+                CloudRestoreSplash()
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.25), value: checkingCloudRestore)
         .animation(.easeInOut(duration: 0.22), value: tabBarHidden)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .tint(Theme.accent)
@@ -120,7 +130,7 @@ struct RootView: View {
                 settings.onboardingCompleted = true
             }
             #endif
-            showOnboarding = !settings.onboardingCompleted
+            decideOnboarding(settings)
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             if let settings = settingsList.first {
@@ -143,6 +153,35 @@ struct RootView: View {
         // modifiers ABOVE their attachment point, so `.appLanguage` below the
         // `.fullScreenCover`s would leave onboarding/paywall un-overridden.
         .appLanguage(settingsList.first?.languageCode)
+    }
+
+    /// Show onboarding right away — unless this looks like a reinstall: the
+    /// cloud store is open and this iCloud account already has app data, in
+    /// which case onboarding is skipped and the data streams back in (user
+    /// decision 2026-09-12). Probe failure/timeout falls back to onboarding.
+    private func decideOnboarding(_ settings: UserSettings) {
+        guard !settings.onboardingCompleted else { return }
+        #if DEBUG
+        // `-resetOnboarding 1` must always show the flow, even on a device
+        // whose iCloud account has data — the probe would skip it otherwise.
+        let forced = UserDefaults.standard.bool(forKey: "resetOnboarding")
+        #else
+        let forced = false
+        #endif
+        guard CloudSync.cloudStoreOpened, !forced else {
+            showOnboarding = true
+            return
+        }
+        checkingCloudRestore = true
+        Task {
+            if await CloudRestoreProbe.hasCloudData() {
+                settings.onboardingCompleted = true
+                try? context.save()
+            } else {
+                showOnboarding = true
+            }
+            checkingCloudRestore = false
+        }
     }
 }
 

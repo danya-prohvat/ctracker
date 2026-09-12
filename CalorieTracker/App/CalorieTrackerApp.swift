@@ -15,6 +15,7 @@ struct CalorieTrackerApp: App {
         if CloudSync.activeThisLaunch,
            let cloud = try? Self.makeContainer(schema: schema, cloud: true) {
             container = cloud
+            CloudSync.markCloudStoreOpened()
             return
         }
         do {

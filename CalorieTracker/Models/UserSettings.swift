@@ -33,7 +33,9 @@ final class UserSettings {
     /// smart meal reminders (`MealReminderScheduler`) and the re-engagement
     /// series (`ReengagementNotificationService`).
     var notificationsEnabled: Bool = false
-    var iCloudSyncEnabled: Bool = false
+    /// ON by default (user decision 2026-09-12) — free feature, silent local
+    /// fallback when the iCloud account is unavailable.
+    var iCloudSyncEnabled: Bool = true
 
     /// Successful OFF-lookup scans used by a free user (10 free, then paywall —
     /// user decision 2026-08-03; local re-scans and not-found don't count).

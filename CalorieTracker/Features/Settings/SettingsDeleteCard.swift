@@ -28,7 +28,10 @@ struct SettingsDeleteCard: View {
             Button("Delete", role: .destructive) { deleteAllData() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            if settings.iCloudSyncEnabled {
+            // What actually gets wiped depends on the store THIS launch runs
+            // with, not the toggle — the toggle only applies after a restart,
+            // and per-object deletes export to iCloud only from a cloud store.
+            if CloudSync.cloudStoreOpened {
                 Text("This erases all products, diary entries and settings on this device and in iCloud.")
             } else {
                 Text("This erases all products, diary entries and settings on this device.")
@@ -37,8 +40,9 @@ struct SettingsDeleteCard: View {
     }
 
     /// Wipe everything and return settings to first-launch defaults, except
-    /// `onboardingCompleted` — onboarding shows only once (spec §8) — and
-    /// `isPremium`, which mirrors the paid entitlement.
+    /// `onboardingCompleted` — onboarding shows only once (spec §8) —
+    /// `isPremium`, which mirrors the paid entitlement, and
+    /// `iCloudSyncEnabled` (see below).
     private func deleteAllData() {
         // Object-by-object, not `context.delete(model:)`: batch deletes bypass
         // the CloudKit export pipeline, so the synced copies would survive in
@@ -61,7 +65,10 @@ struct SettingsDeleteCard: View {
         settings.unitSystem = UserSettings.defaultUnitSystem
         settings.netCarbsEnabled = false
         settings.notificationsEnabled = false
-        settings.iCloudSyncEnabled = false
+        // iCloudSyncEnabled intentionally survives: it's an explicit user
+        // choice. Re-enabling it here would silently resurrect the wiped data
+        // from iCloud on the next launch (and re-upload future data) for a
+        // user who deliberately opted out of sync.
         settings.scanCount = 0
         // isPremium intentionally survives — wiping local data does not cancel
         // the subscription, and a paying user must not see ads and locks.
