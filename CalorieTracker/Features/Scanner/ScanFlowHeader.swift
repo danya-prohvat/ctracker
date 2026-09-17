@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Header of the dark scan flow: "‹ Back" on the leading edge and a centered
-/// "Scan barcode" title, per the prototype.
+/// Header of the dark scan flow: the shared `BackButtonLabel` (white on the
+/// camera) on the leading edge and a centered "Scan barcode" title.
 struct ScanFlowHeader: View {
     let onBack: () -> Void
 
@@ -12,15 +12,10 @@ struct ScanFlowHeader: View {
                 .foregroundStyle(.white)
             HStack {
                 Button(action: onBack) {
-                    HStack(spacing: 3) {
-                        Image(systemName: "chevron.backward")
-                            .font(.subheadline.weight(.medium))
-                        Text("Back")
-                            .font(.callout.weight(.medium))
-                    }
-                    .foregroundStyle(.white.opacity(0.9))
+                    BackButtonLabel()
+                        .foregroundStyle(.white.opacity(0.9))
                 }
-                .accessibilityLabel(Text("Cancel"))
+                .accessibilityLabel("Back")
                 Spacer()
             }
         }

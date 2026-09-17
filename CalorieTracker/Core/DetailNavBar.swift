@@ -2,26 +2,24 @@ import SwiftUI
 
 extension View {
     /// Pushed-detail chrome with the native scroll-edge blur: an inline, pinned
-    /// title and a green back button (chevron + label). Unlike a hand-drawn
-    /// header over the scroll view, the *system* nav bar stays transparent at
-    /// the top and blurs its content as the page scrolls under it — the same
-    /// behavior as the large-title tab roots (`largeTitleScreen`).
+    /// title and the app's one green back button (`BackButtonLabel`, always
+    /// "Back"). Unlike a hand-drawn header over the scroll view, the *system*
+    /// nav bar stays transparent at the top and blurs its content as the page
+    /// scrolls under it — the same behavior as the large-title tab roots
+    /// (`largeTitleScreen`).
     ///
-    /// Pass `Text` (not raw strings) so each caller controls localization: a
-    /// literal like `Text("Add food")` localizes; a formatted date like
-    /// `Text(dayLabel)` stays verbatim. The back label mirrors the parent
-    /// screen (e.g. "9 July" for a page pushed from that day).
+    /// Pass `Text` (not a raw string) for the title so each caller controls
+    /// localization: a literal like `Text("Add food")` localizes; a formatted
+    /// date like `Text(dayLabel)` stays verbatim.
     func detailNavBar(
-        backLabel: Text,
         title: Text,
         onBack: @escaping () -> Void
     ) -> some View {
-        modifier(DetailNavBar(backLabel: backLabel, title: title, onBack: onBack))
+        modifier(DetailNavBar(title: title, onBack: onBack))
     }
 }
 
 private struct DetailNavBar: ViewModifier {
-    let backLabel: Text
     let title: Text
     let onBack: () -> Void
 
@@ -32,14 +30,8 @@ private struct DetailNavBar: ViewModifier {
             .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(action: onBack) {
-                        HStack(spacing: 3) {
-                            Image(systemName: "chevron.backward")
-                                .font(.body.weight(.semibold))
-                            backLabel
-                        }
-                    }
-                    .accessibilityLabel("Back")
+                    Button(action: onBack) { BackButtonLabel() }
+                        .accessibilityLabel("Back")
                 }
             }
             .tint(Theme.accentLabel)

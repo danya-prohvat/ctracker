@@ -5,7 +5,6 @@ import SwiftUI
 /// keys); "Today" is the localized root title.
 struct DayNavigationChrome: ViewModifier {
     let isPresented: Bool
-    let monthLabel: String
     let dayLabel: String
     let subtitle: String
     let onBack: () -> Void
@@ -13,7 +12,6 @@ struct DayNavigationChrome: ViewModifier {
     func body(content: Content) -> some View {
         if isPresented {
             content.detailNavBar(
-                backLabel: Text(monthLabel),
                 title: Text(dayLabel),
                 onBack: onBack
             )

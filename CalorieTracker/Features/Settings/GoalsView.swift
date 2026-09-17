@@ -41,7 +41,6 @@ struct GoalsView: View {
         .background(AppBackground())
         .hidesFloatingTabBar()
         .detailNavBar(
-            backLabel: Text("Settings"),
             title: Text("Goals & nutrients"),
             onBack: { dismiss() }
         )

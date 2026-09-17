@@ -10,9 +10,6 @@ struct AddFoodSheet: View {
     // Internal (not private): AddFoodScanFlow.swift extends this type.
     @Environment(\.modelContext) var context
     @Environment(\.dismiss) private var dismiss
-    // In-app language switch: the eager back-label string must follow the
-    // environment locale, not the launch-frozen `Locale.current`.
-    @Environment(\.locale) private var locale
 
     let dayKey: String
 
@@ -52,7 +49,6 @@ struct AddFoodSheet: View {
                 prompt: Text("Search my products")
             )
             .detailNavBar(
-                backLabel: Text(dayLabel),
                 title: Text("Add food"),
                 onBack: { dismiss() }
             )
@@ -125,11 +121,6 @@ struct AddFoodSheet: View {
             // clip at the column edge instead of the screen edge.
             .contentColumn()
         }
-    }
-
-    /// Back label = the day this page was pushed from, e.g. "9 July".
-    private var dayLabel: String {
-        (DayKey.date(from: dayKey) ?? Date()).formatted(.dateTime.month(.wide).day().locale(locale))
     }
 
     // MARK: - Actions (scan wiring lives in AddFoodScanFlow.swift)

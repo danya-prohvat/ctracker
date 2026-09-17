@@ -62,7 +62,6 @@ struct DayView: View {
     private var navigationChrome: DayNavigationChrome {
         DayNavigationChrome(
             isPresented: isPresented,
-            monthLabel: dayDate.formatted(.dateTime.month(.wide).locale(locale)),
             dayLabel: dayLabel,
             subtitle: daySubtitle,
             onBack: { dismiss() }

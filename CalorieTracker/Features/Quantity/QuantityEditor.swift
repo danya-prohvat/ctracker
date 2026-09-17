@@ -117,21 +117,8 @@ struct QuantityEditor: View {
                 onCommit: commit
             )
         }
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
+        .detailNavBar(title: Text(title), onBack: onBack)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: onBack) {
-                    HStack(spacing: 3) {
-                        Image(systemName: "chevron.backward")
-                            .font(.body.weight(.semibold))
-                        Text("Back")
-                            .font(.body)
-                    }
-                }
-                .accessibilityLabel("Back")
-            }
             if let onClose {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: onClose) {
@@ -141,7 +128,6 @@ struct QuantityEditor: View {
                 }
             }
         }
-        .tint(Theme.accentLabel)
     }
 
     // MARK: - Commit

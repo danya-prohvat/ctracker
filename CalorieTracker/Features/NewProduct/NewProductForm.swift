@@ -75,7 +75,6 @@ struct NewProductForm: View {
                 ProductFormCTABar(title: primaryTitle, enabled: fields.canSubmit) { submit() }
             }
             .detailNavBar(
-                backLabel: Text("Back"),
                 title: isEditing ? Text("Edit product") : Text("New product"),
                 onBack: { if isDirty { showDiscard = true } else { cancel() } }
             )
