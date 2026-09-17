@@ -10,13 +10,16 @@ extension View {
         _ entry: Binding<DiaryEntry?>,
         onConfirm: @escaping (DiaryEntry) -> Void
     ) -> some View {
-        confirmationDialog(
+        // A centered alert, not a confirmationDialog: on iOS 26+ the dialog
+        // renders as a popover anchored to the swipe action, which the user
+        // rejected (2026-09-17) — this must match the "Discard changes?" and
+        // "Delete product?" alerts.
+        alert(
             "Delete this entry?",
             isPresented: Binding(
                 get: { entry.wrappedValue != nil },
                 set: { if !$0 { entry.wrappedValue = nil } }
             ),
-            titleVisibility: .visible,
             presenting: entry.wrappedValue
         ) { item in
             Button("Delete", role: .destructive) {

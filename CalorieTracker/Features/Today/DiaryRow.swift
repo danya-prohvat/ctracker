@@ -18,6 +18,10 @@ struct DiaryRow: View {
         ) {
             rowContent
         }
+        // The lifted context-menu preview snapshots this row alone, not the
+        // clipped card around it, so without an explicit preview shape it
+        // shows up as a sharp-cornered rectangle (user report 2026-09-17).
+        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: Theme.radiusCard, style: .continuous))
         .contextMenu {
             Button {
                 onTap()

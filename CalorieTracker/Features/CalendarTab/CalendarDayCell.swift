@@ -22,8 +22,10 @@ struct CalendarDayCell: View {
     let calorieGoal: Double?
     let isToday: Bool
     let isFuture: Bool
-    /// Free-tier day older than the 30-day history window (spec §9): shows a lock
-    /// instead of its ring/data and routes the tap to the paywall.
+    /// Free-tier day older than the 30-day history window (spec §9): keeps its
+    /// ring/number (user decision 2026-09-17 — the day's color is always
+    /// visible), adds a small lock badge when it has data and routes the tap
+    /// to the paywall.
     let isLocked: Bool
     let onTap: () -> Void
 
@@ -64,44 +66,53 @@ struct CalendarDayCell: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
-    /// A locked day drops its ring and shows a muted number + lock; every other
-    /// day keeps the ring/number treatment.
-    @ViewBuilder
+    /// Every day keeps the ring/number treatment; a locked day with data
+    /// additionally wears a small lock badge on the ring's bottom-trailing
+    /// edge. Empty locked days stay a bare muted number like any empty day —
+    /// a badge on every cell of an empty month was visual noise.
     private var content: some View {
-        if isLocked {
-            VStack(spacing: 3) {
-                dayNumber
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.calendarDayMuted)
-                Image(systemName: "lock.fill")
-                    .font(.caption2)
-                    .foregroundStyle(Theme.calendarDayMuted)
+        ring
+            .frame(width: 40, height: 40)
+            .overlay(alignment: .bottomTrailing) {
+                if isLocked && hasData { lockBadge }
             }
-        } else {
-            ZStack {
-                if isToday {
-                    // Soft brand-tinted disc marks the current day behind its
-                    // ring and bold green number.
-                    Circle()
-                        .fill(Theme.accentSoft)
-                        .padding(4)
-                }
-                if isToday || hasData {
-                    // Progress ring: fill = calories vs target, colored live by
-                    // CalendarRingState (neutral under, green on target, amber
-                    // over). Today is scored the same way as past days as it
-                    // fills through the day.
-                    ProgressRing(
-                        progress: progress,
-                        lineWidth: 4,
-                        color: ringState.color,
-                        trackColor: Self.ringTrack
-                    )
-                }
-                dayNumber
-                    .font(isToday ? .headline.weight(.bold) : .subheadline.weight(.semibold))
-                    .foregroundStyle(numberColor)
+    }
+
+    private var lockBadge: some View {
+        Image(systemName: "lock.fill")
+            .font(.caption2.weight(.bold))
+            .imageScale(.small)
+            .foregroundStyle(Theme.calendarDayMuted)
+            .frame(width: 14, height: 14)
+            .background(Circle().fill(Theme.card))
+            .offset(x: 1, y: 1)
+            .accessibilityHidden(true)
+    }
+
+    private var ring: some View {
+        ZStack {
+            if isToday {
+                // Soft brand-tinted disc marks the current day behind its
+                // ring and bold green number.
+                Circle()
+                    .fill(Theme.accentSoft)
+                    .padding(4)
             }
+            if isToday || hasData {
+                // Progress ring: fill = calories vs target, colored live by
+                // CalendarRingState (neutral under, green on target, amber
+                // over). Today is scored the same way as past days as it
+                // fills through the day.
+                ProgressRing(
+                    progress: progress,
+                    lineWidth: 4,
+                    color: ringState.color,
+                    trackColor: Self.ringTrack
+                )
+            }
+            dayNumber
+                .font(isToday ? .headline.weight(.bold) : .subheadline.weight(.semibold))
+                .foregroundStyle(numberColor)
         }
     }
 
@@ -119,7 +130,10 @@ struct CalendarDayCell: View {
     private var accessibilityLabel: Text {
         let day = Text(date, format: .dateTime.month(.wide).day())
         if isLocked {
-            return Text("\(day), locked. Upgrade to view older history.")
+            guard let kcal, let goal = calorieGoal, goal > 0 else {
+                return Text("\(day), locked. Upgrade to view older history.")
+            }
+            return Text("\(day), \(Format.kcal(kcal)) of \(Format.kcal(goal)) calories, \(ringState.name), locked. Upgrade to view older history.")
         }
         if isToday {
             let today = String(localized: "today, in progress", bundle: AppLanguage.current)
@@ -154,7 +168,7 @@ struct CalendarDayCell: View {
             // Over (> 105%): amber, fully filled.
             CalendarDayCell(date: Date(), kcal: 2600, calorieGoal: 2000,
                             isToday: false, isFuture: false, isLocked: false) {}
-            // Locked (free tier, older than 30 days): muted number + lock, no ring.
+            // Locked (free tier, older than 30 days): scored ring + lock badge.
             CalendarDayCell(date: Date(), kcal: 1500, calorieGoal: 2000,
                             isToday: false, isFuture: false, isLocked: true) {}
             // Future / empty: no ring.

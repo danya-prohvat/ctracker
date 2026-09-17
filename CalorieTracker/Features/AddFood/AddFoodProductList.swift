@@ -46,6 +46,8 @@ struct AddFoodProductList: View {
                     ) {
                         AddFoodProductRow(product: product, unitSystem: unitSystem)
                     }
+                    // Rounded lifted preview — same fix as DiaryRow.
+                    .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .contextMenu {
                         Button {
                             onEdit(product)
