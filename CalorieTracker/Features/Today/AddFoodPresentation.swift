@@ -13,14 +13,17 @@ struct AddFoodPresentation: ViewModifier {
     let asSheet: Bool
     @Binding var isActive: Bool
     let dayKey: String
+    /// Fires once the cover/sheet has finished dismissing — DayView releases
+    /// held-back entries here so their animations play on a visible screen.
+    var onDismiss: () -> Void = {}
 
     func body(content: Content) -> some View {
         if asSheet {
-            content.adaptiveSheet(isPresented: $isActive) {
+            content.adaptiveSheet(isPresented: $isActive, onDismiss: onDismiss) {
                 flow.presentationDragIndicator(.visible)
             }
         } else {
-            content.fullScreenCover(isPresented: $isActive) { flow }
+            content.fullScreenCover(isPresented: $isActive, onDismiss: onDismiss) { flow }
         }
     }
 

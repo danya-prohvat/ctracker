@@ -27,7 +27,6 @@ struct AddFoodSheet: View {
     // Set by the scanner, presented once its cover finishes dismissing.
     @State var pendingScan: AddSheet.Kind?
     @State private var addSheet: AddSheet?
-    @State private var popAfterSheet = false
 
     var settings: UserSettings? { settingsList.first }
     private var unitSystem: UnitSystem { settings?.unitSystem ?? .metric }
@@ -53,7 +52,7 @@ struct AddFoodSheet: View {
                 onBack: { dismiss() }
             )
             .hidesFloatingTabBar()
-            .adaptiveSheet(item: $addSheet, onDismiss: popIfNeeded) {
+            .adaptiveSheet(item: $addSheet) {
                 addStep($0.kind)
                     .presentationDragIndicator(.visible)
             }
@@ -129,17 +128,13 @@ struct AddFoodSheet: View {
         addSheet = AddSheet(kind: .quantity(product.loggable))
     }
 
-    /// A completed log (or "Close") dismisses the modal, then pops the page.
+    /// A completed log closes the whole add flow in ONE step: dismissing this
+    /// page takes the quantity/new-product modal down with it. Closing the
+    /// modal first and popping afterwards (the earlier two-step exit) kept the
+    /// day screen covered long enough to hide its ring animation (user
+    /// request 2026-09-17).
     private func logFinished() {
-        popAfterSheet = true
-        addSheet = nil
-    }
-
-    private func popIfNeeded() {
-        if popAfterSheet {
-            popAfterSheet = false
-            dismiss()
-        }
+        dismiss()
     }
 
     /// Present the scan result only after the scanner cover has dismissed, so

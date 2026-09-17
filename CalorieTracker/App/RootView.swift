@@ -156,9 +156,10 @@ struct RootView: View {
     }
 
     /// Show onboarding right away — unless this looks like a reinstall: the
-    /// cloud store is open and this iCloud account already has app data, in
-    /// which case onboarding is skipped and the data streams back in (user
-    /// decision 2026-09-12). Probe failure/timeout falls back to onboarding.
+    /// cloud store is open and the first CloudKit import brings back a
+    /// finished onboarding or real data, in which case onboarding is skipped
+    /// (user decision 2026-09-12; probe reworked 2026-09-17, see
+    /// `CloudRestoreProbe`). No data / timeout falls back to onboarding.
     private func decideOnboarding(_ settings: UserSettings) {
         guard !settings.onboardingCompleted else { return }
         #if DEBUG
@@ -174,8 +175,10 @@ struct RootView: View {
         }
         checkingCloudRestore = true
         Task {
-            if await CloudRestoreProbe.hasCloudData() {
-                settings.onboardingCompleted = true
+            if await CloudRestoreProbe.waitForCloudData(in: context) {
+                // Re-resolve the singleton: the import may have merged in the
+                // account's settings, and `current` keeps the completed one.
+                UserSettings.current(in: context).onboardingCompleted = true
                 try? context.save()
             } else {
                 showOnboarding = true
