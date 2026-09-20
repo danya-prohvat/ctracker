@@ -2,12 +2,10 @@ import SwiftUI
 import SafariServices
 
 /// External links used by Settings, onboarding and the paywall.
-///
-/// TODO: `privacyURL` / `termsURL` are placeholders — replace with the real
-/// hosted policy pages before release.
 enum AppLinks {
-    static let privacyURL = fixedURL("https://example.com/ctracker/privacy")
-    static let termsURL = fixedURL("https://example.com/ctracker/terms")
+    /// Hosted policy pages (GitHub Pages, 2026-09-20).
+    static let privacyURL = fixedURL("https://danya-prohvat.github.io/ctracker_privacy-policy/")
+    static let termsURL = fixedURL("https://danya-prohvat.github.io/ctracker_terms-of-use/")
     /// "Calorie Counter & Food Log" — Apple ID from App Store Connect (2026-07-21).
     static let appStoreURL = fixedURL("https://apps.apple.com/app/id6789442226")
     /// App Store "Write a review" deep link — opens the store page with the
