@@ -36,13 +36,16 @@ struct NewProductForm: View {
     private var isLogging: Bool { if case .logging = mode { return true }; return false }
     private var isEditing: Bool { if case .editing = mode { return true }; return false }
 
-    /// The scanner matched a product whose card has no nutrition values at all
-    /// (a half-filled OFF entry) — worth telling the user why fields are empty.
-    private var scanFoundButEmpty: Bool {
-        guard let prefill, prefill.wasScanned else { return false }
-        return prefill.per100Calories == 0 && prefill.per100Protein == 0
+    /// The scanner matched a product whose card lacks the name and/or has no
+    /// nutrition values at all (a half-filled OFF entry) — worth telling the
+    /// user why fields are empty.
+    private var scanMissingData: ScanMissingData? {
+        guard let prefill, prefill.wasScanned else { return nil }
+        let nutritionMissing = prefill.per100Calories == 0 && prefill.per100Protein == 0
             && prefill.per100Fat == 0 && prefill.per100Carbs == 0
             && prefill.per100Micros.isEmpty
+        let nameMissing = prefill.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return ScanMissingData(nameMissing: nameMissing, nutritionMissing: nutritionMissing)
     }
 
     private var primaryTitle: LocalizedStringKey {
@@ -69,7 +72,7 @@ struct NewProductForm: View {
                            saveToMyProducts: $saveToMyProducts,
                            barcode: barcode,
                            showsSaveToggle: isLogging,
-                           showsMissingNutritionNotice: scanFoundButEmpty)
+                           scanMissingData: scanMissingData)
             .background(AppBackground())
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 ProductFormCTABar(title: primaryTitle, enabled: fields.canSubmit) { submit() }

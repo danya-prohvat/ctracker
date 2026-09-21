@@ -26,6 +26,17 @@ struct DaySummaryCard: View {
         return values.isEmpty ? nil : values.reduce(0, +)
     }
 
+    /// Derived metric (spec §6): tapping the mini-rings flips them between
+    /// grams-vs-goal and the % of calories split. Nil = grams mode; gated on
+    /// macro calories (not logged kcal), so a kcal-only entry can't produce a
+    /// meaningless 0/0/0 split.
+    private var macroPercents: (p: Int, f: Int, c: Int)? {
+        guard showPercents,
+              NutritionMath.calories(protein: protein, fat: fat, carbs: carbs) > 0
+        else { return nil }
+        return NutritionMath.macroCaloriePercents(protein: protein, fat: fat, carbs: carbs)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 18) {
@@ -40,27 +51,23 @@ struct DaySummaryCard: View {
 
             MacroRingsView(
                 protein: MacroValue(titleKey: "Protein", consumed: protein,
-                                    goal: settings?.proteinGoal),
+                                    goal: settings?.proteinGoal,
+                                    caloriePercent: macroPercents?.p),
                 fat: MacroValue(titleKey: "Fat", consumed: fat,
-                                goal: settings?.fatGoal),
+                                goal: settings?.fatGoal,
+                                caloriePercent: macroPercents?.f),
                 carbs: MacroValue(titleKey: "Carbs", consumed: carbs,
-                                  goal: settings?.carbGoal)
+                                  goal: settings?.carbGoal,
+                                  caloriePercent: macroPercents?.c)
             )
             .contentShape(Rectangle())
             .onTapGesture {
                 withAnimation(.snappy) { showPercents.toggle() }
             }
+            .sensoryFeedback(.selection, trigger: showPercents)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint("Switches between grams and share of calories")
 
-            // Derived metrics (spec §6): tap the mini-rings for the % of
-            // calories split; net carbs is shown when enabled in settings.
-            if showPercents && calories > 0 {
-                let p = NutritionMath.macroCaloriePercents(
-                    protein: protein, fat: fat, carbs: carbs)
-                Text("P \(p.p)% · F \(p.f)% · C \(p.c)% of calories")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(Theme.textSecondary)
-                    .frame(maxWidth: .infinity)
-            }
             if settings?.netCarbsEnabled == true {
                 Group {
                     if let fiber {

@@ -17,8 +17,8 @@ struct ProductFormContent: View {
     @Binding var saveToMyProducts: Bool
     let barcode: String?
     let showsSaveToggle: Bool
-    /// Scan matched a product, but its card carried no nutrition values.
-    var showsMissingNutritionNotice: Bool = false
+    /// Scan matched a product, but its card lacked the name and/or nutrition.
+    var scanMissingData: ScanMissingData? = nil
 
     var body: some View {
         ScrollView {
@@ -28,8 +28,8 @@ struct ProductFormContent: View {
                         .padding(.bottom, 14)
                 }
 
-                if showsMissingNutritionNotice {
-                    MissingNutritionNotice()
+                if let scanMissingData {
+                    ScanMissingDataNotice(missing: scanMissingData)
                         .padding(.bottom, 14)
                 }
 
