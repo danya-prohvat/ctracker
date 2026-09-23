@@ -27,6 +27,9 @@ struct CalendarDayCell: View {
     /// visible), adds a small lock badge when it has data and routes the tap
     /// to the paywall.
     let isLocked: Bool
+    /// Delay before the ring's first fill-in (see `ProgressRing.fillDelay`);
+    /// the grid passes its slide duration so rings fill after the transition.
+    var fillDelay: TimeInterval = 0
     let onTap: () -> Void
 
     /// Ring track from the prototype day cells (#EEEEF0).
@@ -107,7 +110,8 @@ struct CalendarDayCell: View {
                     progress: progress,
                     lineWidth: 4,
                     color: ringState.color,
-                    trackColor: Self.ringTrack
+                    trackColor: Self.ringTrack,
+                    fillDelay: fillDelay
                 )
             }
             dayNumber

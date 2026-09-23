@@ -159,7 +159,7 @@ struct CalendarTabView: View {
             byAdding: mode.component, value: delta, to: anchor
         ) else { return }
         stepDirection = delta
-        withAnimation(.easeInOut(duration: 0.25)) {
+        withAnimation(CalendarGridCard.stepAnimation) {
             anchor = CalendarAnchorMath.periodStart(of: mode.component, for: shifted)
         }
         refetch()

@@ -2,7 +2,9 @@ import SwiftUI
 
 /// Circular progress ring used across Today, Calendar and Goals:
 /// a light track plus a round-capped arc starting at 12 o'clock.
-/// The arc springs in from zero on first appearance (Fitness-style fill-in).
+/// The arc springs in from zero on first appearance (Fitness-style fill-in);
+/// `fillDelay` postpones that first fill so it can start after a surrounding
+/// transition finishes (the calendar grid slide) instead of during it.
 /// Deliberately NOT mirrored under RTL: the fill stays clockwise everywhere,
 /// matching Apple's Fitness/Activity rings (`rotationEffect` doesn't flip,
 /// which is exactly the behavior we want — don't "fix" for layoutDirection).
@@ -11,6 +13,9 @@ struct ProgressRing: View {
     var lineWidth: CGFloat
     var color: Color = Theme.accent
     var trackColor: Color = Theme.ringTrack
+    /// Seconds to wait before the first fill-in starts. Live updates after
+    /// that (progress changes while on screen) animate immediately.
+    var fillDelay: TimeInterval = 0
 
     @State private var appeared = false
 
@@ -28,7 +33,13 @@ struct ProgressRing: View {
         }
         .padding(lineWidth / 2)
         .animation(.snappy(duration: 0.5), value: shown)
-        .onAppear { appeared = true }
+        .task {
+            if fillDelay > 0 {
+                try? await Task.sleep(for: .seconds(fillDelay))
+                guard !Task.isCancelled else { return }
+            }
+            appeared = true
+        }
     }
 }
 

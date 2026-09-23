@@ -24,6 +24,13 @@ struct CalendarGridCard: View {
 
     @Environment(\.layoutDirection) private var layoutDirection
 
+    /// Duration of the period-step slide (the parent animates `anchor` with
+    /// it). Day rings delay their fill-in by the same amount so they start
+    /// filling only once the new grid has fully slid in (user decision
+    /// 2026-09-23) — not while last month's numbers are still on screen.
+    static let stepDuration: TimeInterval = 0.25
+    static let stepAnimation = Animation.easeInOut(duration: stepDuration)
+
     private static let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
 
     var body: some View {
@@ -148,7 +155,8 @@ struct CalendarGridCard: View {
             calorieGoal: calorieGoal,
             isToday: key == todayKey,
             isFuture: key > todayKey,
-            isLocked: isDayLocked(key)
+            isLocked: isDayLocked(key),
+            fillDelay: Self.stepDuration
         ) {
             onTapDay(key)
         }
