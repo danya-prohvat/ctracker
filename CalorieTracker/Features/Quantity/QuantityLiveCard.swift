@@ -50,6 +50,9 @@ struct QuantityLiveCard: View {
             Text(verbatim: value)
                 .font(.stat(.title2))
                 .foregroundStyle(color)
+                // A huge total wraps to two lines; keep them centered under
+                // the caption instead of ragged-left (user request 2026-09-27).
+                .multilineTextAlignment(.center)
             Text(caption)
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(Theme.textSecondary)

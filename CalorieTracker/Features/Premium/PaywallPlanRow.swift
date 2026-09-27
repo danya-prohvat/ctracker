@@ -49,6 +49,7 @@ struct PaywallPlanRow: View {
                     price
                         .font(.stat(.subheadline, .semibold))
                         .foregroundStyle(Theme.textPrimary)
+                        .multilineTextAlignment(.trailing)
                     priceDetail
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)

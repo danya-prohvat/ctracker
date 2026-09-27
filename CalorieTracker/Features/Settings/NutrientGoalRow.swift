@@ -49,6 +49,7 @@ struct NutrientGoalRow: View {
             normLabel
                 .font(.stat(.footnote, .semibold))
                 .foregroundStyle(Color(hex: 0x6B6B70))
+                .multilineTextAlignment(.center)
                 .frame(minWidth: 58)
             GoalsStepperCircle(.increment, size: 24, glyphSize: 16) {
                 adjustGoal(by: step)

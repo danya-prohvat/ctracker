@@ -49,6 +49,7 @@ extension PlanEditor {
             Text(Format.kcal(calories))
                 .font(.stat(.largeTitle))
                 .foregroundStyle(Theme.textPrimary)
+                .multilineTextAlignment(.center)
                 .contentTransition(.numericText())
                 .animation(.easeOut(duration: 0.2), value: calories)
                 .contentShape(Rectangle())

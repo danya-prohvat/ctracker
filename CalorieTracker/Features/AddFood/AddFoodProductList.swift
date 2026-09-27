@@ -114,6 +114,7 @@ private struct AddFoodProductRow: View {
                 Text("\(Format.kcal(product.calories)) kcal")
                     .font(.stat(.subheadline))
                     .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.trailing)
                 Text(product.basis.per100Label(unitSystem))
                     .font(.caption2)
                     .foregroundStyle(Theme.textQuaternary)

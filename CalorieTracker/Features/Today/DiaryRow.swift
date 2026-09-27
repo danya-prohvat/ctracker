@@ -56,6 +56,7 @@ struct DiaryRow: View {
                 Text(Format.kcal(entry.calories))
                     .font(.stat(.body, .semibold))
                     .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.trailing)
                 Text("kcal")
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(Theme.textQuaternary)
