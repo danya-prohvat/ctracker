@@ -18,7 +18,6 @@ struct QuantityEditor: View {
     let title: LocalizedStringKey
     let ctaTitle: LocalizedStringKey
     let onBack: () -> Void
-    let onClose: (() -> Void)?   // trailing "Close"; hidden when nil
     let onDelete: (() -> Void)?
     let onCommit: (Double) -> Void   // receives canonical quantity (g / ml)
 
@@ -40,7 +39,6 @@ struct QuantityEditor: View {
         title: LocalizedStringKey,
         ctaTitle: LocalizedStringKey,
         onBack: @escaping () -> Void,
-        onClose: (() -> Void)? = nil,
         onDelete: (() -> Void)? = nil,
         onCommit: @escaping (Double) -> Void
     ) {
@@ -55,7 +53,6 @@ struct QuantityEditor: View {
         self.title = title
         self.ctaTitle = ctaTitle
         self.onBack = onBack
-        self.onClose = onClose
         self.onDelete = onDelete
         self.onCommit = onCommit
 
@@ -118,16 +115,6 @@ struct QuantityEditor: View {
             )
         }
         .detailNavBar(title: Text(title), onBack: onBack)
-        .toolbar {
-            if let onClose {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: onClose) {
-                        Text("Close")
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-                }
-            }
-        }
     }
 
     // MARK: - Commit

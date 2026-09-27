@@ -82,13 +82,8 @@ struct GoalsCalculatorSheet: View {
             .dismissesKeyboardOnTap()
             .navigationTitle("Calculate goals")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-            // Apply lives in a bottom CTA bar, not the nav bar: two asymmetric
-            // toolbar buttons push the inline title off screen-center.
+            // No Cancel button (user decision 2026-09-27): swipe-down closes.
+            // Apply lives in a bottom CTA bar, not the nav bar.
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 ProductFormCTABar(title: "Apply", enabled: canApply) { apply() }
             }

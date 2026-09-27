@@ -45,13 +45,18 @@ struct GoalsExtrasCard: View {
         .buttonStyle(.plain)
     }
 
+    // Same shape as every other switch row: explicit label + hidden-label
+    // Toggle (the app switch style draws only the switch).
     private var netCarbsRow: some View {
-        Toggle(isOn: $netCarbs) {
+        HStack(spacing: 12) {
             Text("Net carbs")
                 .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
+            Spacer(minLength: 0)
+            Toggle(isOn: $netCarbs) { Text("Net carbs") }
+                .labelsHidden()
+                .tint(Theme.accent)
         }
-        .tint(Theme.accent)
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
     }

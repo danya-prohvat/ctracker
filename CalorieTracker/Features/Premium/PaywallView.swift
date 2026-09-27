@@ -1,13 +1,18 @@
 import SwiftUI
 import SwiftData
 
-/// Soft paywall (spec §9): closable (after a short delay), value proposition,
-/// compact radio-style plan rows, single "Continue" CTA. Present in a `.sheet`.
+/// Soft paywall (spec §9): value proposition, compact radio-style plan rows,
+/// single "Continue" CTA. Presented as a sheet (swipe-down closes, no close
+/// button — user decision 2026-09-27) or, after onboarding, as a full-screen
+/// cover that can't be swiped away, so only that caller asks for the X.
 ///
 /// Plan names and prices come from the store via `PurchaseService.quotes()`
 /// (RevenueCat when wired), rendered instantly from `PaywallQuotesCache`
 /// (warmed at scene activation) — skeletons only appear on a cold cache.
 struct PaywallView: View {
+    /// True only for the post-onboarding full-screen cover.
+    var showsCloseButton = false
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Query private var settingsList: [UserSettings]
@@ -41,7 +46,9 @@ struct PaywallView: View {
         // Presented as a sheet from several places — the grabber lives here
         // so every call site gets it. Ignored by the onboarding cover.
         .presentationDragIndicator(.visible)
-        .overlay(alignment: .topTrailing) { closeButton }
+        .overlay(alignment: .topTrailing) {
+            if showsCloseButton { closeButton }
+        }
         .task {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
             withAnimation(.easeInOut(duration: 0.3)) { closeVisible = true }
@@ -70,7 +77,8 @@ struct PaywallView: View {
 
     // MARK: - Sections
 
-    /// Close control — appears only after a 1.5 s delay (soft paywall).
+    /// Close control for the full-screen cover — appears only after a 1.5 s
+    /// delay (soft paywall).
     private var closeButton: some View {
         Button {
             dismiss()

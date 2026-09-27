@@ -60,6 +60,9 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.22), value: tabBarHidden)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .tint(Theme.accent)
+        // Every Toggle in the app (sheets included) draws as the pure-SwiftUI
+        // switch — the UISwitch-backed default drops quick taps on iOS 26.
+        .toggleStyle(.appSwitch)
         // The palette is light-only for now; without this, system materials
         // and sheets would flip dark while cards/text stay light.
         .preferredColorScheme(.light)
@@ -67,7 +70,13 @@ struct RootView: View {
             if phase == .active {
                 // ATT on first launch (user decision 2026-07-13). The system alert
                 // only appears while active, hence scenePhase and not .task.
-                Task { await TrackingConsent.requestIfNeeded() }
+                // Notifications follow right after ATT (user decision
+                // 2026-09-27): reminders are on by default, so the permission
+                // is asked here once, not from the Settings toggle.
+                Task {
+                    await TrackingConsent.requestIfNeeded()
+                    await NotificationStartupPrompt.requestIfNeeded(in: context)
+                }
             }
             // Replan the smart meal reminders whenever the app gains or loses
             // focus — logging only happens in-app, so this keeps the planned
@@ -146,7 +155,8 @@ struct RootView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $postOnboardingPaywall) { PaywallView() }
+        // Full-screen cover can't be swiped down, so this one keeps the X.
+        .fullScreenCover(isPresented: $postOnboardingPaywall) { PaywallView(showsCloseButton: true) }
         // In-app language override takes effect immediately (locale + RTL);
         // AppleLanguages completes the switch on the next launch. Outermost
         // on purpose: presented covers inherit the environment only from

@@ -52,12 +52,8 @@ struct LanguagePickerSheet: View {
             )
             .navigationTitle("Language")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
         }
+        // No Cancel button (user decision 2026-09-27): swipe-down closes.
         .presentationDragIndicator(.visible)
     }
 

@@ -7,6 +7,11 @@ import SwiftUI
 /// The content sits on an opaque `Theme.card` so it slides cleanly over the
 /// buttons. Host inside a card that clips to its corner radius so the buttons
 /// follow the rounded edges.
+///
+/// The drag is a `simultaneousGesture` with an axis lock (fix 2026-09-27):
+/// as a plain `.gesture` it competed with the ScrollView, so a finger that
+/// landed on a row scrolled with a noticeable hitch. Now the scroll view is
+/// never blocked; the row only moves once the first movement is horizontal.
 struct SwipeToDeleteRow<Content: View>: View {
     var onTap: () -> Void
     var onDelete: () -> Void
@@ -19,6 +24,8 @@ struct SwipeToDeleteRow<Content: View>: View {
     @Environment(\.layoutDirection) private var layoutDirection
     @State private var offset: CGFloat = 0
     @State private var isOpen = false
+    /// Locked on the first movement of a drag; vertical = leave it to scroll.
+    @State private var dragAxis: Axis?
 
     private let buttonWidth: CGFloat = 88
     private var revealWidth: CGFloat { onEdit == nil ? buttonWidth : buttonWidth * 2 }
@@ -35,7 +42,7 @@ struct SwipeToDeleteRow<Content: View>: View {
                 .onTapGesture {
                     if isOpen { setOpen(false) } else { onTap() }
                 }
-                .gesture(dragGesture)
+                .simultaneousGesture(dragGesture)
         }
         .clipped()
     }
@@ -73,8 +80,13 @@ struct SwipeToDeleteRow<Content: View>: View {
     }
 
     private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 16)
+        DragGesture(minimumDistance: 12)
             .onChanged { value in
+                if dragAxis == nil {
+                    let t = value.translation
+                    dragAxis = abs(t.width) > abs(t.height) ? .horizontal : .vertical
+                }
+                guard dragAxis == .horizontal else { return }
                 let base = isOpen ? slide * revealWidth : 0
                 let proposed = base + value.translation.width
                 if slide < 0 {
@@ -84,7 +96,10 @@ struct SwipeToDeleteRow<Content: View>: View {
                 }
             }
             .onEnded { _ in
-                setOpen(abs(offset) > revealWidth / 2)
+                if dragAxis == .horizontal {
+                    setOpen(abs(offset) > revealWidth / 2)
+                }
+                dragAxis = nil
             }
     }
 

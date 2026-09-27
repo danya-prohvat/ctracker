@@ -19,9 +19,9 @@ struct AddSheet: Identifiable {
     let kind: Kind
 }
 
-/// The New-product modal. With the save toggle on the form saves and dismisses
-/// itself (no immediate log — the product is then logged from the list, user
-/// decision 2026-07-14); it only continues here for log-once entries.
+/// The New-product modal. The primary Save button saves and dismisses the
+/// form itself (no immediate log — the product is then logged from the list,
+/// user decision 2026-07-14); only the secondary log-once button continues here.
 struct NewProductLogSheet: View {
     @Environment(\.modelContext) private var context
 

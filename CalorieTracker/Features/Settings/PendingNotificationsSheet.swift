@@ -32,9 +32,6 @@ struct PendingNotificationsSheet: View {
             .navigationTitle("Scheduled")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Refresh") { Task { await load() } }
                 }

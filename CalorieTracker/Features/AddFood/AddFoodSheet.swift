@@ -75,7 +75,9 @@ struct AddFoodSheet: View {
         switch kind {
         case .quantity(let food):
             NavigationStack {
-                QuantityLogView(food: food, dayKey: dayKey,
+                QuantityLogView(food: food,
+                                product: products.first { $0.id == food.productID },
+                                dayKey: dayKey,
                                 unitSystem: unitSystem, onLogged: logFinished)
             }
         case .newProduct(let route):

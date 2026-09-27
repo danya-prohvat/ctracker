@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Scrollable body of the product form: barcode chip, name/per card, macro
-/// card, vitamins & minerals card and the optional "Save to My products" card.
+/// card, the vitamins & minerals card and the actions block at the end.
 /// Pure layout — all state lives in `NewProductForm`.
 struct ProductFormContent: View {
     @Binding var name: String
@@ -14,11 +14,17 @@ struct ProductFormContent: View {
     @Binding var fatText: String
     @Binding var carbsText: String
     @Binding var microTexts: [String: String]
-    @Binding var saveToMyProducts: Bool
     let barcode: String?
-    let showsSaveToggle: Bool
     /// Scan matched a product, but its card lacked the name and/or nutrition.
     var scanMissingData: ScanMissingData? = nil
+    /// Actions live at the end of the form, not in a pinned bar (user
+    /// decision 2026-09-27): nothing covers the fields and the keyboard
+    /// simply pushes the content up.
+    let primaryTitle: LocalizedStringKey
+    var secondaryTitle: LocalizedStringKey? = nil
+    let canSubmit: Bool
+    let onPrimary: () -> Void
+    var onSecondary: () -> Void = {}
 
     var body: some View {
         ScrollView {
@@ -47,10 +53,12 @@ struct ProductFormContent: View {
 
                 MicroFieldsSection(microTexts: $microTexts)
 
-                if showsSaveToggle {
-                    SaveToggleCard(isOn: $saveToMyProducts)
-                        .padding(.top, 16)
-                }
+                ProductFormActions(primaryTitle: primaryTitle,
+                                   secondaryTitle: secondaryTitle,
+                                   enabled: canSubmit,
+                                   onPrimary: onPrimary,
+                                   onSecondary: onSecondary)
+                    .padding(.top, 20)
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -74,9 +82,11 @@ struct ProductFormContent: View {
                            fatText: .constant(""),
                            carbsText: .constant(""),
                            microTexts: .constant([:]),
-                           saveToMyProducts: .constant(true),
                            barcode: "4820000123456",
-                           showsSaveToggle: true)
+                           primaryTitle: "Save to My products",
+                           secondaryTitle: "Log today only",
+                           canSubmit: true,
+                           onPrimary: {})
     }
     .modelContainer(PreviewData.container)
 }

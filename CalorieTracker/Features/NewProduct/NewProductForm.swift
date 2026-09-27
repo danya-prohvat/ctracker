@@ -4,8 +4,9 @@ import SwiftData
 /// New / edit product form (spec §5), styled after the prototype's frosted
 /// sheet: custom header, glass field cards and a pinned bottom CTA.
 /// Nutrition is entered per 100 g / 100 ml; fields are empty with a gray "0"
-/// placeholder (never pre-filled zeros). Field state and parsing live in
-/// `ProductFormFields`; this view is layout, routing and persistence.
+/// placeholder (never pre-filled zeros). Actions are the last block of the
+/// scroll, not a pinned bar (user decision 2026-09-27). Field state and
+/// parsing live in `ProductFormFields`; this view is routing and persistence.
 struct NewProductForm: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -25,7 +26,6 @@ struct NewProductForm: View {
     // actually changed something, not "the form has content" (in editing mode
     // every field starts filled, so the latter would always be true).
     @State private var loadedFields = ProductFormFields()
-    @State private var saveToMyProducts = true
     @State private var barcode: String? = nil
 
     @State private var didLoad = false
@@ -50,13 +50,17 @@ struct NewProductForm: View {
 
     private var primaryTitle: LocalizedStringKey {
         switch mode {
-        case .logging:
-            // Day-aware CTA: log-once into a past day from the calendar must
-            // not promise "today" (fix 2026-09-08, same rule as QuantityLogView).
-            let logsToday = (dayKey ?? todayKey) == todayKey
-            return saveToMyProducts ? "Save" : (logsToday ? "Add to today" : "Add")
+        case .logging: return "Save to My products"
         case .saving, .editing: return "Save"
         }
+    }
+
+    /// Secondary CTA in logging mode (two explicit buttons replaced the
+    /// save toggle, user decision 2026-09-27). Day-aware: log-once into a
+    /// past day from the calendar must not promise "today" (fix 2026-09-08,
+    /// same rule as QuantityLogView).
+    private var logOnceTitle: LocalizedStringKey {
+        (dayKey ?? todayKey) == todayKey ? "Log today only" : "Log once"
     }
 
     var body: some View {
@@ -69,14 +73,14 @@ struct NewProductForm: View {
                            fatText: $fields.fatText,
                            carbsText: $fields.carbsText,
                            microTexts: $fields.microTexts,
-                           saveToMyProducts: $saveToMyProducts,
                            barcode: barcode,
-                           showsSaveToggle: isLogging,
-                           scanMissingData: scanMissingData)
+                           scanMissingData: scanMissingData,
+                           primaryTitle: primaryTitle,
+                           secondaryTitle: isLogging ? logOnceTitle : nil,
+                           canSubmit: fields.canSubmit,
+                           onPrimary: submit,
+                           onSecondary: logOnce)
             .background(AppBackground())
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                ProductFormCTABar(title: primaryTitle, enabled: fields.canSubmit) { submit() }
-            }
             .detailNavBar(
                 title: isEditing ? Text("Edit product") : Text("New product"),
                 onBack: { if isDirty { showDiscard = true } else { cancel() } }
@@ -134,27 +138,29 @@ struct NewProductForm: View {
             dismiss()
 
         case .logging:
-            if saveToMyProducts {
-                // Save only (user decision 2026-07-14): no immediate quantity
-                // step — the product lands in My products and is logged by
-                // tapping it in the list.
-                _ = ProductStore.upsert(name: trimmedName, basis: fields.basis,
-                                        calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
-                                        micros: micros, barcode: barcode, in: context)
-                dismiss()
-            } else {
-                // lastQuantity = the entered base amount, so the immediate
-                // log-once writes exactly the values the user typed.
-                let food = LoggableFood(
-                    productID: nil, name: trimmedName, basis: fields.basis,
-                    per100Calories: v.cals, per100Protein: v.p,
-                    per100Fat: v.f, per100Carbs: v.c,
-                    per100Micros: micros, lastQuantity: fields.perAmount,
-                    wasScanned: barcode?.isEmpty == false
-                )
-                onContinue(food)
-            }
+            // Save only (user decision 2026-07-14): no immediate quantity
+            // step — the product lands in My products and is logged by
+            // tapping it in the list. Log-once is the secondary button.
+            _ = ProductStore.upsert(name: trimmedName, basis: fields.basis,
+                                    calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
+                                    micros: micros, barcode: barcode, in: context)
+            dismiss()
         }
+    }
+
+    /// Secondary action in logging mode: write the entry without creating a
+    /// product. lastQuantity = the entered base amount, so the log-once
+    /// writes exactly the values the user typed.
+    private func logOnce() {
+        let v = fields.macroValues()
+        let food = LoggableFood(
+            productID: nil, name: fields.trimmedName, basis: fields.basis,
+            per100Calories: v.cals, per100Protein: v.p,
+            per100Fat: v.f, per100Carbs: v.c,
+            per100Micros: fields.parsedMicros(), lastQuantity: fields.perAmount,
+            wasScanned: barcode?.isEmpty == false
+        )
+        onContinue(food)
     }
 
     private func cancel() {

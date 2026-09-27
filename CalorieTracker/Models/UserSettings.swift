@@ -31,8 +31,10 @@ final class UserSettings {
     var netCarbsEnabled: Bool = false
     /// The single reminders toggle (user decision 2026-07-21): covers both the
     /// smart meal reminders (`MealReminderScheduler`) and the re-engagement
-    /// series (`ReengagementNotificationService`).
-    var notificationsEnabled: Bool = false
+    /// series (`ReengagementNotificationService`). ON by default (user
+    /// decision 2026-09-27); the system permission is asked at startup right
+    /// after ATT (`NotificationStartupPrompt`), a refusal flips this off.
+    var notificationsEnabled: Bool = true
     /// ON by default (user decision 2026-09-12) — free feature, silent local
     /// fallback when the iCloud account is unavailable.
     var iCloudSyncEnabled: Bool = true

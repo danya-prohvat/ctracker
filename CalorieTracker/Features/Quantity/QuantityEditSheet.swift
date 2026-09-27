@@ -29,8 +29,7 @@ struct QuantityEditSheet: View {
                 initialCanonical: entry.quantity,
                 title: "Edit entry",
                 ctaTitle: "Save changes",
-                onBack: { dismiss() },     // prototype: Back closes the sheet in edit mode
-                onClose: { dismiss() },
+                onBack: { dismiss() },     // Back closes the sheet in edit mode (swipe-down too)
                 onDelete: { pendingDelete = entry },
                 onCommit: save
             )
