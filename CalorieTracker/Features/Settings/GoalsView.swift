@@ -50,7 +50,7 @@ struct GoalsView: View {
         .onChange(of: fat) { persistGoals() }
         .onChange(of: carbs) { persistGoals() }
         .adaptiveSheet(isPresented: $showCalculator) {
-            GoalsCalculatorSheet(unitSystem: settings?.unitSystem ?? .metric) { plan in
+            GoalsCalculatorSheet(settings: settings, unitSystem: settings?.unitSystem ?? .metric) { plan in
                 calories = plan.calories
                 protein = plan.protein
                 fat = plan.fat

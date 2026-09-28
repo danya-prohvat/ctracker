@@ -47,6 +47,17 @@ final class UserSettings {
     /// Resume point if onboarding is interrupted (spec §8).
     var onboardingStep: Int = 0
 
+    // Body profile — the last answers given in onboarding or the goals
+    // calculator (user decision 2026-09-28, overrides spec §8 "raw answers
+    // are never stored"): both screens reopen prefilled from here. nil =
+    // never answered. Written only via `updateBodyProfile`.
+    private var profileSexRaw: String? = nil
+    var profileAge: Int? = nil
+    var profileHeightCm: Double? = nil
+    var profileWeightKg: Double? = nil
+    private var profileActivityRaw: String? = nil
+    var profileTargetWeightKg: Double? = nil
+
     /// Local mirror of the RevenueCat "pro" entitlement, kept in sync by
     /// `PurchaseService.syncEntitlement()` on every scene activation. The rest
     /// of the app reads it only through `PremiumGate`.
@@ -57,7 +68,41 @@ final class UserSettings {
         set { unitSystemRaw = newValue.rawValue }
     }
 
+    var profileSex: CalcSex? {
+        get { profileSexRaw.flatMap(CalcSex.init(rawValue:)) }
+        set { profileSexRaw = newValue?.rawValue }
+    }
+
+    var profileActivity: CalcActivity? {
+        get { profileActivityRaw.flatMap(CalcActivity.init(rawValue:)) }
+        set { profileActivityRaw = newValue?.rawValue }
+    }
+
     init() {}
+}
+
+extension UserSettings {
+    /// The single writer of the body profile, shared by onboarding and the
+    /// goals calculator. `targetWeightKg` nil = not chosen yet.
+    func updateBodyProfile(sex: CalcSex?, age: Int, heightCm: Double, weightKg: Double,
+                           activity: CalcActivity?, targetWeightKg: Double?) {
+        profileSex = sex
+        profileAge = age
+        profileHeightCm = heightCm
+        profileWeightKg = weightKg
+        profileActivity = activity
+        profileTargetWeightKg = targetWeightKg
+    }
+
+    /// "Delete all data": the profile is personal data, so it goes too.
+    func clearBodyProfile() {
+        profileSex = nil
+        profileAge = nil
+        profileHeightCm = nil
+        profileWeightKg = nil
+        profileActivity = nil
+        profileTargetWeightKg = nil
+    }
 }
 
 extension UserSettings {

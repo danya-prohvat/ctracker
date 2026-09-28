@@ -65,6 +65,7 @@ struct SettingsDeleteCard: View {
         settings.unitSystem = UserSettings.defaultUnitSystem
         settings.netCarbsEnabled = false
         settings.notificationsEnabled = false
+        settings.clearBodyProfile()
         // iCloudSyncEnabled intentionally survives: it's an explicit user
         // choice. Re-enabling it here would silently resurrect the wiped data
         // from iCloud on the next launch (and re-upload future data) for a

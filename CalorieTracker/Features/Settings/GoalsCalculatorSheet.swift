@@ -1,77 +1,74 @@
 import SwiftUI
+import SwiftData
 
 /// "Calculate for me" sheet: sex, age, height, weight, activity and goal
 /// direction → GoalCalculator.plan, applied back into the goals editor.
 /// A native grouped form styled like the other modal pickers (see
 /// LanguagePickerSheet) so every sheet in the app reads the same.
+/// Answers are remembered (user decision 2026-09-28): the sheet opens with
+/// the body profile last saved by onboarding or a previous Apply, and Apply
+/// writes it back (`CalculatorInputs`); closing without Apply changes nothing.
 struct GoalsCalculatorSheet: View {
+    @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
     /// Drives the input units (cm·kg vs ft·lbs) the same way onboarding does;
     /// conversion happens once on Apply (`BodyUnits`), math stays metric.
     let unitSystem: UnitSystem
+    let settings: UserSettings?
     let onApply: (MacroPlan) -> Void
 
-    @State private var sex: CalcSex = .unspecified
-    @State private var age: Int = 25
-    @State private var heightText = ""
-    @State private var feetText = ""
-    @State private var inchesText = ""
-    @State private var weightText = ""
-    @State private var activity: CalcActivity = .light
-    @State private var direction: CalcGoalDirection = .maintain
+    @State private var inputs: CalculatorInputs
 
     private let directions: [CalcGoalDirection] = [.lose, .maintain, .gain]
 
-    private var isImperial: Bool { unitSystem == .us }
-
-    private var heightCm: Double? {
-        guard isImperial else { return Format.parse(heightText) }
-        let inches = (Format.parse(feetText) ?? 0) * BodyUnits.inchesPerFoot
-            + (Format.parse(inchesText) ?? 0)
-        return inches > 0 ? BodyUnits.cm(fromInches: inches) : nil
+    init(settings: UserSettings?, unitSystem: UnitSystem, onApply: @escaping (MacroPlan) -> Void) {
+        self.settings = settings
+        self.unitSystem = unitSystem
+        self.onApply = onApply
+        _inputs = State(initialValue: CalculatorInputs(settings: settings, unitSystem: unitSystem))
     }
 
-    private var weightKg: Double? {
-        guard let value = Format.parse(weightText) else { return nil }
-        return isImperial ? BodyUnits.kg(fromLbs: value) : value
-    }
-
-    private var canApply: Bool { (heightCm ?? 0) > 0 && (weightKg ?? 0) > 0 }
+    private var isImperial: Bool { inputs.isImperial }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("About you") {
-                    Picker("Sex", selection: $sex) {
+                    Picker("Sex", selection: $inputs.sex) {
                         ForEach(CalcSex.allCases, id: \.self) { value in
                             Text(sexLabel(value)).tag(value)
                         }
                     }
-                    Picker("Age", selection: $age) {
+                    Picker("Age", selection: $inputs.age) {
                         ForEach(10...100, id: \.self) { years in
                             Text("\(years)").tag(years)
                         }
                     }
                     if isImperial {
                         imperialHeightRow
-                        measurementField("Weight", text: $weightText, unit: "lbs")
+                        measurementField("Weight", text: $inputs.weightText, unit: "lbs")
                     } else {
-                        measurementField("Height", text: $heightText, unit: "cm")
-                        measurementField("Weight", text: $weightText, unit: "kg")
+                        measurementField("Height", text: $inputs.heightText, unit: "cm")
+                        measurementField("Weight", text: $inputs.weightText, unit: "kg")
                     }
                 }
 
                 Section("Activity") {
-                    Picker("Activity", selection: $activity) {
+                    // Inline rows, not a menu (fix 2026-09-28): the menu
+                    // style squeezed the chosen option next to the row label
+                    // and truncated the long descriptions mid-word.
+                    Picker("Activity", selection: $inputs.activity) {
                         ForEach(CalcActivity.allCases, id: \.self) { value in
                             Text(activityLabel(value)).tag(value)
                         }
                     }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
                 }
 
                 Section("Goal") {
-                    Picker("Goal", selection: $direction) {
+                    Picker("Goal", selection: $inputs.direction) {
                         ForEach(directions, id: \.self) { value in
                             Text(directionLabel(value)).tag(value)
                         }
@@ -85,7 +82,7 @@ struct GoalsCalculatorSheet: View {
             // No Cancel button (user decision 2026-09-27): swipe-down closes.
             // Apply lives in a bottom CTA bar, not the nav bar.
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                ProductFormCTABar(title: "Apply", enabled: canApply) { apply() }
+                ProductFormCTABar(title: "Apply", enabled: inputs.canApply) { apply() }
             }
             .tint(Theme.accentLabel)
         }
@@ -115,16 +112,16 @@ struct GoalsCalculatorSheet: View {
         HStack(spacing: 4) {
             Text("Height")
             Spacer()
-            TextField("0", text: $feetText)
+            TextField("0", text: $inputs.feetText)
                 .keyboardType(.decimalPad)
-                .numericInputLimit($feetText, maxDigits: 1)
+                .numericInputLimit($inputs.feetText, maxDigits: 1)
                 .multilineTextAlignment(.trailing)
                 .frame(maxWidth: 44)
             Text(verbatim: "′")
                 .foregroundStyle(Theme.textSecondary)
-            TextField("0", text: $inchesText)
+            TextField("0", text: $inputs.inchesText)
                 .keyboardType(.decimalPad)
-                .numericInputLimit($inchesText, maxDigits: 2)
+                .numericInputLimit($inputs.inchesText, maxDigits: 2)
                 .multilineTextAlignment(.trailing)
                 .frame(maxWidth: 52)
             Text(verbatim: "″")
@@ -133,21 +130,24 @@ struct GoalsCalculatorSheet: View {
     }
 
     /// The calculator derives lose/maintain/gain from the current→target
-    /// difference, so encode the chosen direction as a ±5 kg target offset.
+    /// difference, so the direction is encoded as a target weight (see
+    /// `CalculatorInputs.targetWeightKg`). Apply also remembers the answers.
     private func apply() {
-        guard let heightCm, let weightKg else { return }
-        let targetWeightKg: Double
-        switch direction {
-        case .lose: targetWeightKg = weightKg - 5
-        case .maintain: targetWeightKg = weightKg
-        case .gain: targetWeightKg = weightKg + 5
+        guard let heightCm = inputs.heightCm, let weightKg = inputs.weightKg else { return }
+        let targetWeightKg = inputs.targetWeightKg(
+            currentKg: weightKg, stored: settings?.profileTargetWeightKg
+        )
+        if let settings {
+            inputs.save(to: settings, heightCm: heightCm, weightKg: weightKg,
+                        targetWeightKg: targetWeightKg)
+            try? context.save()
         }
         let plan = GoalCalculator.plan(
-            sex: sex,
-            age: age,
+            sex: inputs.sex,
+            age: inputs.age,
             heightCm: heightCm,
             weightKg: weightKg,
-            activity: activity,
+            activity: inputs.activity,
             targetWeightKg: targetWeightKg
         )
         onApply(plan)
@@ -181,9 +181,9 @@ struct GoalsCalculatorSheet: View {
 }
 
 #Preview("Metric") {
-    GoalsCalculatorSheet(unitSystem: .metric) { _ in }
+    GoalsCalculatorSheet(settings: nil, unitSystem: .metric) { _ in }
 }
 
 #Preview("US") {
-    GoalsCalculatorSheet(unitSystem: .us) { _ in }
+    GoalsCalculatorSheet(settings: nil, unitSystem: .us) { _ in }
 }

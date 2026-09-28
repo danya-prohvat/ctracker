@@ -5,18 +5,20 @@ import UIKit
 /// Full-screen onboarding (spec §8): one question per screen (block centered
 /// vertically), thin progress bar pinned top, small Skip in the corner on
 /// every step, auto-advance on card steps. Raw answers (sex / age / height /
-/// weight / activity / target) live
-/// only in @State and are never persisted — only the resulting plan is written
-/// to UserSettings at the end. The current step index is persisted after each
-/// advance so an interrupted onboarding resumes where it left off.
+/// weight / activity / target) are @State seeded from the body profile in
+/// UserSettings and written back on every advance (user decision 2026-09-28,
+/// overrides spec §8) — so an interrupted onboarding resumes with its
+/// answers and the goals calculator starts from them. The resulting plan is
+/// written to the daily goals at the end.
 /// The closing soft paywall is NOT a step here — after the flow (finished or
 /// skipped alike) the host (RootView) dismisses this cover, shows Today for a
 /// beat and only then presents the paywall over it (user decision 2026-07-21),
 /// so the paywall never reveals a still-dismissing onboarding behind it.
 ///
-/// This file holds the state and flow control; the step views live in
+/// This file holds the state and step navigation; the step views live in
 /// OnboardingAboutYouSteps / OnboardingGoalSteps, the shared scaffold and
-/// picker bindings in OnboardingStepScaffold.
+/// picker bindings in OnboardingStepScaffold, plan / profile / finish in
+/// OnboardingCompletion.
 struct OnboardingFlow: View {
     // Internal (not private): the step-view extensions in sibling files use
     // the state, settings and context directly.
@@ -25,14 +27,14 @@ struct OnboardingFlow: View {
     let settings: UserSettings
     let onFinish: () -> Void
 
-    // Raw answers — @State only, never persisted (spec §8).
+    // Raw answers — seeded from the remembered body profile in init.
     @State var sex: CalcSex?
-    @State var age = 25
-    @State var heightCm: Double = 170
-    @State var weightKg: Double = 70
+    @State var age: Int
+    @State var heightCm: Double
+    @State var weightKg: Double
     @State var activity: CalcActivity?
-    @State var targetWeightKg: Double = 70
-    @State var targetInitialized = false
+    @State var targetWeightKg: Double
+    @State var targetInitialized: Bool
     @State var useImperial: Bool
 
     // Computed plan (PlanEditor bindings on the result step).
@@ -52,6 +54,16 @@ struct OnboardingFlow: View {
         self.onFinish = onFinish
         _step = State(initialValue: min(max(settings.onboardingStep, 0), Self.stepCount - 1))
         _useImperial = State(initialValue: settings.unitSystem == .us)
+        // Remembered answers: a resumed or re-run onboarding starts from what
+        // was answered before; a stored target means its step already ran.
+        _sex = State(initialValue: settings.profileSex)
+        _age = State(initialValue: settings.profileAge ?? 25)
+        _heightCm = State(initialValue: settings.profileHeightCm ?? 170)
+        let weight = settings.profileWeightKg ?? 70
+        _weightKg = State(initialValue: weight)
+        _activity = State(initialValue: settings.profileActivity)
+        _targetWeightKg = State(initialValue: settings.profileTargetWeightKg ?? weight)
+        _targetInitialized = State(initialValue: settings.profileTargetWeightKg != nil)
     }
 
     var body: some View {
@@ -135,13 +147,14 @@ struct OnboardingFlow: View {
         withAnimation(.easeInOut(duration: 0.3)) {
             step += 1
         }
-        // Persist the resume point (spec §8) — never the raw answers.
+        // Persist the resume point (spec §8) and the answers so far.
         settings.onboardingStep = step
+        saveProfile()
         try? context.save()
     }
 
-    /// Resuming mid-flow after a relaunch: raw answers are gone by design, so
-    /// late steps fall back to computing the plan from the current defaults.
+    /// Resuming mid-flow after a relaunch: answers come back from the
+    /// profile; late steps only need the plan recomputed.
     private func resumeIfNeeded() {
         if !targetInitialized, step >= 4 {
             targetWeightKg = weightKg
@@ -150,43 +163,6 @@ struct OnboardingFlow: View {
         if step >= 5, planCalories <= 0 {
             computePlan()
         }
-    }
-
-    func computePlan() {
-        let plan = GoalCalculator.plan(
-            sex: sex ?? .unspecified,
-            age: age,
-            heightCm: heightCm,
-            weightKg: weightKg,
-            activity: activity ?? .moderate,
-            targetWeightKg: targetInitialized ? targetWeightKg : weightKg
-        )
-        planCalories = plan.calories
-        planProtein = plan.protein
-        planFat = plan.fat
-        planCarbs = plan.carbs
-    }
-
-    /// Skip: finish immediately, defaults stay untouched (spec §8).
-    private func skip() {
-        settings.onboardingCompleted = true
-        settings.onboardingStep = 0
-        try? context.save()
-        onFinish()
-    }
-
-    /// Continue on "Your plan": write ONLY the resulting plan, then hand off
-    /// to the host (which shows the soft paywall a beat later).
-    func finish() {
-        if planCalories <= 0 { computePlan() }
-        settings.calorieGoal = planCalories
-        settings.proteinGoal = planProtein
-        settings.fatGoal = planFat
-        settings.carbGoal = planCarbs
-        settings.onboardingCompleted = true
-        settings.onboardingStep = 0
-        try? context.save()
-        onFinish()
     }
 }
 
