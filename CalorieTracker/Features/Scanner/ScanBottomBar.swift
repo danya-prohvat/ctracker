@@ -4,8 +4,6 @@ import SwiftUI
 /// ODbL footer, shown in every phase where OFF data is fetched or displayed.
 struct ScanBottomBar: View {
     let phase: ScanFlowPhase
-    @Binding var manualCode: String
-    let onManualLookup: (String) -> Void
     let onCreateManually: (String) -> Void
     let onScanAgain: () -> Void
     let onRetry: (String) -> Void
@@ -21,8 +19,6 @@ struct ScanBottomBar: View {
         VStack(spacing: 10) {
             ScanActionBar(
                 phase: phase,
-                manualCode: $manualCode,
-                onManualLookup: onManualLookup,
                 onCreateManually: onCreateManually,
                 onScanAgain: onScanAgain,
                 onRetry: onRetry

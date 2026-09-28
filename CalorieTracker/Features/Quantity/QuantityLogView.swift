@@ -35,9 +35,10 @@ struct QuantityLogView: View {
             per100Fat: current.per100Fat,
             per100Carbs: current.per100Carbs,
             unitSystem: unitSystem,
-            // Always start from the canonical default of 100 g / ml (user
-            // decision 2026-07-14) — not from the last logged quantity.
-            initialCanonical: 100,
+            // Start from the portion the product was entered for ("Per 30 g",
+            // user decision 2026-09-27), 100 g / ml when none. Still never
+            // the last logged quantity (user decision 2026-07-14 stands).
+            initialCanonical: product?.servingAmount ?? 100,
             title: "Add quantity",
             // Day-aware CTA: logging into a past day from the calendar must
             // not promise "today" (fix 2026-09-07).

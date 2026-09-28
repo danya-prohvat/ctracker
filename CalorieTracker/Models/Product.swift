@@ -21,6 +21,13 @@ final class Product {
 
     var barcode: String? = nil
 
+    /// The base amount the nutrition was entered for in the product form
+    /// ("Per 30 g"), canonical g / ml. Storage stays per-100 (spec §3); this
+    /// only remembers the portion the user described, so the quantity screen
+    /// can start from it (user decision 2026-09-27). nil = 100 (legacy,
+    /// seeded and scanned products).
+    var servingAmount: Double? = nil
+
     /// Last logged quantity in canonical units (g / ml) — used for prefill & Recent chips.
     var lastQuantity: Double? = nil
     /// Last time this product was logged — drives "My products" recency sort & Recent chips.
@@ -47,6 +54,7 @@ final class Product {
         carbs: Double = 0,
         micros: [String: Double] = [:],
         barcode: String? = nil,
+        servingAmount: Double? = nil,
         lastQuantity: Double? = nil,
         lastLoggedAt: Date? = nil,
         createdAt: Date = Date()
@@ -60,6 +68,7 @@ final class Product {
         self.carbs = carbs
         self.micros = micros
         self.barcode = barcode
+        self.servingAmount = servingAmount
         self.lastQuantity = lastQuantity
         self.lastLoggedAt = lastLoggedAt
         self.createdAt = createdAt

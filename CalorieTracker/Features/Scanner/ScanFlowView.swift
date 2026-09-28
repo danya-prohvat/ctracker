@@ -29,8 +29,11 @@ struct ScanFlowView: View {
     @State private var phase: ScanFlowPhase = .requestingPermission
     /// Bumped to recreate the scanner view — it reports each code only once.
     @State private var scanToken = 0
-    @State private var manualCode = ""
     @State private var didRequestPermission = false
+    /// Manual barcode entry (user decision 2026-09-28): the sheet hands its
+    /// code over, the lookup runs after the sheet is gone (`finishManualEntry`).
+    @State private var showManualEntry = false
+    @State private var pendingManualCode: String?
     /// Last camera-reported code, for the same-code debounce.
     @State private var lastScan: (code: String, at: Date)?
     /// In-flight OFF lookup — cancelled when the scanner is dismissed, so a
@@ -43,12 +46,11 @@ struct ScanFlowView: View {
             ScanCenterContent(
                 phase: phase,
                 scanToken: scanToken,
-                onScannedCode: handleScannedCode
+                onScannedCode: handleScannedCode,
+                onEnterManually: { showManualEntry = true }
             )
             ScanBottomBar(
                 phase: phase,
-                manualCode: $manualCode,
-                onManualLookup: handleCode,
                 onCreateManually: onCreateManually,
                 onScanAgain: restartScanning,
                 onRetry: lookup
@@ -57,6 +59,9 @@ struct ScanFlowView: View {
         .background(Theme.scanBackground.ignoresSafeArea())
         // Viewfinder, status panel and action bar fade between phases.
         .animation(.easeInOut(duration: 0.2), value: phase)
+        .adaptiveSheet(isPresented: $showManualEntry, onDismiss: finishManualEntry) {
+            ScanManualEntrySheet { code in pendingManualCode = code }
+        }
         .task {
             await ensurePermission()
             await ScanRewardGate.preloadIfNeeded(context: context)
@@ -79,8 +84,8 @@ struct ScanFlowView: View {
         guard !didRequestPermission else { return }
         didRequestPermission = true
         #if targetEnvironment(simulator)
-        // No camera hardware — go straight to the scanning state where
-        // the manual-lookup debug bar lives.
+        // No camera hardware — go straight to scanning; the manual-entry
+        // link covers the missing camera.
         phase = .scanning
         #else
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -97,10 +102,11 @@ struct ScanFlowView: View {
 
     /// Camera path only: haptic + sound on recognition, and a re-report of the
     /// same code within the debounce window silently resumes scanning instead
-    /// of looping the lookup. Manual (debug) lookup calls `handleCode` directly.
+    /// of looping the lookup. Manual entry feeds `handleCode` directly, silent.
     private func handleScannedCode(_ rawCode: String) {
         let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !code.isEmpty else { return }
+        // The camera keeps running under the manual-entry sheet — ignore it.
+        guard !code.isEmpty, !showManualEntry else { return }
         if let last = lastScan, last.code == code,
            Date().timeIntervalSince(last.at) < ScanFeedback.debounceInterval {
             scanToken += 1
@@ -164,9 +170,21 @@ struct ScanFlowView: View {
     }
 
     private func restartScanning() {
-        manualCode = ""
         scanToken += 1
         phase = .scanning
+    }
+
+    /// Runs after the manual-entry sheet is fully gone, so a local hand-off
+    /// or the rewarded ad never races the sheet's dismissal. Closed without
+    /// a code: recreate the scanner — it reports each code once, and a code
+    /// seen while the sheet was up was ignored.
+    private func finishManualEntry() {
+        if let code = pendingManualCode {
+            pendingManualCode = nil
+            handleCode(code)
+        } else if case .scanning = phase {
+            scanToken += 1
+        }
     }
 }
 

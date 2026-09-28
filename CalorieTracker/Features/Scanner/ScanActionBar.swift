@@ -3,26 +3,16 @@ import UIKit
 
 /// State-dependent bottom action stack of the dark scan flow: a 54pt green
 /// primary button plus a 50pt translucent secondary one, per the prototype.
+/// Manual barcode entry is not here — it is a link under the status panel
+/// opening `ScanManualEntrySheet` (user decision 2026-09-28).
 struct ScanActionBar: View {
     let phase: ScanFlowPhase
-    @Binding var manualCode: String
-    let onManualLookup: (String) -> Void
     let onCreateManually: (String) -> Void
     let onScanAgain: () -> Void
     let onRetry: (String) -> Void
 
     var body: some View {
         switch phase {
-        case .scanning:
-            #if targetEnvironment(simulator) && DEBUG
-            // The simulator has no camera — allow typing a barcode by hand.
-            // Hidden in mock-photo screenshot mode (`-scanMockPhoto <path>`).
-            if !ScanMockPhoto.isActive { manualLookupBar }
-            #elseif targetEnvironment(simulator)
-            manualLookupBar
-            #else
-            EmptyView()
-            #endif
         case .notFound(let code):
             VStack(spacing: 10) {
                 primaryButton("Create manually") { onCreateManually(code) }
@@ -40,7 +30,7 @@ struct ScanActionBar: View {
                 primaryButton("Retry") { onRetry(code) }
                 secondaryButton("Scan again", action: onScanAgain)
             }
-        case .searching, .found, .requestingPermission, .handedOff:
+        case .scanning, .searching, .found, .requestingPermission, .handedOff:
             EmptyView()
         }
     }
@@ -83,41 +73,6 @@ struct ScanActionBar: View {
                 )
         }
     }
-
-    // MARK: - Simulator manual entry
-
-    #if targetEnvironment(simulator)
-    private var manualLookupBar: some View {
-        VStack(spacing: 10) {
-            TextField("Barcode", text: $manualCode)
-                .font(.subheadline)
-                .foregroundStyle(.white)
-                .tint(Theme.scanLine)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .keyboardType(.numbersAndPunctuation)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 14)
-                .frame(height: 44)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(.white.opacity(0.08))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(.white.opacity(0.14), lineWidth: 1)
-                )
-            Button {
-                onManualLookup(manualCode)
-            } label: {
-                Text("Look up code")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.6))
-            }
-            .disabled(manualCode.trimmingCharacters(in: .whitespaces).isEmpty)
-        }
-    }
-    #endif
 }
 
 #Preview {
@@ -125,8 +80,6 @@ struct ScanActionBar: View {
         Theme.scanBackground.ignoresSafeArea()
         ScanActionBar(
             phase: .notFound("4820000123456"),
-            manualCode: .constant(""),
-            onManualLookup: { _ in },
             onCreateManually: { _ in },
             onScanAgain: {},
             onRetry: { _ in }

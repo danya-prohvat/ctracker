@@ -126,6 +126,7 @@ struct NewProductForm: View {
             product.fat = v.f
             product.carbs = v.c
             product.micros = micros
+            product.servingAmount = fields.perAmount
             try? context.save()
             dismiss()
 
@@ -134,7 +135,8 @@ struct NewProductForm: View {
             // create a twin (CloudKit rules forbid a unique constraint).
             _ = ProductStore.upsert(name: trimmedName, basis: fields.basis,
                                     calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
-                                    micros: micros, barcode: barcode, in: context)
+                                    micros: micros, barcode: barcode,
+                                    servingAmount: fields.perAmount, in: context)
             dismiss()
 
         case .logging:
@@ -143,7 +145,8 @@ struct NewProductForm: View {
             // tapping it in the list. Log-once is the secondary button.
             _ = ProductStore.upsert(name: trimmedName, basis: fields.basis,
                                     calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
-                                    micros: micros, barcode: barcode, in: context)
+                                    micros: micros, barcode: barcode,
+                                    servingAmount: fields.perAmount, in: context)
             dismiss()
         }
     }

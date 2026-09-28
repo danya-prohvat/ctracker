@@ -14,8 +14,9 @@ struct LoggableFood: Hashable {
     var per100Carbs: Double
     var per100Micros: [String: Double]
     /// Canonical quantity (g / ml) attached to the food, if any. The quantity
-    /// screen ignores it (always starts at 100); the log-once fast path uses
-    /// it to carry the form's "Per" base amount to write immediately.
+    /// screen ignores it (it starts from `Product.servingAmount`, else 100);
+    /// the log-once fast path uses it to carry the form's "Per" base amount
+    /// to write immediately.
     var lastQuantity: Double?
     /// Whether the source came from the barcode scanner (frozen into the diary
     /// snapshot at log time). Defaults to false so existing call sites compile.

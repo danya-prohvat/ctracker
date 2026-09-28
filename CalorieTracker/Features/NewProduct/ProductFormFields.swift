@@ -58,14 +58,21 @@ struct ProductFormFields: Equatable {
         value == 0 ? "" : Format.editable(value)
     }
 
+    /// Editing shows the product the way it was entered: "Per" = the saved
+    /// serving amount and every value scaled from per-100 back to it, so a
+    /// "per 30 g · 150 kcal" bar does not reopen as "per 100 g · 500 kcal".
+    /// Products without a serving amount (legacy / scanned) load as per-100.
     mutating func load(product: Product) {
+        let serving = product.servingAmount ?? 100
+        let scale = serving / 100
         name = product.name
         basis = product.basis
-        caloriesText = Self.text(product.calories)
-        proteinText = Self.text(product.protein)
-        fatText = Self.text(product.fat)
-        carbsText = Self.text(product.carbs)
-        microTexts = product.micros.mapValues { Format.editable($0) }
+        perAmountText = Format.editable(serving)
+        caloriesText = Self.text(product.calories * scale)
+        proteinText = Self.text(product.protein * scale)
+        fatText = Self.text(product.fat * scale)
+        carbsText = Self.text(product.carbs * scale)
+        microTexts = product.micros.mapValues { Format.editable($0 * scale) }
     }
 
     mutating func load(prefill: LoggableFood) {

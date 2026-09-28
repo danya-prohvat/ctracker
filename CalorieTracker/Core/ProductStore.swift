@@ -45,6 +45,7 @@ enum ProductStore {
         carbs: Double,
         micros: [String: Double],
         barcode: String?,
+        servingAmount: Double?,
         in context: ModelContext
     ) -> Product {
         if let product = existing(barcode: barcode, in: context) {
@@ -55,13 +56,14 @@ enum ProductStore {
             product.fat = fat
             product.carbs = carbs
             product.micros = micros
+            product.servingAmount = servingAmount
             try? context.save()
             return product
         }
         let product = Product(
             name: name, basis: basis,
             calories: calories, protein: protein, fat: fat, carbs: carbs,
-            micros: micros, barcode: barcode
+            micros: micros, barcode: barcode, servingAmount: servingAmount
         )
         context.insert(product)
         try? context.save()
