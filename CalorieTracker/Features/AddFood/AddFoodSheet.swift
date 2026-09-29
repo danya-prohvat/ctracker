@@ -23,7 +23,9 @@ struct AddFoodSheet: View {
     @State private var productToDelete: Product?
     @State private var creatingProduct = false
     @State var showScanner = false
-    @State var showPaywall = false
+    /// Decided in `startScan`: free scans used up → the scanner opens on its
+    /// limit screen instead of the camera.
+    @State var scannerStartsLocked = false
     // Set by the scanner, presented once its cover finishes dismissing.
     @State var pendingScan: AddSheet.Kind?
     @State private var addSheet: AddSheet?
@@ -64,7 +66,6 @@ struct AddFoodSheet: View {
                 NavigationStack { NewProductForm(mode: .saving) }
                     .presentationDragIndicator(.visible)
             }
-            .adaptiveSheet(isPresented: $showPaywall) { PaywallView() }
             .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) { scanFlow }
             .confirmDeleteProduct($productToDelete, onConfirm: delete)
             .task { applyDebugRoute() }
@@ -96,6 +97,7 @@ struct AddFoodSheet: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     AddFoodActionCards(
+                        scanAllowance: settings.map { PremiumGate.scanAllowance(settings: $0) },
                         onNewProduct: { addSheet = AddSheet(kind: .newProduct(NewProductRoute())) },
                         onScan: startScan
                     )

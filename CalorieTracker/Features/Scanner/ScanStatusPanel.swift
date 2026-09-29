@@ -1,7 +1,9 @@
 import SwiftUI
 
 /// Per-state content shown under (or instead of) the viewfinder in the dark
-/// scan flow: hints, spinner, not-found / denied / offline messages.
+/// scan flow: hints, spinner, not-found / denied / offline messages. The ad
+/// offer and daily-limit states live in ScanStatusPanelGates.swift, which is
+/// why the shared pieces below are internal.
 struct ScanStatusPanel: View {
     let phase: ScanFlowPhase
 
@@ -21,6 +23,10 @@ struct ScanStatusPanel: View {
             offline
         case .serverError:
             serverError
+        case .rewardOffer:
+            rewardOffer
+        case .limitReached:
+            limitReached
         case .requestingPermission, .handedOff:
             EmptyView()
         }
@@ -81,7 +87,7 @@ struct ScanStatusPanel: View {
                 body: "This barcode isn't in our database yet. You can add it manually.",
                 maxWidth: 240
             )
-            codeChip(code)
+            ScanCodeChip(code: code)
         }
     }
 
@@ -138,7 +144,7 @@ struct ScanStatusPanel: View {
 
     // MARK: - Pieces
 
-    private func message(
+    func message(
         title: LocalizedStringKey, body: LocalizedStringKey, maxWidth: CGFloat
     ) -> some View {
         VStack(spacing: 5) {
@@ -154,34 +160,13 @@ struct ScanStatusPanel: View {
         .multilineTextAlignment(.center)
     }
 
-    private func statusCircle(@ViewBuilder content: () -> some View) -> some View {
+    func statusCircle(@ViewBuilder content: () -> some View) -> some View {
         ZStack {
             Circle()
                 .fill(.white.opacity(0.08))
                 .frame(width: 72, height: 72)
             content()
         }
-    }
-
-    private func codeChip(_ code: String) -> some View {
-        HStack(spacing: 8) {
-            ScanBarcodeGlyph(barWidths: [2, 3, 1, 3, 2, 1], spacing: 2)
-                .frame(height: 16)
-            Text(verbatim: code)
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(.white)
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.white.opacity(0.08))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(.white.opacity(0.14), lineWidth: 1)
-        )
     }
 }
 

@@ -1,9 +1,11 @@
 import SwiftData
 
-/// The rewarded-ad toll on barcode scanning (user decision 2026-08-03): from
-/// the second successful scan on, free users watch a rewarded ad before the
-/// scan result is revealed. The very first scan is ad-free; premium and the
-/// install-day grace skip ads entirely (both via `AdsConfig.shouldShowAds`).
+/// The rewarded-ad toll on barcode scanning (user decision 2026-08-03; opt-in
+/// since 2026-09-28, as AdMob requires for rewarded ads): from the second
+/// successful scan on, free users get a "Watch ad" offer before the result
+/// is revealed — the reward is the scan itself. The very first scan is
+/// ad-free; premium and the install-day grace skip ads entirely (both via
+/// `AdsConfig.shouldShowAds`).
 @MainActor
 enum ScanRewardGate {
     /// Called when the scan flow opens, so the ad is loading while the user
@@ -13,14 +15,17 @@ enum ScanRewardGate {
         await RewardedAdManager.shared.preload()
     }
 
-    /// Runs `reveal` behind the rewarded ad when the gate applies and an ad
-    /// is loaded, or immediately otherwise — the ad must never block or lose
-    /// the scan result.
-    static func present(context: ModelContext, reveal: @escaping () -> Void) {
-        if applies(context: context),
-           RewardedAdManager.shared.show(onDismiss: reveal) {
-            return
-        }
+    /// True when a successful lookup should stop at the "Watch ad" offer: the
+    /// gate applies and an ad is actually loaded. No ad ready = the result is
+    /// revealed for free — an ad must never block or lose a scan.
+    static func shouldOffer(context: ModelContext) -> Bool {
+        applies(context: context) && RewardedAdManager.shared.isReady
+    }
+
+    /// Shows the loaded ad and runs `reveal` once it is gone — closing early
+    /// still reveals — or immediately when no ad can be presented after all.
+    static func present(reveal: @escaping () -> Void) {
+        if RewardedAdManager.shared.show(onDismiss: reveal) { return }
         reveal()
     }
 

@@ -6,27 +6,35 @@ import AVFoundation
 ///
 /// State machine: scanning → (own DB hit → `onLocalProduct`) → searching →
 /// found (`onPrefill`) / not found (`onCreateManually`) / offline (retry),
-/// plus a camera-permission-denied state. The caller owns navigation: this
-/// view only reports outcomes through its callbacks and dismisses itself.
+/// plus camera-permission-denied, the opt-in "Watch ad" offer that holds a
+/// found product back, and the daily free-scan limit the flow can open on
+/// (user decision 2026-09-28). The caller owns navigation: this view only
+/// reports outcomes through its callbacks and dismisses itself.
 struct ScanFlowView: View {
-    @Environment(\.modelContext) private var context
+    // Internal (not private): ScanFlowLookup.swift extends this type.
+    @Environment(\.modelContext) var context
     @Environment(\.dismiss) private var dismiss
 
     let onLocalProduct: (Product) -> Void
     let onPrefill: (ScanPrefill) -> Void
     let onCreateManually: (String) -> Void
+    /// True when the free scans are used up: the flow opens on `.limitReached`
+    /// instead of asking for the camera.
+    let startsLocked: Bool
 
     init(
+        startsLocked: Bool = false,
         onLocalProduct: @escaping (Product) -> Void,
         onPrefill: @escaping (ScanPrefill) -> Void,
         onCreateManually: @escaping (String) -> Void
     ) {
+        self.startsLocked = startsLocked
         self.onLocalProduct = onLocalProduct
         self.onPrefill = onPrefill
         self.onCreateManually = onCreateManually
     }
 
-    @State private var phase: ScanFlowPhase = .requestingPermission
+    @State var phase: ScanFlowPhase = .requestingPermission
     /// Bumped to recreate the scanner view — it reports each code only once.
     @State private var scanToken = 0
     @State private var didRequestPermission = false
@@ -38,7 +46,12 @@ struct ScanFlowView: View {
     @State private var lastScan: (code: String, at: Date)?
     /// In-flight OFF lookup — cancelled when the scanner is dismissed, so a
     /// late response can't fire ads/callbacks over an unrelated screen.
-    @State private var lookupTask: Task<Void, Never>?
+    @State var lookupTask: Task<Void, Never>?
+    /// The found product held back behind the "Watch ad" offer.
+    @State var pendingPrefill: ScanPrefill?
+    /// Paywall opened from the offer / limit screens; a fresh premium on
+    /// return unlocks the flow (`paywallClosed`).
+    @State var showPaywall = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -53,7 +66,9 @@ struct ScanFlowView: View {
                 phase: phase,
                 onCreateManually: onCreateManually,
                 onScanAgain: restartScanning,
-                onRetry: lookup
+                onRetry: lookup,
+                onWatchAd: watchAd,
+                onGoPremium: { showPaywall = true }
             )
         }
         .background(Theme.scanBackground.ignoresSafeArea())
@@ -62,7 +77,14 @@ struct ScanFlowView: View {
         .adaptiveSheet(isPresented: $showManualEntry, onDismiss: finishManualEntry) {
             ScanManualEntrySheet { code in pendingManualCode = code }
         }
+        .adaptiveSheet(isPresented: $showPaywall, onDismiss: paywallClosed) {
+            PaywallView()
+        }
         .task {
+            if startsLocked {
+                phase = .limitReached
+                return
+            }
             await ensurePermission()
             await ScanRewardGate.preloadIfNeeded(context: context)
             #if DEBUG
@@ -78,7 +100,7 @@ struct ScanFlowView: View {
         .onDisappear { lookupTask?.cancel() }
     }
 
-    // MARK: - Logic
+    // MARK: - Logic (lookup, ad offer and reveal live in ScanFlowLookup.swift)
 
     private func ensurePermission() async {
         guard !didRequestPermission else { return }
@@ -117,66 +139,14 @@ struct ScanFlowView: View {
         handleCode(code)
     }
 
-    private func handleCode(_ rawCode: String) {
-        let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !code.isEmpty else { return }
-
-        // Own database first — no network needed for products we already know.
-        if let product = localProduct(for: code) {
-            phase = .handedOff
-            onLocalProduct(product)
-            return
-        }
-        lookup(code)
-    }
-
-    private func localProduct(for code: String) -> Product? {
-        ProductStore.existing(scannedCode: code, in: context)
-    }
-
-    private func lookup(_ code: String) {
-        phase = .searching(code)
-        // In-app language for the prefilled product name — `Locale.current` is
-        // frozen at launch and lags an in-session language switch.
-        let languageCode = UserSettings.current(in: context).languageCode
-        lookupTask?.cancel()
-        lookupTask = Task {
-            do {
-                let result = try await BarcodeLookupService.lookup(barcode: code,
-                                                                   languageCode: languageCode)
-                guard !Task.isCancelled else { return }
-                switch result {
-                case .found(let prefill):
-                    // Rewarded scan gate: the phase stays `.searching` while
-                    // the ad is up — the outcome is only revealed after it
-                    // closes, never announced beforehand.
-                    ScanRewardGate.present(context: context) {
-                        phase = .found
-                        onPrefill(prefill)
-                    }
-                case .notFound:
-                    phase = .notFound(code)
-                }
-            } catch {
-                // Our own cancel also lands here (URLSession throws on it).
-                guard !Task.isCancelled else { return }
-                if case LookupError.serverError = error {
-                    phase = .serverError(code)
-                } else {
-                    phase = .offline(code)
-                }
-            }
-        }
-    }
-
     private func restartScanning() {
         scanToken += 1
         phase = .scanning
     }
 
     /// Runs after the manual-entry sheet is fully gone, so a local hand-off
-    /// or the rewarded ad never races the sheet's dismissal. Closed without
-    /// a code: recreate the scanner — it reports each code once, and a code
+    /// or the ad offer never races the sheet's dismissal. Closed without a
+    /// code: recreate the scanner — it reports each code once, and a code
     /// seen while the sheet was up was ignored.
     private func finishManualEntry() {
         if let code = pendingManualCode {
@@ -186,10 +156,32 @@ struct ScanFlowView: View {
             scanToken += 1
         }
     }
+
+    /// Back from the paywall: a fresh premium unlocks whatever it was opened
+    /// from — the held-back result is revealed, or the locked flow starts
+    /// scanning for real. Still free: stay where we were.
+    private func paywallClosed() {
+        guard PremiumGate.isPremium(settings: UserSettings.current(in: context)) else { return }
+        switch phase {
+        case .rewardOffer: revealPending()
+        case .limitReached: Task { await ensurePermission() }
+        default: break
+        }
+    }
 }
 
 #Preview {
     ScanFlowView(
+        onLocalProduct: { _ in },
+        onPrefill: { _ in },
+        onCreateManually: { _ in }
+    )
+    .modelContainer(PreviewData.container)
+}
+
+#Preview("Limit reached") {
+    ScanFlowView(
+        startsLocked: true,
         onLocalProduct: { _ in },
         onPrefill: { _ in },
         onCreateManually: { _ in }

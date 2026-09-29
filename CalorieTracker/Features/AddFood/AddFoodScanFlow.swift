@@ -1,11 +1,12 @@
 import SwiftUI
 
-/// Scanner wiring for the add-food flow: launch gating (10 free successful
-/// scans, user decision 2026-08-03), scan counting and routing of scan
-/// outcomes into a modal step.
+/// Scanner wiring for the add-food flow: launch gating (a welcome pool of
+/// free scans, then a daily quota — `PremiumGate.scanAllowance`), scan
+/// counting and routing of scan outcomes into a modal step.
 extension AddFoodSheet {
     var scanFlow: some View {
         ScanFlowView(
+            startsLocked: scannerStartsLocked,
             onLocalProduct: { product in
                 // Re-scanning a product already in the user's base is free:
                 // no counter tick and no rewarded ad (user decision
@@ -30,23 +31,21 @@ extension AddFoodSheet {
         )
     }
 
-    /// Free tier gets `PremiumGate.freeScanLimit` successful scans, then the
-    /// paywall (spec §9; limit raised to 10 on 2026-08-03).
+    /// Free tier: `PremiumGate.freeScanLimit` welcome scans, then
+    /// `dailyFreeScanLimit` per day (user decision 2026-09-28). Used up → the
+    /// scanner opens on its limit screen (upgrade / manual entry) instead of
+    /// the camera; the paywall is presented from inside the flow.
     func startScan() {
         // A route left over from an earlier session must never fire when this
         // scanner cover closes.
         pendingScan = nil
-        guard let settings else { showScanner = true; return }
-        if PremiumGate.isUnlocked(.scanner, settings: settings) {
-            showScanner = true
-        } else {
-            showPaywall = true
-        }
+        scannerStartsLocked = settings.map { !PremiumGate.isUnlocked(.scanner, settings: $0) } ?? false
+        showScanner = true
     }
 
     private func countScan() {
-        guard let settings, !PremiumGate.isPremium(settings: settings) else { return }
-        settings.scanCount += 1
+        guard let settings else { return }
+        PremiumGate.recordSuccessfulScan(settings: settings)
         try? context.save()
     }
 

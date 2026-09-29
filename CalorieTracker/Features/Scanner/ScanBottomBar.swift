@@ -7,10 +7,12 @@ struct ScanBottomBar: View {
     let onCreateManually: (String) -> Void
     let onScanAgain: () -> Void
     let onRetry: (String) -> Void
+    let onWatchAd: () -> Void
+    let onGoPremium: () -> Void
 
     private var showsAttribution: Bool {
         switch phase {
-        case .searching, .found, .notFound: return true
+        case .searching, .found, .notFound, .rewardOffer: return true
         default: return false
         }
     }
@@ -21,7 +23,9 @@ struct ScanBottomBar: View {
                 phase: phase,
                 onCreateManually: onCreateManually,
                 onScanAgain: onScanAgain,
-                onRetry: onRetry
+                onRetry: onRetry,
+                onWatchAd: onWatchAd,
+                onGoPremium: onGoPremium
             )
             if showsAttribution {
                 // ODbL attribution — required whenever OFF data is shown or fetched.

@@ -25,8 +25,13 @@ struct SettingsTestCard: View {
                 seedNote = count > 0 ? "Seeded \(count) entries" : "Store not empty"
             }
             SettingsRowDivider()
-            actionRow("Reset free scans", note: "Used: \(settings.scanCount)") {
+            actionRow(
+                "Reset free scans",
+                note: "Used: \(settings.scanCount) · today \(settings.dailyScanCount)"
+            ) {
                 settings.scanCount = 0
+                settings.dailyScanCount = 0
+                settings.dailyScanDayKey = nil
                 try? context.save()
             }
             SettingsRowDivider()

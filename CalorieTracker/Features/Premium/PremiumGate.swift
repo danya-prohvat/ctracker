@@ -5,18 +5,41 @@ enum PremiumFeature {
     /// The full micronutrient catalog beyond the free set — prefer
     /// `PremiumGate.isNutrientUnlocked(_:settings:)` for per-nutrient checks.
     case nutrients
-    /// Barcode scanner. Free users get 10 successful scans, then the paywall.
+    /// Barcode scanner — see `PremiumGate.scanAllowance`.
     case scanner
     /// Calendar days older than the last 30 days.
     case deepHistory
 }
 
+/// Where a user stands with barcode scanning (user decision 2026-09-28).
+enum ScanAllowance: Equatable {
+    /// Premium: no counters, no ads.
+    case unlimited
+    /// Inside the welcome pool of `PremiumGate.freeScanLimit` scans.
+    case welcome(left: Int)
+    /// Pool spent: `PremiumGate.dailyFreeScanLimit` scans per local day,
+    /// each behind the opt-in rewarded ad.
+    case daily(left: Int)
+
+    /// Scans still allowed; nil = unlimited.
+    var scansLeft: Int? {
+        switch self {
+        case .unlimited: return nil
+        case .welcome(let left), .daily(let left): return left
+        }
+    }
+}
+
 /// Single source of truth for what the current user may access (spec §9).
 enum PremiumGate {
-    /// Successful barcode scans a free user gets before the scanner locks
-    /// (user decision 2026-08-03: 10, was 3; only scans that found a product
-    /// count — see `AddFoodScanFlow`).
+    /// Welcome pool: successful barcode scans a free user gets before the
+    /// daily quota kicks in (user decision 2026-08-03: 10, was 3; only scans
+    /// that found a product count — see `AddFoodScanFlow`).
     static let freeScanLimit = 10
+    /// Successful scans a free user gets per local day once the pool is spent
+    /// (user decision 2026-09-28: the scanner never goes dead for good — a
+    /// scan costs an ad instead). Resets with the local day key.
+    static let dailyFreeScanLimit = 3
 
     /// Nutrients every user gets for free — deliberately the same set as the
     /// first-launch defaults (fiber, sugar, sodium, saturated fat): one
@@ -40,8 +63,36 @@ enum PremiumGate {
         if settings.isPremium { return true }
         switch feature {
         case .nutrients: return false
-        case .scanner: return settings.scanCount < freeScanLimit
+        case .scanner: return (scanAllowance(settings: settings).scansLeft ?? 1) > 0
         case .deepHistory: return false
+        }
+    }
+
+    /// The welcome pool is spent first; after it the per-day counter applies,
+    /// read as zero whenever its day key is not today.
+    static func scanAllowance(settings: UserSettings) -> ScanAllowance {
+        if settings.isPremium { return .unlimited }
+        let poolLeft = freeScanLimit - settings.scanCount
+        if poolLeft > 0 { return .welcome(left: poolLeft) }
+        let usedToday = settings.dailyScanDayKey == DayKey.today ? settings.dailyScanCount : 0
+        return .daily(left: max(0, dailyFreeScanLimit - usedToday))
+    }
+
+    /// The single writer of the scan counters — one call per successful OFF
+    /// lookup (`AddFoodScanFlow`). Premium never counts; the pool is spent
+    /// before the day counter, which restarts on its first scan of a new day.
+    static func recordSuccessfulScan(settings: UserSettings) {
+        switch scanAllowance(settings: settings) {
+        case .unlimited:
+            return
+        case .welcome:
+            settings.scanCount += 1
+        case .daily:
+            if settings.dailyScanDayKey != DayKey.today {
+                settings.dailyScanDayKey = DayKey.today
+                settings.dailyScanCount = 0
+            }
+            settings.dailyScanCount += 1
         }
     }
 
@@ -55,12 +106,6 @@ enum PremiumGate {
               let cutoff = Calendar.current.date(byAdding: .day, value: -29, to: today)
         else { return false }
         return dayKey >= DayKey.string(from: cutoff)
-    }
-
-    /// Barcode scans a free user still has left (0 when exhausted; irrelevant —
-    /// but still counts down — for premium users, who never hit the limit).
-    static func remainingFreeScans(settings: UserSettings) -> Int {
-        max(0, freeScanLimit - settings.scanCount)
     }
 
     /// The single writer of `settings.isPremium`: mirrors a definitive

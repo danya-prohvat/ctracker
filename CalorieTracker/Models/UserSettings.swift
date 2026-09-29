@@ -39,9 +39,15 @@ final class UserSettings {
     /// fallback when the iCloud account is unavailable.
     var iCloudSyncEnabled: Bool = true
 
-    /// Successful OFF-lookup scans used by a free user (10 free, then paywall —
-    /// user decision 2026-08-03; local re-scans and not-found don't count).
+    /// Successful OFF-lookup scans used from the welcome pool of 10 (user
+    /// decision 2026-08-03; local re-scans and not-found don't count).
     var scanCount: Int = 0
+    /// Successful scans used today by a free user once the welcome pool is
+    /// spent (`PremiumGate.dailyFreeScanLimit` per local day, user decision
+    /// 2026-09-28). Meaningful only while `dailyScanDayKey == DayKey.today`;
+    /// a stale key reads as zero — see `PremiumGate.scanAllowance`.
+    var dailyScanCount: Int = 0
+    var dailyScanDayKey: String? = nil
 
     var onboardingCompleted: Bool = false
     /// Resume point if onboarding is interrupted (spec §8).

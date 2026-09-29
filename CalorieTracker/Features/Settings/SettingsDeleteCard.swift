@@ -71,6 +71,8 @@ struct SettingsDeleteCard: View {
         // from iCloud on the next launch (and re-upload future data) for a
         // user who deliberately opted out of sync.
         settings.scanCount = 0
+        settings.dailyScanCount = 0
+        settings.dailyScanDayKey = nil
         // isPremium intentionally survives — wiping local data does not cancel
         // the subscription, and a paying user must not see ads and locks.
         settings.onboardingCompleted = true

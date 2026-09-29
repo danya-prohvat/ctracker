@@ -2,6 +2,9 @@ import SwiftUI
 
 /// "New product" + "Scan" action cards row of the Add food sheet.
 struct AddFoodActionCards: View {
+    /// Free scans left, shown on the Scan card so the limit never comes as a
+    /// surprise (user decision 2026-09-28). nil / unlimited = no caption.
+    var scanAllowance: ScanAllowance? = nil
     let onNewProduct: () -> Void
     let onScan: () -> Void
 
@@ -54,10 +57,27 @@ struct AddFoodActionCards: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Theme.accentDeep)
                 .ctaFit()
+            if let scanCaption {
+                Text(scanCaption)
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textTertiary)
+                    .ctaFit()
+                    .padding(.top, -2)
+            }
         }
         .frame(width: 84)
         .frame(maxHeight: .infinity)
         .glassCard(cornerRadius: 14)
+    }
+}
+
+extension AddFoodActionCards {
+    private var scanCaption: LocalizedStringKey? {
+        switch scanAllowance {
+        case .welcome(let left): return "\(left) free left"
+        case .daily(let left): return "\(left) of \(PremiumGate.dailyFreeScanLimit) today"
+        case .unlimited, nil: return nil
+        }
     }
 }
 
@@ -108,7 +128,11 @@ private struct ViewfinderCornersShape: Shape {
 #Preview {
     ZStack {
         AppBackground()
-        AddFoodActionCards(onNewProduct: {}, onScan: {})
-            .padding(20)
+        VStack(spacing: 16) {
+            AddFoodActionCards(onNewProduct: {}, onScan: {})
+            AddFoodActionCards(scanAllowance: .welcome(left: 7), onNewProduct: {}, onScan: {})
+            AddFoodActionCards(scanAllowance: .daily(left: 2), onNewProduct: {}, onScan: {})
+        }
+        .padding(20)
     }
 }
