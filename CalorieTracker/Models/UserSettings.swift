@@ -64,7 +64,7 @@ final class UserSettings {
     private var profileActivityRaw: String? = nil
     var profileTargetWeightKg: Double? = nil
 
-    /// Local mirror of the RevenueCat "pro" entitlement, kept in sync by
+    /// Local mirror of the RevenueCat premium entitlement, kept in sync by
     /// `PurchaseService.syncEntitlement()` on every scene activation. The rest
     /// of the app reads it only through `PremiumGate`.
     var isPremium: Bool = false

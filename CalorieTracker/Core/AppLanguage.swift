@@ -28,9 +28,25 @@ enum AppLanguage {
     /// the two never diverge; System (no override) resolves the stale-process
     /// case exactly like `effectiveOverride(nil)`.
     static var current: Bundle {
+        bundle(for: pickedCode)
+    }
+
+    /// Locale for values formatted outside the SwiftUI environment — numbers
+    /// (`Format`), date strings built with `.formatted()`, weekday symbols.
+    /// `Locale.current` is frozen at process launch, so without this a month
+    /// name or a grouping separator stayed in the previous language until
+    /// restart (fix 2026-09-29). Same value `appLanguage(_:)` pushes into the
+    /// environment, so baked strings and `Text` never disagree.
+    static var locale: Locale {
+        effectiveOverride(for: pickedCode).map(Locale.init(identifier:)) ?? .current
+    }
+
+    /// The language picker's choice as written to the app-domain
+    /// `AppleLanguages` (nil = System).
+    private static var pickedCode: String? {
         let appDomain = Bundle.main.bundleIdentifier
             .flatMap { UserDefaults.standard.persistentDomain(forName: $0) }
-        return bundle(for: (appDomain?["AppleLanguages"] as? [String])?.first)
+        return (appDomain?["AppleLanguages"] as? [String])?.first
     }
 
     static func isRTL(_ code: String) -> Bool {

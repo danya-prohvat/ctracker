@@ -16,7 +16,7 @@ import Foundation
 ///     weekly / monthly / annual / lifetime packages.
 /// `PurchaseServices.make` then picks this service automatically — plan names
 /// and prices on the paywall come from the store (`quotes()`), and purchases
-/// unlock the "pro" entitlement mirrored into `UserSettings.isPremium`.
+/// unlock the premium entitlement mirrored into `UserSettings.isPremium`.
 
 /// Build-time billing configuration. Lives outside the `#if canImport` block so
 /// the key can be filled in before the package is added.
@@ -25,9 +25,11 @@ enum PurchasesConfig {
     /// keep using `StubPurchaseService`.
     static let revenueCatAPIKey = "appl_PwdrifgGiobkwIzsqYlpexrnOrL"
 
-    /// The single entitlement every plan unlocks (identifier as configured in
-    /// the RevenueCat dashboard).
-    static let premiumEntitlementID = "pro"
+    /// The single entitlement every plan unlocks. Must match the entitlement
+    /// *identifier* in the RevenueCat dashboard character for character
+    /// (verified 2026-09-29 against `/v1/product_entitlement_mapping`; the old
+    /// value "pro" matched nothing, so purchases never unlocked premium).
+    static let premiumEntitlementID = "Calorie Tracker Pro"
 }
 
 #if canImport(RevenueCat)
@@ -51,6 +53,7 @@ enum RevenueCatPurchaseError: LocalizedError {
 /// `UserSettings` singleton; the RevenueCat "premium" entitlement state is
 /// mirrored into `settings.isPremium`, which the rest of the app reads through
 /// `PremiumGate`.
+@MainActor
 final class RevenueCatPurchaseService: PurchaseService {
     private let settings: UserSettings
 
@@ -73,6 +76,12 @@ final class RevenueCatPurchaseService: PurchaseService {
         let result = try await Purchases.shared.purchase(package: package)
         if result.userCancelled { throw CancellationError() }
         apply(result.customerInfo)
+        // Paid but nothing unlocked = the dashboard entitlement doesn't match
+        // `premiumEntitlementID` (or the product isn't attached to it). Fail
+        // loudly instead of closing the paywall as if it had worked.
+        guard isEntitled(result.customerInfo) else {
+            throw RevenueCatPurchaseError.notConfigured
+        }
     }
 
     func restore() async throws {
@@ -82,11 +91,13 @@ final class RevenueCatPurchaseService: PurchaseService {
     }
 
     func syncEntitlement() async {
-        // RevenueCat answers from its local cache when offline; a throw means
-        // it has no answer at all (first launch offline) — then `isPremium`
-        // must stay as-is rather than flip to false.
+        // `.fetchCurrent`, not the default cache-first policy: the SDK judges
+        // a cached entitlement against the time it was fetched (3-day grace),
+        // so the cache keeps answering "active" after the subscription has
+        // expired and the fresh verdict only landed one activation later.
+        // A throw (offline) means no verdict — `isPremium` stays as-is.
         guard Purchases.isConfigured,
-              let info = try? await Purchases.shared.customerInfo()
+              let info = try? await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent)
         else { return }
         apply(info)
     }
@@ -127,10 +138,11 @@ final class RevenueCatPurchaseService: PurchaseService {
         // The gate detects a premium→free transition and trims the tracked
         // nutrient set forward to the free one; offline fetches never reach
         // here (see `syncEntitlement`), so premium is never stripped blindly.
-        PremiumGate.applyEntitlement(
-            info.entitlements[PurchasesConfig.premiumEntitlementID]?.isActive == true,
-            settings: settings
-        )
+        PremiumGate.applyEntitlement(isEntitled(info), settings: settings)
+    }
+
+    private func isEntitled(_ info: CustomerInfo) -> Bool {
+        info.entitlements[PurchasesConfig.premiumEntitlementID]?.isActive == true
     }
 }
 #endif

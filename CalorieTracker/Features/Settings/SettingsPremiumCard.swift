@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 /// Premium banner on the Settings root: upgrade CTA for free users,
 /// subscription status + manage link for premium users. Gating semantics
@@ -6,6 +7,8 @@ import SwiftUI
 struct SettingsPremiumCard: View {
     let settings: UserSettings
     let onUpgrade: () -> Void
+
+    @State private var showingManageSubscriptions = false
 
     var body: some View {
         if PremiumGate.isPremium(settings: settings) {
@@ -37,7 +40,11 @@ struct SettingsPremiumCard: View {
 
             SettingsRowDivider()
 
-            Link(destination: AppLinks.manageSubscriptionsURL) {
+            // System sheet over the app (StoreKit), not a link out to the
+            // App Store — user decision 2026-09-29.
+            Button {
+                showingManageSubscriptions = true
+            } label: {
                 HStack {
                     Text("Manage subscription")
                         .font(.callout)
@@ -48,6 +55,8 @@ struct SettingsPremiumCard: View {
                 .settingsRowPadding()
                 .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .manageSubscriptionsSheet(isPresented: $showingManageSubscriptions)
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
     }

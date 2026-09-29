@@ -28,11 +28,14 @@ enum CalendarGridMath {
         return cells
     }
 
-    /// Localized single-letter weekday symbols rotated to the user's first weekday.
-    static func weekdaySymbols() -> [String] {
-        let calendar = Calendar.current
-        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+    /// Localized single-letter weekday symbols rotated to the user's first
+    /// weekday. Names come from `locale` (the app language); the rotation
+    /// stays on `Calendar.current`, the same calendar that lays out the grid.
+    static func weekdaySymbols(locale: Locale) -> [String] {
+        var calendar = Calendar.current
         let first = calendar.firstWeekday - 1
+        calendar.locale = locale
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
         guard symbols.indices.contains(first) else { return symbols }
         return Array(symbols[first...]) + Array(symbols[..<first])
     }

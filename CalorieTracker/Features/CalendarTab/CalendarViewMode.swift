@@ -23,9 +23,12 @@ enum CalendarViewMode: CaseIterable {
     }
 
     /// Localized "Jul 6 – 12" range for the week starting at `weekStart`.
-    static func weekRangeLabel(_ weekStart: Date) -> String {
+    /// `locale` is the view's environment locale — a bare `.formatted()`
+    /// follows the launch-frozen process locale and kept the month name in
+    /// the previous language after an in-app language switch.
+    static func weekRangeLabel(_ weekStart: Date, locale: Locale) -> String {
         let end = Calendar.current.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
         return (weekStart..<max(end, weekStart.addingTimeInterval(1)))
-            .formatted(date: .abbreviated, time: .omitted)
+            .formatted(Date.IntervalFormatStyle(date: .abbreviated, time: .omitted, locale: locale))
     }
 }

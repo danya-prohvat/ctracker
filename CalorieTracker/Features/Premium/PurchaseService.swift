@@ -5,6 +5,11 @@ import Foundation
 /// in builds without the SDK. All four `PaywallPlan`s unlock the single
 /// "premium" entitlement: weekly / monthly / yearly are auto-renewable
 /// subscriptions, Lifetime is a non-consumable one-time purchase.
+///
+/// Main-actor bound: every implementation writes `UserSettings`, a model of
+/// the main context — a nonisolated `async` method would resume on a
+/// background thread after its first `await` and mutate it from there.
+@MainActor
 protocol PurchaseService {
     /// Buys the given plan. On success the injected `UserSettings.isPremium`
     /// reflects the new entitlement.
@@ -29,6 +34,7 @@ protocol PurchaseService {
 /// The single place that picks the billing backend: RevenueCat when the SDK is
 /// compiled in and `PurchasesConfig.revenueCatAPIKey` is set, the development
 /// stub otherwise.
+@MainActor
 enum PurchaseServices {
     static func make(settings: UserSettings) -> PurchaseService {
         #if canImport(RevenueCat)
@@ -46,6 +52,7 @@ enum PurchaseServices {
 /// via `UserSettings.current(in:)` (or the first result of a `@Query`). The
 /// service mutates `isPremium` directly on that instance, so the caller only
 /// needs to save the model context afterwards.
+@MainActor
 final class StubPurchaseService: PurchaseService {
     private let settings: UserSettings
 

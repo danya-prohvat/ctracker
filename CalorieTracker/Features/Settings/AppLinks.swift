@@ -18,9 +18,6 @@ enum AppLinks {
         components?.queryItems = [URLQueryItem(name: "action", value: "write-review")]
         return components?.url ?? appStoreURL
     }()
-    /// System page for managing App Store subscriptions.
-    static let manageSubscriptionsURL = fixedURL("https://apps.apple.com/account/subscriptions")
-
     /// Compile-time constant URLs without force unwrap: a typo trips the
     /// assertion in DEBUG instead of crashing production.
     private static func fixedURL(_ string: String) -> URL {

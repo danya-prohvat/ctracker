@@ -23,6 +23,7 @@ struct CalendarGridCard: View {
     let onTapDay: (String) -> Void
 
     @Environment(\.layoutDirection) private var layoutDirection
+    @Environment(\.locale) private var locale
 
     /// Duration of the period-step slide (the parent animates `anchor` with
     /// it). Day rings delay their fill-in by the same amount so they start
@@ -83,7 +84,7 @@ struct CalendarGridCard: View {
     private var title: Text {
         switch mode {
         case .month: Text(anchor, format: .dateTime.month(.wide).year())
-        case .week: Text(verbatim: CalendarViewMode.weekRangeLabel(anchor))
+        case .week: Text(verbatim: CalendarViewMode.weekRangeLabel(anchor, locale: locale))
         }
     }
 
@@ -111,7 +112,7 @@ struct CalendarGridCard: View {
     private var weekdayRow: some View {
         HStack(spacing: 0) {
             // Symbols can repeat (e.g. "T", "T" in English), so identify by column.
-            ForEach(Array(CalendarGridMath.weekdaySymbols().enumerated()), id: \.offset) { _, symbol in
+            ForEach(Array(CalendarGridMath.weekdaySymbols(locale: locale).enumerated()), id: \.offset) { _, symbol in
                 Text(symbol)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(Theme.textTertiary)

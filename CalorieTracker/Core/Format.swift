@@ -8,9 +8,12 @@ enum Format {
     /// Rounds to the single decimal place the app works in.
     static func round1(_ value: Double) -> Double { (value * 10).rounded() / 10 }
 
-    /// Compact number for display: up to one decimal place.
+    /// Compact number for display: up to one decimal place. Formats in the
+    /// app language (`AppLanguage.locale`), not the launch-frozen process
+    /// locale — digits and separators switch with the in-app language.
     static func amount(_ value: Double) -> String {
         let f = NumberFormatter()
+        f.locale = AppLanguage.locale
         f.numberStyle = .decimal
         f.maximumFractionDigits = 1
         return f.string(from: NSNumber(value: value)) ?? String(round1(value))

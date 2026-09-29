@@ -8,6 +8,7 @@ import SwiftData
 /// current week and the current month (user request 2026-07-09).
 struct CalendarTabView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.locale) private var locale
     @Query private var settingsList: [UserSettings]
 
     /// Time scale of the grid; the segmented control and stat-card taps drive it.
@@ -134,7 +135,7 @@ struct CalendarTabView: View {
     private var periodCaption: Text {
         switch mode {
         case .month: Text(anchor, format: .dateTime.month(.wide))
-        case .week: Text(verbatim: CalendarViewMode.weekRangeLabel(anchor))
+        case .week: Text(verbatim: CalendarViewMode.weekRangeLabel(anchor, locale: locale))
         }
     }
 
