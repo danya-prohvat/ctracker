@@ -18,10 +18,14 @@ enum CloudRestoreProbe {
     /// Waits (up to `timeoutSeconds`) for the first CloudKit import and returns
     /// true as soon as restored data shows up locally. No account, offline,
     /// an import that brought nothing, or a timeout → false, and the caller
-    /// runs normal onboarding: better to onboard a returning user once more
+    /// keeps normal onboarding: better to onboard a returning user once more
     /// than to strand a new one on an empty Today.
+    /// The cap is generous (was 8 s): the probe runs behind the already
+    /// visible onboarding, so waiting costs nothing, and a real account's
+    /// first import is slow — ~500 records took 18 s on an iPhone 14
+    /// (measured 2026-10-01), so the short cap always missed the restore.
     @MainActor
-    static func waitForCloudData(in context: ModelContext, timeoutSeconds: Double = 8) async -> Bool {
+    static func waitForCloudData(in context: ModelContext, timeoutSeconds: Double = 90) async -> Bool {
         let container = CKContainer(identifier: CloudSync.containerID)
         guard let status = try? await container.accountStatus(),
               status == .available else { return false }

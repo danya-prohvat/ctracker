@@ -11,10 +11,8 @@ struct RootView: View {
     @Query private var settingsList: [UserSettings]
 
     @State private var showOnboarding = false
-    /// True while the reinstall probe asks CloudKit whether this account
-    /// already has data (cloud store open + local onboarding not completed).
-    /// Shows a brief "Checking iCloud" splash instead of flashing onboarding.
-    @State private var checkingCloudRestore = false
+    /// An onboarding question was answered — the iCloud probe keeps the flow.
+    @State private var onboardingStarted = false
     @State private var postOnboardingPaywall = false
     @State private var tabBarHidden = false
     @State private var selectedTab: AppTab = {
@@ -50,13 +48,7 @@ struct RootView: View {
                     .padding(.bottom, 8)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-
-            if checkingCloudRestore {
-                CloudRestoreSplash()
-                    .transition(.opacity)
-            }
         }
-        .animation(.easeInOut(duration: 0.25), value: checkingCloudRestore)
         .animation(.easeInOut(duration: 0.22), value: tabBarHidden)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .tint(Theme.accent)
@@ -143,15 +135,8 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             if let settings = settingsList.first {
-                OnboardingFlow(settings: settings) {
-                    // Finished or skipped — same exit (user decision
-                    // 2026-07-21): onboarding dismisses, Today shows for a
-                    // beat, then the soft paywall slides up over it.
-                    showOnboarding = false
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .seconds(1))
-                        postOnboardingPaywall = true
-                    }
+                OnboardingFlow(settings: settings, onStarted: { onboardingStarted = true }) {
+                    closeOnboarding(showPaywall: true)
                 }
             }
         }
@@ -165,35 +150,46 @@ struct RootView: View {
         .appLanguage(settingsList.first?.languageCode)
     }
 
-    /// Show onboarding right away — unless this looks like a reinstall: the
-    /// cloud store is open and the first CloudKit import brings back a
-    /// finished onboarding or real data, in which case onboarding is skipped
-    /// (user decision 2026-09-12; probe reworked 2026-09-17, see
-    /// `CloudRestoreProbe`). No data / timeout falls back to onboarding.
+    /// Finished or skipped — same exit (user decision 2026-07-21): Today
+    /// shows for a beat, then the soft paywall slides up over it.
+    private func closeOnboarding(showPaywall: Bool) {
+        showOnboarding = false
+        guard showPaywall else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            postOnboardingPaywall = true
+        }
+    }
+
+    /// Onboarding shows at once; a reinstall is detected in the background
+    /// (user decision 2026-10-01, replaces the blocking "Checking iCloud…"
+    /// splash that made every new user wait 2–3 s). If the cloud store is
+    /// open and the first CloudKit import brings back a finished onboarding
+    /// or real data (`CloudRestoreProbe`), the still-open onboarding is
+    /// dismissed and the soft paywall follows as usual (skipped for a
+    /// restored premium) — unless the user already answered a question:
+    /// then they finish the flow themselves (user decision 2026-10-01).
+    /// No data / timeout → nothing happens.
     private func decideOnboarding(_ settings: UserSettings) {
         guard !settings.onboardingCompleted else { return }
+        showOnboarding = true
         #if DEBUG
-        // `-resetOnboarding 1` must always show the flow, even on a device
-        // whose iCloud account has data — the probe would skip it otherwise.
-        let forced = UserDefaults.standard.bool(forKey: "resetOnboarding")
-        #else
-        let forced = false
+        // `-resetOnboarding 1` must always keep the flow, even on a device
+        // whose iCloud account has data — the probe would dismiss it otherwise.
+        if UserDefaults.standard.bool(forKey: "resetOnboarding") { return }
         #endif
-        guard CloudSync.cloudStoreOpened, !forced else {
-            showOnboarding = true
-            return
-        }
-        checkingCloudRestore = true
+        guard CloudSync.cloudStoreOpened else { return }
         Task {
-            if await CloudRestoreProbe.waitForCloudData(in: context) {
-                // Re-resolve the singleton: the import may have merged in the
-                // account's settings, and `current` keeps the completed one.
-                UserSettings.current(in: context).onboardingCompleted = true
-                try? context.save()
-            } else {
-                showOnboarding = true
-            }
-            checkingCloudRestore = false
+            // Still open and untouched = the user hasn't started, finished
+            // or skipped it themselves.
+            guard await CloudRestoreProbe.waitForCloudData(in: context),
+                  showOnboarding, !onboardingStarted else { return }
+            // Re-resolve the singleton: the import may have merged in the
+            // account's settings, and `current` keeps the completed one.
+            let restored = UserSettings.current(in: context)
+            restored.onboardingCompleted = true
+            try? context.save()
+            closeOnboarding(showPaywall: !PremiumGate.isPremium(settings: restored))
         }
     }
 }

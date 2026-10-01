@@ -102,28 +102,33 @@ struct GoalsCalculatorSheet: View {
                 .frame(maxWidth: 120)
             Text(unit)
                 .foregroundStyle(Theme.textSecondary)
-                .frame(width: 34, alignment: .leading)
+                .lineLimit(1)
+                .fixedSize()
+                .frame(minWidth: 34, alignment: .leading)
         }
     }
 
     /// US height entry as feet + inches; the ′/″ marks are the same verbatim
     /// symbols the onboarding height wheel shows.
+    /// Fields hug their digits (`fixedSize`) so the value reads as one
+    /// "6′ 10″" group — fixed-width frames left a wide hole after the ′.
     private var imperialHeightRow: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             Text("Height")
             Spacer()
             TextField("0", text: $inputs.feetText)
                 .keyboardType(.decimalPad)
                 .numericInputLimit($inputs.feetText, maxDigits: 1)
                 .multilineTextAlignment(.trailing)
-                .frame(maxWidth: 44)
+                .fixedSize()
             Text(verbatim: "′")
                 .foregroundStyle(Theme.textSecondary)
             TextField("0", text: $inputs.inchesText)
                 .keyboardType(.decimalPad)
                 .numericInputLimit($inputs.inchesText, maxDigits: 2)
                 .multilineTextAlignment(.trailing)
-                .frame(maxWidth: 52)
+                .fixedSize()
+                .padding(.leading, 8)
             Text(verbatim: "″")
                 .foregroundStyle(Theme.textSecondary)
         }

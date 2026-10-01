@@ -25,6 +25,8 @@ struct OnboardingFlow: View {
     @Environment(\.modelContext) var context
 
     let settings: UserSettings
+    /// Fired on every answered question (host stops auto-dismissing then).
+    var onStarted: () -> Void = {}
     let onFinish: () -> Void
 
     // Raw answers — seeded from the remembered body profile in init.
@@ -45,12 +47,14 @@ struct OnboardingFlow: View {
 
     @State private var step: Int
     @State private var isAdvancing = false
+    @State private var goingBack = false
     @State var calcPhase = 0
 
     static let stepCount = 7
 
-    init(settings: UserSettings, onFinish: @escaping () -> Void) {
+    init(settings: UserSettings, onStarted: @escaping () -> Void = {}, onFinish: @escaping () -> Void) {
         self.settings = settings
+        self.onStarted = onStarted
         self.onFinish = onFinish
         _step = State(initialValue: min(max(settings.onboardingStep, 0), Self.stepCount - 1))
         _useImperial = State(initialValue: settings.unitSystem == .us)
@@ -78,29 +82,17 @@ struct OnboardingFlow: View {
         .onAppear(perform: resumeIfNeeded)
     }
 
-    // MARK: - Top bar (progress + Skip, on every step)
+    // MARK: - Top bar (Back + progress + Skip)
+
+    /// Back is offered on every step but the first and the timed
+    /// calculating interlude (which advances on its own).
+    private var canGoBack: Bool { step > 0 && step != 5 }
 
     private var topBar: some View {
-        HStack(spacing: 16) {
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.separator)
-                    Capsule()
-                        .fill(Theme.accent)
-                        .frame(width: max(8, geo.size.width * Double(step + 1) / Double(Self.stepCount)))
-                        .animation(.easeInOut(duration: 0.3), value: step)
-                }
-            }
-            .frame(height: 4)
-
-            Button("Skip") { skip() }
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Theme.textSecondary)
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 4)
-        .contentColumn()
+        OnboardingTopBar(
+            progress: Double(step + 1) / Double(Self.stepCount),
+            canGoBack: canGoBack, onBack: back, onSkip: skip
+        )
     }
 
     // MARK: - Steps
@@ -120,8 +112,8 @@ struct OnboardingFlow: View {
 
     private var stepTransition: AnyTransition {
         .asymmetric(
-            insertion: .move(edge: .trailing).combined(with: .opacity),
-            removal: .move(edge: .leading).combined(with: .opacity)
+            insertion: .move(edge: goingBack ? .leading : .trailing).combined(with: .opacity),
+            removal: .move(edge: goingBack ? .trailing : .leading).combined(with: .opacity)
         )
     }
 
@@ -144,10 +136,26 @@ struct OnboardingFlow: View {
 
     func advance() {
         guard step < Self.stepCount - 1 else { return }
+        goingBack = false
+        onStarted()
         withAnimation(.easeInOut(duration: 0.3)) {
             step += 1
         }
         // Persist the resume point (spec §8) and the answers so far.
+        settings.onboardingStep = step
+        saveProfile()
+        try? context.save()
+    }
+
+    /// Back one question; from "Your plan" it lands on the target step,
+    /// skipping the calculating interlude (Continue there re-runs it).
+    func back() {
+        guard canGoBack, !isAdvancing else { return }
+        goingBack = true
+        calcPhase = 0
+        withAnimation(.easeInOut(duration: 0.3)) {
+            step = step == 6 ? 4 : step - 1
+        }
         settings.onboardingStep = step
         saveProfile()
         try? context.save()
