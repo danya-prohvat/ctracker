@@ -66,7 +66,9 @@ struct AddFoodSheet: View {
                 NavigationStack { NewProductForm(mode: .saving) }
                     .presentationDragIndicator(.visible)
             }
-            .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) { scanFlow }
+            .fullScreenCover(isPresented: $showScanner, onDismiss: presentPendingScan) {
+                scanFlow.presentationLanguage()
+            }
             .confirmDeleteProduct($productToDelete, onConfirm: delete)
             .task { applyDebugRoute() }
     }

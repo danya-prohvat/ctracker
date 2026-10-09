@@ -138,15 +138,17 @@ struct RootView: View {
                 OnboardingFlow(settings: settings, onStarted: { onboardingStarted = true }) {
                     closeOnboarding(showPaywall: true)
                 }
+                .appLanguage(settings.languageCode)
             }
         }
         // Full-screen cover can't be swiped down, so this one keeps the X.
-        .fullScreenCover(isPresented: $postOnboardingPaywall) { PaywallView(showsCloseButton: true) }
+        .fullScreenCover(isPresented: $postOnboardingPaywall) {
+            PaywallView(showsCloseButton: true).presentationLanguage()
+        }
         // In-app language override takes effect immediately (locale + RTL);
-        // AppleLanguages completes the switch on the next launch. Outermost
-        // on purpose: presented covers inherit the environment only from
-        // modifiers ABOVE their attachment point, so `.appLanguage` below the
-        // `.fullScreenCover`s would leave onboarding/paywall un-overridden.
+        // AppleLanguages completes the switch on the next launch. Presented
+        // covers/sheets inherit the locale but take `layoutDirection` from
+        // UIKit, so each presentation root re-applies it (`presentationLanguage`).
         .appLanguage(settingsList.first?.languageCode)
     }
 

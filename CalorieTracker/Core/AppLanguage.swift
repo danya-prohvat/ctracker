@@ -42,8 +42,10 @@ enum AppLanguage {
     }
 
     /// The language picker's choice as written to the app-domain
-    /// `AppleLanguages` (nil = System).
-    private static var pickedCode: String? {
+    /// `AppleLanguages` (nil = System). Mirrors `UserSettings.languageCode`
+    /// for call sites without a model context — presentation roots use it to
+    /// re-apply the override (see `presentationLanguage()`).
+    static var pickedCode: String? {
         let appDomain = Bundle.main.bundleIdentifier
             .flatMap { UserDefaults.standard.persistentDomain(forName: $0) }
         return (appDomain?["AppleLanguages"] as? [String])?.first
@@ -83,18 +85,42 @@ enum AppLanguage {
     }
 }
 
+/// Single-branch override: an `if/else` around `self` gave the two cases
+/// different view identities, so System ↔ language flips rebuilt the whole
+/// tree — state reset, animations cut (fix 2026-10-09). With no override the
+/// inherited values are written back unchanged.
+private struct AppLanguageModifier: ViewModifier {
+    let code: String?
+    @Environment(\.locale) private var inheritedLocale
+    @Environment(\.layoutDirection) private var inheritedDirection
+
+    func body(content: Content) -> some View {
+        let override = AppLanguage.effectiveOverride(for: code)
+        content
+            .environment(\.locale, override.map(Locale.init(identifier:)) ?? inheritedLocale)
+            .environment(\.layoutDirection, override.map(direction) ?? inheritedDirection)
+    }
+
+    private func direction(_ code: String) -> LayoutDirection {
+        AppLanguage.isRTL(code) ? .rightToLeft : .leftToRight
+    }
+}
+
 extension View {
     /// Applies the stored language override immediately. For System the
     /// device language is applied only when the process language is stale
     /// (see `AppLanguage.effectiveOverride`).
-    @ViewBuilder
     func appLanguage(_ code: String?) -> some View {
-        if let code = AppLanguage.effectiveOverride(for: code) {
-            self
-                .environment(\.locale, Locale(identifier: code))
-                .environment(\.layoutDirection, AppLanguage.isRTL(code) ? .rightToLeft : .leftToRight)
-        } else {
-            self
-        }
+        modifier(AppLanguageModifier(code: code))
+    }
+
+    /// Re-applies the override at the root of a sheet / full-screen cover.
+    /// A presented hosting controller inherits the environment `locale`, but
+    /// takes its `layoutDirection` from UIKit — i.e. the PROCESS language —
+    /// so with Arabic picked in an English-launched app every modal came up
+    /// LTR (and vice versa after a relaunch; fix 2026-10-09). Every
+    /// `.sheet`/`.fullScreenCover` content must start with this.
+    func presentationLanguage() -> some View {
+        appLanguage(AppLanguage.pickedCode)
     }
 }

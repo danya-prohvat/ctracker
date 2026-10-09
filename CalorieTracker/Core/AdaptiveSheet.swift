@@ -6,6 +6,9 @@ import UIKit
 /// centered formSheet and the first full-screen take): a clear full-screen
 /// cover hosting `PadSheetChrome` — dimmed backdrop, 640pt card anchored to
 /// the bottom, grabber with swipe-down to dismiss, tap outside to dismiss.
+/// Both variants re-apply the in-app language at the presented root
+/// (`presentationLanguage()`), otherwise the modal takes UIKit's layout
+/// direction instead of the picked one.
 extension View {
     @ViewBuilder
     func adaptiveSheet<C: View>(
@@ -15,10 +18,12 @@ extension View {
     ) -> some View {
         if UIDevice.current.userInterfaceIdiom == .pad {
             fullScreenCover(isPresented: isPresented, onDismiss: onDismiss) {
-                PadSheetChrome { content() }
+                PadSheetChrome { content() }.presentationLanguage()
             }
         } else {
-            sheet(isPresented: isPresented, onDismiss: onDismiss, content: content)
+            sheet(isPresented: isPresented, onDismiss: onDismiss) {
+                content().presentationLanguage()
+            }
         }
     }
 
@@ -30,10 +35,12 @@ extension View {
     ) -> some View {
         if UIDevice.current.userInterfaceIdiom == .pad {
             fullScreenCover(item: item, onDismiss: onDismiss) { value in
-                PadSheetChrome { content(value) }
+                PadSheetChrome { content(value) }.presentationLanguage()
             }
         } else {
-            sheet(item: item, onDismiss: onDismiss, content: content)
+            sheet(item: item, onDismiss: onDismiss) { value in
+                content(value).presentationLanguage()
+            }
         }
     }
 }

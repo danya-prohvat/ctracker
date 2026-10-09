@@ -29,8 +29,15 @@ struct SwipeToDeleteRow<Content: View>: View {
 
     private let buttonWidth: CGFloat = 88
     private var revealWidth: CGFloat { onEdit == nil ? buttonWidth : buttonWidth * 2 }
-    /// Sign of the slide that exposes the trailing buttons (RTL-aware).
+    /// Sign of the on-screen slide that exposes the trailing buttons: toward
+    /// the left in LTR, toward the right in RTL. `offset` is kept in SCREEN
+    /// space, like the drag translation that feeds it.
     private var slide: CGFloat { layoutDirection == .rightToLeft ? 1 : -1 }
+    /// `.offset(x:)` is mirrored by SwiftUI in RTL while `DragGesture`'s
+    /// translation is not, so the screen-space value is flipped back before
+    /// it is applied (fix 2026-10-09: in Arabic the row slid away from the
+    /// finger, out of the clipped card, and the buttons never showed).
+    private var appliedOffset: CGFloat { layoutDirection == .rightToLeft ? -offset : offset }
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -38,7 +45,7 @@ struct SwipeToDeleteRow<Content: View>: View {
                 .opacity(offset == 0 ? 0 : 1)
             content
                 .background(Theme.card)
-                .offset(x: offset)
+                .offset(x: appliedOffset)
                 .onTapGesture {
                     if isOpen { setOpen(false) } else { onTap() }
                 }

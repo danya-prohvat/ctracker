@@ -23,7 +23,9 @@ struct AddFoodPresentation: ViewModifier {
                 flow.presentationDragIndicator(.visible)
             }
         } else {
-            content.fullScreenCover(isPresented: $isActive, onDismiss: onDismiss) { flow }
+            content.fullScreenCover(isPresented: $isActive, onDismiss: onDismiss) {
+                flow.presentationLanguage()
+            }
         }
     }
 
