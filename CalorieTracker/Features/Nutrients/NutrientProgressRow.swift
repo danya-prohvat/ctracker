@@ -3,7 +3,10 @@ import SwiftUI
 /// One nutrient row: name, "consumed / target unit" (or value only when no
 /// target, or "—" when no entry has data). Never divides by a nil/zero target.
 /// Goal-kind targets stay brand-colored and get a checkmark at ≥100%;
-/// limit-kind targets turn amber near the cap and red + "+X over" above it.
+/// limit-kind targets turn amber near the cap and red above it, with the
+/// "+X over" spelled out in the caption under the name — next to the value
+/// it overflowed a 390 pt screen in de/pl/ru and truncated the name
+/// (fix 2026-10-09).
 ///
 /// Shared by the day summary (`VitaminsMineralsSection`) and the calendar's
 /// per-period averages (`CalendarNutrientHistoryCard`) so both read identically.
@@ -27,9 +30,8 @@ struct NutrientProgressRow: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Theme.textStrong)
                         .lineLimit(1)
-                    Text(def.kind == .limit ? "Limit" : "Goal")
+                    kindCaption
                         .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
                 }
                 Spacer(minLength: 8)
                 HStack(spacing: 5) {
@@ -71,6 +73,23 @@ struct NutrientProgressRow: View {
         return Theme.microBar
     }
 
+    /// "Limit" / "Goal", plus the overage for an exceeded limit. It lives on
+    /// this short line so the long translations ("+3,7 ponad limit") have
+    /// the whole row width instead of fighting the name on one line.
+    private var kindCaption: Text {
+        let kind = Text(def.kind == .limit ? "Limit" : "Goal")
+            .foregroundStyle(Theme.textTertiary)
+        guard def.kind == .limit, let consumed, let goal, goal > 0, consumed > goal else {
+            return kind
+        }
+        // Accessibility: the overage is spelled out, never color alone.
+        return kind
+            + Text(verbatim: " · ").foregroundStyle(Theme.textTertiary)
+            + Text("+\(Format.amount(consumed - goal)) over")
+                .foregroundStyle(Theme.destructive)
+                .fontWeight(.semibold)
+    }
+
     private var trailingText: Text {
         guard let consumed else {
             return Text(verbatim: "—").foregroundStyle(Theme.textSecondary)
@@ -79,14 +98,7 @@ struct NutrientProgressRow: View {
             return Text(verbatim: Format.nutrient(consumed, unit: def.unit))
                 .foregroundStyle(Theme.textSecondary)
         }
-        let base = Text(verbatim: "\(Format.amount(consumed)) / \(Format.nutrient(goal, unit: def.unit))")
+        return Text(verbatim: "\(Format.amount(consumed)) / \(Format.nutrient(goal, unit: def.unit))")
             .foregroundStyle(Theme.textSecondary)
-        guard def.kind == .limit, consumed > goal else { return base }
-        // Accessibility: the overage is spelled out, never color alone.
-        return base
-            + Text(verbatim: " · ").foregroundStyle(Theme.textSecondary)
-            + Text("+\(Format.amount(consumed - goal)) over")
-                .foregroundStyle(Theme.destructive)
-                .fontWeight(.semibold)
     }
 }
