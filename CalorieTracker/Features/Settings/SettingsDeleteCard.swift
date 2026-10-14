@@ -39,10 +39,13 @@ struct SettingsDeleteCard: View {
         }
     }
 
-    /// Wipe everything and return settings to first-launch defaults, except
-    /// `onboardingCompleted` — onboarding shows only once (spec §8) —
-    /// `isPremium`, which mirrors the paid entitlement, and
-    /// `iCloudSyncEnabled` (see below).
+    /// Wipe the *data* (products, diary, goals, body profile, nutrient
+    /// tracking) and keep the device/account *preferences*: `onboardingCompleted`
+    /// (onboarding shows only once, spec §8), `isPremium` (mirrors the paid
+    /// entitlement), `iCloudSyncEnabled` (see below), `languageCode`,
+    /// `unitSystem` and the free-scan counters (fix 2026-10-10: resetting
+    /// them handed out a fresh welcome pool of 10 scans per wipe, and the
+    /// units snapped to the device default instead of the user's choice).
     private func deleteAllData() {
         // Object-by-object, not `context.delete(model:)`: batch deletes bypass
         // the CloudKit export pipeline, so the synced copies would survive in
@@ -62,7 +65,6 @@ struct SettingsDeleteCard: View {
             .filter { NutrientCatalog.defaultEnabled.contains($0) }
         settings.nutrientGoalOverrides = [:]
         settings.nutrientTrackingLog = []
-        settings.unitSystem = UserSettings.defaultUnitSystem
         settings.netCarbsEnabled = false
         settings.notificationsEnabled = false
         settings.clearBodyProfile()
@@ -70,11 +72,8 @@ struct SettingsDeleteCard: View {
         // choice. Re-enabling it here would silently resurrect the wiped data
         // from iCloud on the next launch (and re-upload future data) for a
         // user who deliberately opted out of sync.
-        settings.scanCount = 0
-        settings.dailyScanCount = 0
-        settings.dailyScanDayKey = nil
-        // isPremium intentionally survives — wiping local data does not cancel
-        // the subscription, and a paying user must not see ads and locks.
+        // isPremium and the scan counters intentionally survive — wiping local
+        // data neither cancels the subscription nor refills the free quota.
         settings.onboardingCompleted = true
 
         MealReminderScheduler.cancelAll()

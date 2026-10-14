@@ -55,7 +55,11 @@ struct ScanFlowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScanFlowHeader(onBack: { dismiss() })
+            // Cancel on the tap, not in onDisappear: that fires only after
+            // the ~0.4 s close animation, and a response landing in that
+            // window still opened the form and ticked the scan counter
+            // (fix 2026-10-10, closes the §17 race).
+            ScanFlowHeader(onBack: { lookupTask?.cancel(); dismiss() })
             ScanCenterContent(
                 phase: phase,
                 scanToken: scanToken,

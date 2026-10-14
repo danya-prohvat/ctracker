@@ -30,7 +30,7 @@ struct SettingsPremiumCard: View {
                     Text("Premium active")
                         .font(.headline)
                         .foregroundStyle(Theme.textPrimary)
-                    Text("Manages via App Store")
+                    Text("All features unlocked")
                         .font(.footnote)
                         .foregroundStyle(Theme.textSecondary)
                 }

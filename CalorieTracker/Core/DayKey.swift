@@ -8,6 +8,11 @@ enum DayKey {
         let f = DateFormatter()
         f.calendar = Calendar(identifier: .gregorian)
         f.locale = Locale(identifier: "en_US_POSIX")
+        // A plain formatter snapshots the zone at creation, so after a
+        // timezone change without a relaunch "today" was computed in the old
+        // zone while the calendar grid (`Calendar.current`) already used the
+        // new one (fix 2026-10-10).
+        f.timeZone = .autoupdatingCurrent
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
