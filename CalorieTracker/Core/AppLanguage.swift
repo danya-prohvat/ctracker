@@ -41,14 +41,31 @@ enum AppLanguage {
         effectiveOverride(for: pickedCode).map(Locale.init(identifier:)) ?? .current
     }
 
-    /// The language picker's choice as written to the app-domain
-    /// `AppleLanguages` (nil = System). Mirrors `UserSettings.languageCode`
-    /// for call sites without a model context — presentation roots use it to
-    /// re-apply the override (see `presentationLanguage()`).
+    /// The app-domain `AppleLanguages` override, matched to one of the app's
+    /// localizations (nil = none). Written by the in-app picker (`["ar"]`,
+    /// mirrored in `UserSettings.languageCode`) OR by iOS itself when the user
+    /// sets a per-app language in Settings → Apps → Calorie Tracker → Language
+    /// (`["ar-UA", "en-UA", …]`, no `languageCode`). Call sites without a model
+    /// context and presentation roots re-apply it (see `presentationLanguage()`).
+    /// Matching through `Bundle.preferredLocalizations` folds "ar-UA" → "ar",
+    /// so `bundle(for:)` finds the lproj (fix 2026-10-14).
     static var pickedCode: String? {
-        let appDomain = Bundle.main.bundleIdentifier
-            .flatMap { UserDefaults.standard.persistentDomain(forName: $0) }
-        return (appDomain?["AppleLanguages"] as? [String])?.first
+        guard let list = appDomainLanguages, !list.isEmpty else { return nil }
+        return Bundle.preferredLocalizations(from: Bundle.main.localizations,
+                                             forPreferences: list).first
+    }
+
+    /// Raw app-domain `AppleLanguages`: the launch-argument domain first
+    /// (`-AppleLanguages (ar)` from a scheme or devicectl, DEBUG testing),
+    /// then the persistent app domain (picker / iOS per-app language).
+    private static var appDomainLanguages: [String]? {
+        let defaults = UserDefaults.standard
+        if let args = defaults.volatileDomain(forName: UserDefaults.argumentDomain)["AppleLanguages"] as? [String] {
+            return args
+        }
+        return Bundle.main.bundleIdentifier
+            .flatMap { defaults.persistentDomain(forName: $0) }
+            .flatMap { $0["AppleLanguages"] as? [String] }
     }
 
     static func isRTL(_ code: String) -> Bool {
@@ -56,17 +73,22 @@ enum AppLanguage {
     }
 
     /// The code to override the environment with. An explicit choice wins
-    /// as-is; for System (`nil`) the device's true language is applied — but
-    /// only while the process still runs in a different one (it was launched
-    /// under a since-removed `AppleLanguages` override, which keeps serving
-    /// old strings until relaunch — fix 2026-09-08: picking System used to be
-    /// a silent no-op until restart). On a system-driven launch this returns
-    /// `nil`, keeping the native no-override behavior (full region-aware locale).
+    /// as-is; for System (`nil`) the language the process SHOULD run in is
+    /// applied — but only while the process still runs in a different one (it
+    /// was launched under a since-removed `AppleLanguages` override, which
+    /// keeps serving old strings until relaunch — fix 2026-09-08: picking
+    /// System used to be a silent no-op until restart). The reference is the
+    /// app-domain `AppleLanguages` when present (iOS per-app language, launch
+    /// argument), else the device language — fix 2026-10-14: comparing against
+    /// the device language alone treated a per-app Arabic launch on an English
+    /// iPhone as "stale" and forced the UI back to English/LTR. On a launch
+    /// already in the right language this returns `nil`, keeping the native
+    /// no-override behavior (full region-aware locale).
     static func effectiveOverride(for code: String?) -> String? {
         if let code { return code }
-        guard let system = systemLanguageCode,
-              system != Bundle.main.preferredLocalizations.first else { return nil }
-        return system
+        guard let target = pickedCode ?? systemLanguageCode,
+              target != Bundle.main.preferredLocalizations.first else { return nil }
+        return target
     }
 
     /// The device's preferred language among the app's localizations, read

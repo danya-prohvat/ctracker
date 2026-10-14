@@ -6,6 +6,11 @@ struct CalorieTrackerApp: App {
     let container: ModelContainer
 
     init() {
+        #if DEBUG
+        // `-initializeCloudKitSchema 1`: push the full schema to CloudKit
+        // Development before deploying it to Production (see the type).
+        CloudSchemaInitializer.runIfRequested()
+        #endif
         let schema = Schema(versionedSchema: AppSchemaV1.self)
         // CloudKit-backed store only when the user enabled iCloud sync — a free
         // feature, no premium required (user decision 2026-07-28). Mirrored to
