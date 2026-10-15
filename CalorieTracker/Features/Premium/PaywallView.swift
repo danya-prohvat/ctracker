@@ -23,7 +23,7 @@ struct PaywallView: View {
     @State private var isWorking = false
     @State private var closeVisible = false
     @State private var legal: PaywallLegalPage?
-    @State private var errorMessage: String?
+    @State private var alert: PurchaseFlowAlert?
 
     private var currentSettings: UserSettings {
         settingsList.first ?? UserSettings.current(in: context)
@@ -62,17 +62,7 @@ struct PaywallView: View {
                 .ignoresSafeArea()
                 .presentationDragIndicator(.visible)
         }
-        .alert(
-            "Purchase failed",
-            isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            )
-        ) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .purchaseFlowAlert($alert)
     }
 
     // MARK: - Sections
@@ -157,35 +147,35 @@ struct PaywallView: View {
     // MARK: - Actions
 
     private func buy() {
-        guard !isWorking else { return }
-        isWorking = true
-        Task {
-            defer { isWorking = false }
-            let service = PurchaseServices.make(settings: currentSettings)
-            do {
-                try await service.purchase(selected)
-                try? context.save()
-                dismiss()
-            } catch is CancellationError {
-                // User backed out of the store sheet — stay on the paywall.
-            } catch {
-                errorMessage = error.localizedDescription
-            }
+        run(phase: .purchase) { service in
+            try await service.purchase(selected)
         }
     }
 
     private func restore() {
+        run(phase: .restore) { service in
+            try await service.restore()
+            // Restore "succeeded" but found nothing — say so instead of
+            // leaving the user tapping a button that does nothing.
+            guard currentSettings.isPremium else { throw PurchaseFlowError.nothingToRestore }
+        }
+    }
+
+    /// Shared plumbing for both store actions: in-flight guard + spinner, save
+    /// and dismiss on success, alert on failure (user cancellation stays silent).
+    private func run(phase: PurchaseFlowPhase,
+                     _ action: @escaping (PurchaseService) async throws -> Void) {
         guard !isWorking else { return }
         isWorking = true
         Task {
             defer { isWorking = false }
-            let service = PurchaseServices.make(settings: currentSettings)
             do {
-                try await service.restore()
+                try await action(PurchaseServices.make(settings: currentSettings))
                 try? context.save()
-                if currentSettings.isPremium { dismiss() }
+                dismiss()
             } catch {
-                errorMessage = error.localizedDescription
+                guard !PurchaseFlowError.isUserCancellation(error) else { return }
+                alert = PurchaseFlowAlert(error, phase: phase)
             }
         }
     }

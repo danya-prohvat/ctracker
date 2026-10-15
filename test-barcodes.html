@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тестові коди для сканера — TESTPLAN §6</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --accent:#1b7f3b; }
+  body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--fg); margin: 0; padding: 24px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .hint { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; page-break-inside: avoid; }
+  .card h2 { font-size: 17px; margin: 0 0 2px; }
+  .card .test { color: var(--accent); font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+  .card .expect { color: var(--muted); font-size: 14px; margin-top: 10px; }
+  .code { display: flex; justify-content: center; padding: 12px 0; }
+  .code svg { max-width: 100%; }
+  .err { color: #b00020; font-size: 13px; }
+  .mono { font-family: ui-monospace, Menlo, monospace; }
+  @media print { .card { border: none; border-bottom: 1px solid var(--line); border-radius: 0; } }
+</style>
+</head>
+<body>
+<h1>Тестові коди для сканера (TESTPLAN §6)</h1>
+<div class="hint">Скануй прямо з екрана Mac (яскравість на максимум, відстань 15–25 см) або роздрукуй (⌘P). Кожен код підписано пунктом тест-плану й очікуваним результатом.</div>
+
+<div class="card">
+  <h2>1. QR-код</h2>
+  <div class="test">Типи кодів → QR</div>
+  <div class="code"><div id="qr"></div></div>
+  <div class="expect">Очікується: сканер НЕ реагує взагалі (metadata types лише EAN-13/EAN-8/UPC-E/Code128). Вміст: <span class="mono">https://world.openfoodfacts.org</span></div>
+</div>
+
+<div class="card">
+  <h2>2. UPC-E (8 цифр)</h2>
+  <div class="test">Типи кодів → UPC-E</div>
+  <div class="code"><svg id="upce"></svg></div>
+  <div class="expect">Код <span class="mono">01234565</span> (розгортається в UPC-A <span class="mono">012345000065</span>). Очікується: зчитується, OFF → notFound, без креша.</div>
+</div>
+
+<div class="card">
+  <h2>3. Code128 з літерами (логістична етикетка)</h2>
+  <div class="test">Типи кодів → Code128</div>
+  <div class="code"><svg id="code128"></svg></div>
+  <div class="expect">Код <span class="mono">SSCC-LOG-ABC123XYZ-2026-PALLET-07</span>. Очікується: без креша, довгий код не ламає верстку чипа; OFF → notFound.</div>
+</div>
+
+<div class="card">
+  <h2>4. UPC-A (12 цифр) — реальний US-продукт</h2>
+  <div class="test">UPC-A ↔ EAN-13 локальний хіт (крок 1) · User-Agent і два запити</div>
+  <div class="code"><svg id="upca"></svg></div>
+  <div class="expect">Код <span class="mono">049000042566</span> (Coca-Cola, US). Камера віддасть його як EAN-13 <span class="mono">0049000042566</span>. Для ручного вводу: спершу 12 цифр → Save, потім 13 з нулем → має відкритись кейпад без мережі. У проксі має бути два запити до OFF: з 13 і з 12 цифрами.</div>
+</div>
+
+<div class="card">
+  <h2>5. EAN-13 з провідним нулем (той самий продукт)</h2>
+  <div class="test">UPC-A ↔ EAN-13 локальний хіт (крок 2)</div>
+  <div class="code"><svg id="ean13zero"></svg></div>
+  <div class="expect">Код <span class="mono">0049000042566</span>. Очікується: локальний хіт → одразу кейпад кількості, без мережі, без продукту-близнюка.</div>
+</div>
+
+<div class="card">
+  <h2>6. EAN-13 — напій (основа ml)</h2>
+  <div class="test">Детект основи (g/ml) і кДж</div>
+  <div class="code"><svg id="coke"></svg></div>
+  <div class="expect">Код <span class="mono">5449000000996</span> (Coca-Cola 330 ml). Очікується: форма відкривається на <b>ml</b>.</div>
+</div>
+
+<div class="card">
+  <h2>7. EAN-13 — сухе (основа g)</h2>
+  <div class="test">Детект основи (g/ml) і кДж</div>
+  <div class="code"><svg id="nutella"></svg></div>
+  <div class="expect">Код <span class="mono">3017620422003</span> (Nutella). Очікується: форма відкривається на <b>g</b>.</div>
+</div>
+
+<script>
+  const opts = { height: 120, width: 2.4, fontSize: 18, margin: 12, textMargin: 6 };
+  function draw(id, format, value) {
+    JsBarcode('#' + id, value, { ...opts, format, valid: ok => {
+      if (!ok) document.getElementById(id).outerHTML = '<div class="err">Невалідний код для ' + format + ': ' + value + '</div>';
+    }});
+  }
+  draw('upce', 'UPCE', '01234565');
+  draw('code128', 'CODE128', 'SSCC-LOG-ABC123XYZ-2026-PALLET-07');
+  draw('upca', 'UPC', '049000042566');
+  draw('ean13zero', 'EAN13', '0049000042566');
+  draw('coke', 'EAN13', '5449000000996');
+  draw('nutella', 'EAN13', '3017620422003');
+  new QRCode(document.getElementById('qr'), { text: 'https://world.openfoodfacts.org', width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+</script>
+</body>
+</html>

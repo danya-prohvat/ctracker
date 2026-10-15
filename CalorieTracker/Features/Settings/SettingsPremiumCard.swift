@@ -4,11 +4,20 @@ import StoreKit
 /// Premium banner on the Settings root: upgrade CTA for free users,
 /// subscription status + manage link for premium users. Gating semantics
 /// stay behind `PremiumGate`; only the container is restyled.
+///
+/// The "Manage subscription" row is shown only to users holding an
+/// auto-renewable subscription. `UserSettings.isPremium` is a plain Bool and
+/// cannot tell a Lifetime purchase (non-consumable) or a DEBUG toggle apart
+/// from a subscription, and StoreKit's manage-subscriptions sheet is empty for
+/// both — so the card asks StoreKit 2 directly via `ActiveSubscriptionProbe`
+/// in `.task` and keeps the row hidden until the probe answers `true`
+/// (no flash for Lifetime users).
 struct SettingsPremiumCard: View {
     let settings: UserSettings
     let onUpgrade: () -> Void
 
     @State private var showingManageSubscriptions = false
+    @State private var showsManageRow = false
 
     var body: some View {
         if PremiumGate.isPremium(settings: settings) {
@@ -38,27 +47,37 @@ struct SettingsPremiumCard: View {
             }
             .settingsRowPadding()
 
-            SettingsRowDivider()
-
-            // System sheet over the app (StoreKit), not a link out to the
-            // App Store — user decision 2026-09-29.
-            Button {
-                showingManageSubscriptions = true
-            } label: {
-                HStack {
-                    Text("Manage subscription")
-                        .font(.callout)
-                        .foregroundStyle(Theme.accentLabel)
-                    Spacer(minLength: 12)
-                    SettingsRowChevron()
-                }
-                .settingsRowPadding()
-                .contentShape(Rectangle())
+            if showsManageRow {
+                SettingsRowDivider()
+                manageSubscriptionRow
             }
-            .buttonStyle(.plain)
-            .manageSubscriptionsSheet(isPresented: $showingManageSubscriptions)
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
+        // Re-runs on every appearance of the active card, so a subscription
+        // bought or expired elsewhere is picked up the next time Settings opens.
+        .task {
+            showsManageRow = await ActiveSubscriptionProbe.hasAutoRenewableEntitlement()
+        }
+    }
+
+    /// System sheet over the app (StoreKit), not a link out to the
+    /// App Store — user decision 2026-09-29.
+    private var manageSubscriptionRow: some View {
+        Button {
+            showingManageSubscriptions = true
+        } label: {
+            HStack {
+                Text("Manage subscription")
+                    .font(.callout)
+                    .foregroundStyle(Theme.accentLabel)
+                Spacer(minLength: 12)
+                SettingsRowChevron()
+            }
+            .settingsRowPadding()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .manageSubscriptionsSheet(isPresented: $showingManageSubscriptions)
     }
 
     // MARK: - Upgrade CTA

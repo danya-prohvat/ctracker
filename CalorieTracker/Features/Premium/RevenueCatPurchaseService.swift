@@ -52,20 +52,24 @@ enum RevenueCatPurchaseError: LocalizedError {
 /// Drop-in replacement for `StubPurchaseService`. Inject the live SwiftData
 /// `UserSettings` singleton; the RevenueCat "premium" entitlement state is
 /// mirrored into `settings.isPremium`, which the rest of the app reads through
-/// `PremiumGate`.
+/// `PremiumGate`. Every verdict goes through `reconcile` (see the Reconcile
+/// extension), and every backend call first binds the SDK to the iCloud user
+/// (`RevenueCatIdentity`) so purchases land on an identity shared by all the
+/// user's devices.
 @MainActor
 final class RevenueCatPurchaseService: PurchaseService {
-    private let settings: UserSettings
+    /// Not private: the Reconcile extension lives in its own file.
+    let settings: UserSettings
 
     init(settings: UserSettings) {
         self.settings = settings
-        if !Purchases.isConfigured, !PurchasesConfig.revenueCatAPIKey.isEmpty {
-            Purchases.configure(withAPIKey: PurchasesConfig.revenueCatAPIKey)
-        }
+        // Normally already done in `CalorieTrackerApp.init()`; kept as a net.
+        PurchasesBootstrap.configureIfNeeded()
     }
 
     func purchase(_ plan: PaywallPlan) async throws {
         guard Purchases.isConfigured else { throw RevenueCatPurchaseError.notConfigured }
+        await RevenueCatIdentity.identifyIfNeeded()
         let offerings = try await Purchases.shared.offerings()
         guard let offering = offerings.current else {
             throw RevenueCatPurchaseError.noCurrentOffering
@@ -75,19 +79,20 @@ final class RevenueCatPurchaseService: PurchaseService {
         }
         let result = try await Purchases.shared.purchase(package: package)
         if result.userCancelled { throw CancellationError() }
-        apply(result.customerInfo)
         // Paid but nothing unlocked = the dashboard entitlement doesn't match
         // `premiumEntitlementID` (or the product isn't attached to it). Fail
         // loudly instead of closing the paywall as if it had worked.
         guard isEntitled(result.customerInfo) else {
             throw RevenueCatPurchaseError.notConfigured
         }
+        apply(true)
     }
 
     func restore() async throws {
         guard Purchases.isConfigured else { throw RevenueCatPurchaseError.notConfigured }
+        await RevenueCatIdentity.identifyIfNeeded()
         let info = try await Purchases.shared.restorePurchases()
-        apply(info)
+        await reconcile(info)
     }
 
     func syncEntitlement() async {
@@ -96,10 +101,22 @@ final class RevenueCatPurchaseService: PurchaseService {
         // so the cache keeps answering "active" after the subscription has
         // expired and the fresh verdict only landed one activation later.
         // A throw (offline) means no verdict — `isPremium` stays as-is.
-        guard Purchases.isConfigured,
-              let info = try? await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent)
+        guard Purchases.isConfigured else { return }
+        await RevenueCatIdentity.identifyIfNeeded()
+        guard let info = try? await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent)
         else { return }
-        apply(info)
+        await reconcile(info)
+    }
+
+    /// Runs for the life of the caller's task. Each update is reconciled and
+    /// the settings' own context saved, so the caller needs no hook.
+    func observeEntitlement() async {
+        guard Purchases.isConfigured else { return }
+        await RevenueCatIdentity.identifyIfNeeded()
+        for await info in Purchases.shared.customerInfoStream {
+            await reconcile(info)
+            try? settings.modelContext?.save()
+        }
     }
 
     /// Localized product names/prices from the current Offering. Any failure →
@@ -132,17 +149,6 @@ final class RevenueCatPurchaseService: PurchaseService {
         case .yearly: return offering.annual
         case .lifetime: return offering.lifetime
         }
-    }
-
-    private func apply(_ info: CustomerInfo) {
-        // The gate detects a premium→free transition and trims the tracked
-        // nutrient set forward to the free one; offline fetches never reach
-        // here (see `syncEntitlement`), so premium is never stripped blindly.
-        PremiumGate.applyEntitlement(isEntitled(info), settings: settings)
-    }
-
-    private func isEntitled(_ info: CustomerInfo) -> Bool {
-        info.entitlements[PurchasesConfig.premiumEntitlementID]?.isActive == true
     }
 }
 #endif

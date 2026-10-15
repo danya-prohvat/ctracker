@@ -6,7 +6,8 @@ enum AppTab: String {
 }
 
 struct RootView: View {
-    @Environment(\.modelContext) private var context
+    /// Not private: the lifecycle extension (RootView+Lifecycle.swift) uses it.
+    @Environment(\.modelContext) var context
     @Environment(\.scenePhase) private var scenePhase
     @Query private var settingsList: [UserSettings]
 
@@ -58,62 +59,12 @@ struct RootView: View {
         // The palette is light-only for now; without this, system materials
         // and sheets would flip dark while cards/text stay light.
         .preferredColorScheme(.light)
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                // ATT on first launch (user decision 2026-07-13). The system alert
-                // only appears while active, hence scenePhase and not .task.
-                // Notifications follow right after ATT (user decision
-                // 2026-09-27): reminders are on by default, so the permission
-                // is asked here once, not from the Settings toggle.
-                Task {
-                    await TrackingConsent.requestIfNeeded()
-                    await NotificationStartupPrompt.requestIfNeeded(in: context)
-                }
-            }
-            // Replan the smart meal reminders whenever the app gains or loses
-            // focus — logging only happens in-app, so this keeps the planned
-            // 14:00/20:00 notifications in sync with the diary.
-            if phase == .active || phase == .background {
-                MealReminderScheduler.reschedule(in: context)
-                // Push today's totals to the home-screen widget — covers edits
-                // and deletes too, since those only happen in-app.
-                WidgetBridge.refresh(in: context)
-            }
-            // Restart the re-engagement countdown on every activation — a
-            // series notification only fires if the app stays unopened.
-            if phase == .active {
-                ReengagementNotificationService.reschedule(in: context)
-                Task {
-                    let settings = UserSettings.current(in: context)
-                    // Re-mirror the paid entitlement — purchase() and restore()
-                    // are otherwise the only reads, so without this an expired
-                    // subscription would keep premium forever.
-                    #if DEBUG
-                    // Screenshot launches pin the seeded premium override —
-                    // a live RevenueCat answer would revoke it mid-frame.
-                    let skipSync = UserDefaults.standard.bool(forKey: "seedScreenshotDay")
-                    #else
-                    let skipSync = false
-                    #endif
-                    if !skipSync {
-                        await PurchaseServices.make(settings: settings).syncEntitlement()
-                    }
-                    try? context.save()
-                    // Warm the paywall price cache so plan rows render instantly
-                    // whenever the paywall opens (user decision 2026-08-03).
-                    await PaywallQuotesCache.prefetch(settings: settings)
-                }
-                // App-open + green-zone review triggers (user decision 2026-07-21).
-                ReviewPromptService.checkOnActivation(in: context)
-                // Keep the CloudKit-store mirror in sync with the toggle —
-                // applies on the next start.
-                CloudSync.refresh(in: context)
-                // A cloud merge can bring in barcode twins from other devices.
-                if CloudSync.activeThisLaunch {
-                    ProductStore.dedupeMerged(in: context)
-                }
-            }
-        }
+        // Scene-activation work lives in RootView+Lifecycle.swift.
+        .onChange(of: scenePhase) { _, phase in handleScenePhase(phase) }
+        // Follows RevenueCat's customer-info stream for the life of the root
+        // view — renewals, refunds and Ask to Buy approvals land while the
+        // app is open, not on the next activation (fixed 2026-10-15).
+        .task { await observeEntitlement() }
         .onAppear {
             let settings = UserSettings.current(in: context)
             Seeder.seedIfRequested(context)
@@ -136,7 +87,7 @@ struct RootView: View {
         .fullScreenCover(isPresented: $showOnboarding) {
             if let settings = settingsList.first {
                 OnboardingFlow(settings: settings, onStarted: { onboardingStarted = true }) {
-                    closeOnboarding(showPaywall: true)
+                    closeOnboarding()
                 }
                 .appLanguage(settings.languageCode)
             }
@@ -153,12 +104,15 @@ struct RootView: View {
     }
 
     /// Finished or skipped — same exit (user decision 2026-07-21): Today
-    /// shows for a beat, then the soft paywall slides up over it.
-    private func closeOnboarding(showPaywall: Bool) {
+    /// shows for a beat, then the soft paywall slides up over it. Premium is
+    /// checked at the moment of showing, not when the flow ends (fixed
+    /// 2026-10-15): a restore or a late CloudKit import during the beat
+    /// counts, and a premium user never sees the paywall.
+    private func closeOnboarding() {
         showOnboarding = false
-        guard showPaywall else { return }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(1))
+            guard !PremiumGate.isPremium(settings: UserSettings.current(in: context)) else { return }
             postOnboardingPaywall = true
         }
     }
@@ -191,7 +145,7 @@ struct RootView: View {
             let restored = UserSettings.current(in: context)
             restored.onboardingCompleted = true
             try? context.save()
-            closeOnboarding(showPaywall: !PremiumGate.isPremium(settings: restored))
+            closeOnboarding()
         }
     }
 }

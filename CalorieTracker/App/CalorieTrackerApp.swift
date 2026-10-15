@@ -6,6 +6,12 @@ struct CalorieTrackerApp: App {
     let container: ModelContainer
 
     init() {
+        // Billing SDK from process start, so out-of-app transactions (Ask to
+        // Buy, renewals, refunds) are observed at once (fixed 2026-10-15).
+        PurchasesBootstrap.configureIfNeeded()
+        // The ad-free install day starts at the first launch, not at the first
+        // ad-bearing screen (fixed 2026-10-15).
+        AdsGracePeriod.seedFirstLaunchIfNeeded()
         #if DEBUG
         // `-initializeCloudKitSchema 1`: push the full schema to CloudKit
         // Development before deploying it to Production (see the type).

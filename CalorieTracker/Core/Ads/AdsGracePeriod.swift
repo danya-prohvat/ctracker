@@ -12,11 +12,19 @@ enum AdsGracePeriod {
     static let duration: TimeInterval = 24 * 60 * 60
     private static let firstLaunchKey = "ads.firstLaunchAt"
 
-    /// True while the install-day grace is still running. Seeds the anchor on
-    /// first read, so legacy installs start their day from the first launch
-    /// of a build with this feature.
+    /// True while the install-day grace is still running.
     static var isActive: Bool {
         Date().timeIntervalSince(firstLaunchAt) < duration
+    }
+
+    /// Anchors the day at the first launch. Called from
+    /// `CalorieTrackerApp.init()` (fixed 2026-10-15): seeding lazily on the
+    /// first `isActive` read tied the anchor to the first ad-bearing screen —
+    /// Today has no ads, so a user could get the quiet day days after
+    /// installing. Legacy installs start their day from the first launch of
+    /// a build with this call.
+    static func seedFirstLaunchIfNeeded() {
+        _ = firstLaunchAt
     }
 
     private static var firstLaunchAt: Date {
