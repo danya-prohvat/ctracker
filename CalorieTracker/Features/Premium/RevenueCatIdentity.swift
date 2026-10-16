@@ -14,18 +14,18 @@ import RevenueCat
 /// the anonymous user (and its purchases) into that identity.
 ///
 /// Any failure — no iCloud account, offline, SDK error — keeps the current
-/// (anonymous) user; `logOut` is never called. Success is cached for the
-/// process so repeated syncs don't hit CloudKit again; a failure is retried
-/// on the next call (the account may come online later).
+/// (anonymous) user; `logOut` is never called. One attempt per process: a
+/// device without an iCloud account would otherwise ask CloudKit on every
+/// activation, and the next launch retries anyway.
 @MainActor
 enum RevenueCatIdentity {
-    private static var identified = false
+    private static var attempted = false
     private static var inFlight: Task<Void, Never>?
 
     /// Logs the SDK in as the iCloud user when possible. Safe to call from
     /// several places at once — concurrent callers await the same attempt.
     static func identifyIfNeeded() async {
-        guard !identified, Purchases.isConfigured else { return }
+        guard !attempted, Purchases.isConfigured else { return }
         if let running = inFlight {
             await running.value
             return
@@ -34,6 +34,7 @@ enum RevenueCatIdentity {
         inFlight = attempt
         await attempt.value
         inFlight = nil
+        attempted = true
     }
 
     private static func identify() async {
@@ -41,9 +42,8 @@ enum RevenueCatIdentity {
         guard let recordID = try? await container.userRecordID() else { return }
         let userID = recordID.recordName
         if Purchases.shared.appUserID != userID {
-            guard (try? await Purchases.shared.logIn(userID)) != nil else { return }
+            _ = try? await Purchases.shared.logIn(userID)
         }
-        identified = true
     }
 }
 #endif

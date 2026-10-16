@@ -63,6 +63,11 @@ struct PaywallView: View {
                 .presentationDragIndicator(.visible)
         }
         .purchaseFlowAlert($alert)
+        // Premium that lands later — an approved Ask to Buy, a transfer that
+        // completes after "Nothing to restore" — closes the paywall too.
+        .onChange(of: currentSettings.isPremium) { _, premium in
+            if premium { dismiss() }
+        }
     }
 
     // MARK: - Sections
@@ -179,22 +184,4 @@ struct PaywallView: View {
             }
         }
     }
-}
-
-#Preview {
-    Color.clear
-        .sheet(isPresented: .constant(true)) {
-            PaywallView()
-        }
-        .modelContainer(PreviewData.container)
-}
-
-#Preview("RTL ar") {
-    Color.clear
-        .sheet(isPresented: .constant(true)) {
-            PaywallView()
-                .environment(\.layoutDirection, .rightToLeft)
-                .environment(\.locale, Locale(identifier: "ar"))
-        }
-        .modelContainer(PreviewData.container)
 }

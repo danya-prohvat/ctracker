@@ -62,11 +62,13 @@ extension RootView {
         await PurchaseServices.make(settings: UserSettings.current(in: context)).observeEntitlement()
     }
 
-    /// Screenshot launches (`-seedScreenshotDay 1`) pin the seeded premium
-    /// override, so no backend verdict may touch it.
+    /// Screenshot launches (`-seedScreenshotDay 1`) and the Settings → Test
+    /// premium override (`debugPremiumOverride`, written by the toggle) pin
+    /// the local flag, so no backend verdict may touch it.
     private static var skipsEntitlementSync: Bool {
         #if DEBUG
         UserDefaults.standard.bool(forKey: "seedScreenshotDay")
+            || UserDefaults.standard.bool(forKey: "debugPremiumOverride")
         #else
         false
         #endif

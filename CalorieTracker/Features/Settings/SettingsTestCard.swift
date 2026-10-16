@@ -125,6 +125,10 @@ struct SettingsTestCard: View {
             set: { newValue in
                 // Same path as a real entitlement change, so toggling the
                 // override off also trims tracked nutrients to the free set.
+                // The flag tells RootView to skip the backend sync while the
+                // override is on — otherwise RevenueCat undid it on the next
+                // activation.
+                UserDefaults.standard.set(newValue, forKey: "debugPremiumOverride")
                 PremiumGate.applyEntitlement(newValue, settings: settings)
                 try? context.save()
             }

@@ -5,19 +5,15 @@ import StoreKit
 /// subscription status + manage link for premium users. Gating semantics
 /// stay behind `PremiumGate`; only the container is restyled.
 ///
-/// The "Manage subscription" row is shown only to users holding an
-/// auto-renewable subscription. `UserSettings.isPremium` is a plain Bool and
-/// cannot tell a Lifetime purchase (non-consumable) or a DEBUG toggle apart
-/// from a subscription, and StoreKit's manage-subscriptions sheet is empty for
-/// both — so the card asks StoreKit 2 directly via `ActiveSubscriptionProbe`
-/// in `.task` and keeps the row hidden until the probe answers `true`
-/// (no flash for Lifetime users).
+/// The "Manage subscription" row is always present while premium is active
+/// (user decision 2026-10-15): a visible way to manage the subscription
+/// matters more than hiding it for the rare Lifetime purchase, where the
+/// system sheet simply lists no subscriptions.
 struct SettingsPremiumCard: View {
     let settings: UserSettings
     let onUpgrade: () -> Void
 
     @State private var showingManageSubscriptions = false
-    @State private var showsManageRow = false
 
     var body: some View {
         if PremiumGate.isPremium(settings: settings) {
@@ -47,17 +43,10 @@ struct SettingsPremiumCard: View {
             }
             .settingsRowPadding()
 
-            if showsManageRow {
-                SettingsRowDivider()
-                manageSubscriptionRow
-            }
+            SettingsRowDivider()
+            manageSubscriptionRow
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
-        // Re-runs on every appearance of the active card, so a subscription
-        // bought or expired elsewhere is picked up the next time Settings opens.
-        .task {
-            showsManageRow = await ActiveSubscriptionProbe.hasAutoRenewableEntitlement()
-        }
     }
 
     /// System sheet over the app (StoreKit), not a link out to the

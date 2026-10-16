@@ -34,6 +34,7 @@ enum PurchasesConfig {
 
 #if canImport(RevenueCat)
 import RevenueCat
+import StoreKit
 
 enum RevenueCatPurchaseError: LocalizedError {
     case notConfigured
@@ -91,6 +92,17 @@ final class RevenueCatPurchaseService: PurchaseService {
     func restore() async throws {
         guard Purchases.isConfigured else { throw RevenueCatPurchaseError.notConfigured }
         await RevenueCatIdentity.identifyIfNeeded()
+        // The SDK restores from StoreKit's *local* transaction cache, which is
+        // empty right after a reinstall or an App Store account switch — the
+        // user would get "Nothing to restore" for a subscription they own.
+        // `AppStore.sync()` pulls the account's history first; it may show the
+        // App Store sign-in sheet, legitimate here because the user tapped
+        // Restore. Backing out of that sheet is a cancellation, not an error.
+        do {
+            try await AppStore.sync()
+        } catch StoreKitError.userCancelled {
+            throw CancellationError()
+        }
         let info = try await Purchases.shared.restorePurchases()
         await reconcile(info)
     }
