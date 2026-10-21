@@ -4,7 +4,7 @@ import GoogleMobileAds
 
 /// Loads and shows rewarded ads. Wired to the barcode scanner: from the
 /// second successful scan on, the scan flow preloads an ad on open and shows
-/// it before revealing the lookup result (see `AdsConfig.shouldShowScanReward`).
+/// it before revealing the lookup result (see `ScanRewardGate`).
 /// Check `isReady` before calling `show` — a missing ad must never block the
 /// flow it gates; the next ad preloads itself after each dismissal.
 @MainActor

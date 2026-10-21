@@ -33,6 +33,8 @@ struct SettingsHomeView: View {
             #if DEBUG
             // Launch with `-openGoals 1` to jump straight to Goals & nutrients.
             if UserDefaults.standard.bool(forKey: "openGoals") { debugShowGoals = true }
+            // `-openPaywall 1` opens the paywall sheet (screenshots on emulators).
+            if UserDefaults.standard.bool(forKey: "openPaywall") { showPaywall = true }
             #endif
         }
         .onAppear {

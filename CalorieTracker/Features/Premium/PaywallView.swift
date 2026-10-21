@@ -128,7 +128,7 @@ struct PaywallView: View {
             buy()
         } label: {
             ZStack {
-                Text("Continue")
+                ctaTitle
                     .font(.headline)
                     .ctaFit()
                     .opacity(isWorking ? 0 : 1)
@@ -147,6 +147,12 @@ struct PaywallView: View {
         }
         .buttonStyle(.pressableCard)
         .disabled(isWorking)
+    }
+
+    /// "Start free trial" while the selected plan carries an eligible trial
+    /// (yearly, store-confirmed); plain "Continue" otherwise.
+    private var ctaTitle: Text {
+        quotes?[selected]?.trialDays == nil ? Text("Continue") : Text("Start free trial")
     }
 
     // MARK: - Actions

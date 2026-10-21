@@ -23,4 +23,24 @@ enum StoreEntitlementProbe {
         }
         return false
     }
+
+    /// True when this Apple Account owns the Lifetime non-consumable and no
+    /// auto-renewable subscription is current — nothing for the system
+    /// "Manage subscription" sheet to show (user decision 2026-10-19). Any
+    /// doubt (empty cache right after a reinstall, signed out) reads as
+    /// false, so the row stays visible rather than vanish by mistake.
+    static func ownsLifetimeOnly() async -> Bool {
+        var ownsLifetime = false
+        for await result in Transaction.currentEntitlements {
+            guard case .verified(let transaction) = result,
+                  transaction.revocationDate == nil
+            else { continue }
+            switch transaction.productType {
+            case .nonConsumable: ownsLifetime = true
+            case .autoRenewable: return false
+            default: continue
+            }
+        }
+        return ownsLifetime
+    }
 }

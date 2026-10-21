@@ -5,15 +5,22 @@ import StoreKit
 /// subscription status + manage link for premium users. Gating semantics
 /// stay behind `PremiumGate`; only the container is restyled.
 ///
-/// The "Manage subscription" row is always present while premium is active
-/// (user decision 2026-10-15): a visible way to manage the subscription
-/// matters more than hiding it for the rare Lifetime purchase, where the
-/// system sheet simply lists no subscriptions.
+/// The "Manage subscription" row shows for every premium user except a
+/// Lifetime owner with no running subscription (user decision 2026-10-19,
+/// replaces "always visible" from 2026-10-15): for them the system sheet is
+/// empty. The verdict comes from the device's StoreKit cache
+/// (`StoreEntitlementProbe.ownsLifetimeOnly`), never prompts, and defaults to
+/// showing the row whenever the cache cannot say.
 struct SettingsPremiumCard: View {
     let settings: UserSettings
     let onUpgrade: () -> Void
 
     @State private var showingManageSubscriptions = false
+    @State private var hidesManageRow = false
+    /// Yearly trial length from the warm quotes cache; nil = no eligible trial.
+    @State private var trialDays: Int?
+
+    @Environment(\.locale) private var locale
 
     var body: some View {
         if PremiumGate.isPremium(settings: settings) {
@@ -43,10 +50,13 @@ struct SettingsPremiumCard: View {
             }
             .settingsRowPadding()
 
-            SettingsRowDivider()
-            manageSubscriptionRow
+            if !hidesManageRow {
+                SettingsRowDivider()
+                manageSubscriptionRow
+            }
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
+        .task { hidesManageRow = await StoreEntitlementProbe.ownsLifetimeOnly() }
     }
 
     /// System sheet over the app (StoreKit), not a link out to the
@@ -73,6 +83,8 @@ struct SettingsPremiumCard: View {
 
     /// Native upsell row (iCloud+ pattern): white card, Settings-style icon
     /// squircle, regular text colors and a soft tinted "Upgrade" capsule.
+    /// With an eligible yearly trial the headline sells the trial instead
+    /// (user decision 2026-10-19); subtitle and badge stay.
     private var upgradeCard: some View {
         Button(action: onUpgrade) {
             HStack(spacing: 12) {
@@ -90,12 +102,13 @@ struct SettingsPremiumCard: View {
                             )
                     )
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Try Premium")
+                    upgradeTitle
                         .font(.headline)
                         .foregroundStyle(Theme.textPrimary)
-                    // iCloud sync is a free feature since 2026-07-28 — the
-                    // upsell must not sell it as premium.
-                    Text("All nutrients, scanner & full history")
+                    // iCloud sync is a free feature since 2026-07-28 and the
+                    // scanner is unlimited for everyone since 2026-10-19 —
+                    // the upsell sells ad-free scanning, not more scans.
+                    Text("All nutrients, ad-free scanner & full history")
                         .font(.footnote)
                         .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.leading)
@@ -115,5 +128,17 @@ struct SettingsPremiumCard: View {
         }
         .buttonStyle(.plain)
         .glassCard(cornerRadius: Theme.cornerRadius)
+        .task {
+            await PaywallQuotesCache.prefetch(settings: settings)
+            trialDays = PaywallQuotesCache.cached?[.yearly]?.trialDays
+        }
+    }
+
+    private var upgradeTitle: Text {
+        let quote = PaywallPlanQuote(price: "", trialDays: trialDays)
+        if let trial = quote.trialLabel(locale: locale) {
+            return Text("Try Premium free for \(trial)")
+        }
+        return Text("Try Premium")
     }
 }

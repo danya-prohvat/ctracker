@@ -15,6 +15,10 @@ struct SettingsTestCard: View {
     @State private var showScheduled = false
     @State private var reviewNote: LocalizedStringKey?
     @State private var adsGraceNote: LocalizedStringKey?
+    /// The override itself, not the live premium flag: a fresh install shows
+    /// it OFF even while a real subscription keeps premium on (user decision
+    /// 2026-10-19). Same key `RootView.skipsEntitlementSync` reads.
+    @AppStorage("debugPremiumOverride") private var premiumOverride = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,10 +30,9 @@ struct SettingsTestCard: View {
             }
             SettingsRowDivider()
             actionRow(
-                "Reset free scans",
-                note: "Used: \(settings.scanCount) · today \(settings.dailyScanCount)"
+                "Reset today's scans",
+                note: "Today: \(settings.dailyScanCount)"
             ) {
-                settings.scanCount = 0
                 settings.dailyScanCount = 0
                 settings.dailyScanDayKey = nil
                 try? context.save()
@@ -121,14 +124,15 @@ struct SettingsTestCard: View {
 
     private var premiumBinding: Binding<Bool> {
         Binding(
-            get: { settings.isPremium },
+            get: { premiumOverride },
             set: { newValue in
                 // Same path as a real entitlement change, so toggling the
                 // override off also trims tracked nutrients to the free set.
-                // The flag tells RootView to skip the backend sync while the
-                // override is on — otherwise RevenueCat undid it on the next
-                // activation.
-                UserDefaults.standard.set(newValue, forKey: "debugPremiumOverride")
+                // While ON, RootView skips the backend sync — otherwise
+                // RevenueCat undid it on the next activation. OFF pins
+                // nothing: the store's verdict returns on the next activation
+                // (a live subscription brings premium back by itself).
+                premiumOverride = newValue
                 PremiumGate.applyEntitlement(newValue, settings: settings)
                 try? context.save()
             }

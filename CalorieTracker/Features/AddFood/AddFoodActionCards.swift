@@ -2,9 +2,10 @@ import SwiftUI
 
 /// "New product" + "Scan" action cards row of the Add food sheet.
 struct AddFoodActionCards: View {
-    /// Free scans left, shown on the Scan card so the limit never comes as a
-    /// surprise (user decision 2026-09-28). nil / unlimited = no caption.
-    var scanAllowance: ScanAllowance? = nil
+    /// Ad-free scans left today, shown on the Scan card so the "Watch ad"
+    /// offer never comes as a surprise (user decision 2026-10-19). No
+    /// caption for premium, the grace day, or once today's are spent.
+    var scanToll: ScanToll = .none
     let onNewProduct: () -> Void
     let onScan: () -> Void
 
@@ -73,11 +74,8 @@ struct AddFoodActionCards: View {
 
 extension AddFoodActionCards {
     private var scanCaption: LocalizedStringKey? {
-        switch scanAllowance {
-        case .welcome(let left): return "\(left) free left"
-        case .daily(let left): return "\(left) of \(PremiumGate.dailyFreeScanLimit) today"
-        case .unlimited, nil: return nil
-        }
+        guard case .freeToday(let left) = scanToll else { return nil }
+        return "\(left) of \(ScanRewardGate.dailyAdFreeScans) today"
     }
 }
 
@@ -130,8 +128,7 @@ private struct ViewfinderCornersShape: Shape {
         AppBackground()
         VStack(spacing: 16) {
             AddFoodActionCards(onNewProduct: {}, onScan: {})
-            AddFoodActionCards(scanAllowance: .welcome(left: 7), onNewProduct: {}, onScan: {})
-            AddFoodActionCards(scanAllowance: .daily(left: 2), onNewProduct: {}, onScan: {})
+            AddFoodActionCards(scanToll: .freeToday(left: 2), onNewProduct: {}, onScan: {})
         }
         .padding(20)
     }

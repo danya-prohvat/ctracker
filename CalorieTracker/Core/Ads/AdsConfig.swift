@@ -21,17 +21,9 @@ enum AdsConfig {
 
     /// Ads are a free-tier experience: premium removes them everywhere, and
     /// the first day after install is ad-free (`AdsGracePeriod`). Views ask
-    /// this single gate, never `isPremium` directly.
+    /// this single gate, never `isPremium` directly. The scanner's rewarded
+    /// toll builds on it in `ScanRewardGate`.
     static func shouldShowAds(settings: UserSettings) -> Bool {
         !PremiumGate.isPremium(settings: settings) && !AdsGracePeriod.isActive
-    }
-
-    /// Rewarded gate for the barcode scanner (user decision 2026-08-03, made
-    /// opt-in 2026-09-28): every successful scan after the very first one is
-    /// held behind a "Watch ad" offer before the result is revealed — which
-    /// covers every daily-quota scan, since the welcome pool is spent by then.
-    /// Premium and the install-day grace skip ads entirely via `shouldShowAds`.
-    static func shouldShowScanReward(settings: UserSettings) -> Bool {
-        shouldShowAds(settings: settings) && settings.scanCount >= 1
     }
 }

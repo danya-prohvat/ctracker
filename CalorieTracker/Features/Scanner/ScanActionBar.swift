@@ -12,7 +12,7 @@ struct ScanActionBar: View {
     let onRetry: (String) -> Void
     /// Opt-in rewarded ad: the found product is revealed after it.
     let onWatchAd: () -> Void
-    /// Opens the paywall over the scanner (offer and limit states).
+    /// Opens the paywall over the scanner (offer state).
     let onGoPremium: () -> Void
 
     var body: some View {
@@ -38,11 +38,6 @@ struct ScanActionBar: View {
             VStack(spacing: 10) {
                 primaryButton("Watch ad", systemImage: "play.fill", action: onWatchAd)
                 secondaryButton("Go Premium", action: onGoPremium)
-            }
-        case .limitReached:
-            VStack(spacing: 10) {
-                primaryButton("Unlock unlimited scans", action: onGoPremium)
-                secondaryButton("Add manually instead") { onCreateManually("") }
             }
         case .scanning, .searching, .found, .requestingPermission, .handedOff:
             EmptyView()

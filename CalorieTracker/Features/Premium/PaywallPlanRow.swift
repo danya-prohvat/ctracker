@@ -10,6 +10,8 @@ struct PaywallPlanRow: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @Environment(\.locale) private var locale
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
@@ -40,6 +42,10 @@ struct PaywallPlanRow: View {
                         Text("One-time purchase")
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
+                    } else if let trial = quote?.trialLabel(locale: locale) {
+                        Text("Free for \(trial)")
+                            .font(.caption)
+                            .foregroundStyle(Theme.accentDeep)
                     }
                 }
 

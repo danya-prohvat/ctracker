@@ -2,8 +2,8 @@ import SwiftUI
 
 /// Per-state content shown under (or instead of) the viewfinder in the dark
 /// scan flow: hints, spinner, not-found / denied / offline messages. The ad
-/// offer and daily-limit states live in ScanStatusPanelGates.swift, which is
-/// why the shared pieces below are internal.
+/// offer state lives in ScanStatusPanelGates.swift, which is why the shared
+/// pieces below are internal.
 struct ScanStatusPanel: View {
     let phase: ScanFlowPhase
 
@@ -25,8 +25,6 @@ struct ScanStatusPanel: View {
             serverError
         case .rewardOffer:
             rewardOffer
-        case .limitReached:
-            limitReached
         case .requestingPermission, .handedOff:
             EmptyView()
         }

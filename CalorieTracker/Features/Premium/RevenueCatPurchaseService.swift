@@ -143,10 +143,30 @@ final class RevenueCatPurchaseService: PurchaseService {
             quotes[plan] = PaywallPlanQuote(
                 title: product.localizedTitle.isEmpty ? nil : product.localizedTitle,
                 price: product.localizedPriceString,
-                pricePerMonth: plan == .yearly ? pricePerMonth(of: product) : nil
+                pricePerMonth: plan == .yearly ? pricePerMonth(of: product) : nil,
+                trialDays: await eligibleTrialDays(of: product)
             )
         }
         return quotes
+    }
+
+    /// Days of the product's free-trial introductory offer, only while this
+    /// user is still eligible (the store says "ineligible" once a trial was
+    /// used on the account; "unknown" — offline — promises nothing).
+    private func eligibleTrialDays(of product: StoreProduct) async -> Int? {
+        guard let offer = product.introductoryDiscount, offer.paymentMode == .freeTrial
+        else { return nil }
+        let eligibility = await Purchases.shared.checkTrialOrIntroDiscountEligibility(
+            productIdentifiers: [product.productIdentifier]
+        )
+        guard eligibility[product.productIdentifier]?.status == .eligible else { return nil }
+        let period = offer.subscriptionPeriod
+        switch period.unit {
+        case .day: return period.value
+        case .week: return period.value * 7
+        case .month: return period.value * 30
+        case .year: return period.value * 365
+        }
     }
 
     private func pricePerMonth(of product: StoreProduct) -> String? {

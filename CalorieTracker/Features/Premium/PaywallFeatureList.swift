@@ -8,8 +8,8 @@ struct PaywallFeatureList: View {
                               title: "All 37 vitamins & minerals",
                               subtitle: "The complete micronutrient picture, every day.")
             PaywallFeatureRow(icon: "barcode.viewfinder",
-                              title: "Unlimited barcode scanner",
-                              subtitle: "Scan any product, no limits.")
+                              title: "Ad-free scanning",
+                              subtitle: "Scan as much as you like, no ad breaks.")
             PaywallFeatureRow(icon: "calendar",
                               title: "Full calendar history",
                               subtitle: "Look back further than 30 days.")

@@ -42,7 +42,11 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "C0FFEE11",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "C0FFEE1A",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
           "localizations" : [
             {
               "description" : "All Pro features, billed yearly",

@@ -1,12 +1,10 @@
 import SwiftUI
 
-/// Scanner wiring for the add-food flow: launch gating (a welcome pool of
-/// free scans, then a daily quota — `PremiumGate.scanAllowance`), scan
-/// counting and routing of scan outcomes into a modal step.
+/// Scanner wiring for the add-food flow: scan counting for the rewarded toll
+/// (`ScanRewardGate`) and routing of scan outcomes into a modal step.
 extension AddFoodSheet {
     var scanFlow: some View {
         ScanFlowView(
-            startsLocked: scannerStartsLocked,
             onLocalProduct: { product in
                 // Re-scanning a product already in the user's base is free:
                 // no counter tick and no rewarded ad (user decision
@@ -23,29 +21,27 @@ extension AddFoodSheet {
             },
             onCreateManually: { barcode in
                 // Not-found and denied paths never tick the counter: only
-                // scans that actually found a product count against the free
-                // limit (user decision 2026-08-03).
+                // scans that actually found a product count (user decision
+                // 2026-08-03).
                 pendingScan = .newProduct(NewProductRoute(barcode: barcode.isEmpty ? nil : barcode))
                 showScanner = false
             }
         )
     }
 
-    /// Free tier: `PremiumGate.freeScanLimit` welcome scans, then
-    /// `dailyFreeScanLimit` per day (user decision 2026-09-28). Used up → the
-    /// scanner opens on its limit screen (upgrade / manual entry) instead of
-    /// the camera; the paywall is presented from inside the flow.
+    /// Scanning is never limited (user decision 2026-10-19): a free user past
+    /// the grace day gets `ScanRewardGate.dailyAdFreeScans` ad-free scans a
+    /// day, then each scan costs the opt-in ad inside the flow.
     func startScan() {
         // A route left over from an earlier session must never fire when this
         // scanner cover closes.
         pendingScan = nil
-        scannerStartsLocked = settings.map { !PremiumGate.isUnlocked(.scanner, settings: $0) } ?? false
         showScanner = true
     }
 
     private func countScan() {
         guard let settings else { return }
-        PremiumGate.recordSuccessfulScan(settings: settings)
+        ScanRewardGate.recordSuccessfulScan(settings: settings)
         try? context.save()
     }
 

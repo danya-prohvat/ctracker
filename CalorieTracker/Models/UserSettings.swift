@@ -39,13 +39,14 @@ final class UserSettings {
     /// fallback when the iCloud account is unavailable.
     var iCloudSyncEnabled: Bool = true
 
-    /// Successful OFF-lookup scans used from the welcome pool of 10 (user
-    /// decision 2026-08-03; local re-scans and not-found don't count).
+    /// Legacy welcome-pool counter (2026-08-03 … 2026-10-19). Unused since
+    /// scanning became unlimited; kept so the released schema / CloudKit
+    /// record stays unchanged.
     var scanCount: Int = 0
-    /// Successful scans used today by a free user once the welcome pool is
-    /// spent (`PremiumGate.dailyFreeScanLimit` per local day, user decision
-    /// 2026-09-28). Meaningful only while `dailyScanDayKey == DayKey.today`;
-    /// a stale key reads as zero — see `PremiumGate.scanAllowance`.
+    /// Successful OFF-lookup scans a free user made today past the grace day
+    /// (user decision 2026-10-19: `ScanRewardGate.dailyAdFreeScans` of them
+    /// are ad-free, the rest cost an opt-in ad). Meaningful only while
+    /// `dailyScanDayKey == DayKey.today`; a stale key reads as zero.
     var dailyScanCount: Int = 0
     var dailyScanDayKey: String? = nil
 

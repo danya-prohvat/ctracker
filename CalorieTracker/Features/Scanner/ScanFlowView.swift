@@ -6,10 +6,10 @@ import AVFoundation
 ///
 /// State machine: scanning → (own DB hit → `onLocalProduct`) → searching →
 /// found (`onPrefill`) / not found (`onCreateManually`) / offline (retry),
-/// plus camera-permission-denied, the opt-in "Watch ad" offer that holds a
-/// found product back, and the daily free-scan limit the flow can open on
-/// (user decision 2026-09-28). The caller owns navigation: this view only
-/// reports outcomes through its callbacks and dismisses itself.
+/// plus camera-permission-denied and the opt-in "Watch ad" offer that holds
+/// a found product back (user decision 2026-09-28; scanning itself is never
+/// limited — 2026-10-19). The caller owns navigation: this view only reports
+/// outcomes through its callbacks and dismisses itself.
 struct ScanFlowView: View {
     // Internal (not private): ScanFlowLookup.swift extends this type.
     @Environment(\.modelContext) var context
@@ -18,21 +18,6 @@ struct ScanFlowView: View {
     let onLocalProduct: (Product) -> Void
     let onPrefill: (ScanPrefill) -> Void
     let onCreateManually: (String) -> Void
-    /// True when the free scans are used up: the flow opens on `.limitReached`
-    /// instead of asking for the camera.
-    let startsLocked: Bool
-
-    init(
-        startsLocked: Bool = false,
-        onLocalProduct: @escaping (Product) -> Void,
-        onPrefill: @escaping (ScanPrefill) -> Void,
-        onCreateManually: @escaping (String) -> Void
-    ) {
-        self.startsLocked = startsLocked
-        self.onLocalProduct = onLocalProduct
-        self.onPrefill = onPrefill
-        self.onCreateManually = onCreateManually
-    }
 
     @State var phase: ScanFlowPhase = .requestingPermission
     /// Bumped to recreate the scanner view — it reports each code only once.
@@ -49,8 +34,8 @@ struct ScanFlowView: View {
     @State var lookupTask: Task<Void, Never>?
     /// The found product held back behind the "Watch ad" offer.
     @State var pendingPrefill: ScanPrefill?
-    /// Paywall opened from the offer / limit screens; a fresh premium on
-    /// return unlocks the flow (`paywallClosed`).
+    /// Paywall opened from the offer; a fresh premium on return reveals the
+    /// held-back result (`paywallClosed`).
     @State var showPaywall = false
 
     var body: some View {
@@ -85,10 +70,6 @@ struct ScanFlowView: View {
             PaywallView()
         }
         .task {
-            if startsLocked {
-                phase = .limitReached
-                return
-            }
             await ensurePermission()
             await ScanRewardGate.preloadIfNeeded(context: context)
             #if DEBUG
@@ -161,31 +142,18 @@ struct ScanFlowView: View {
         }
     }
 
-    /// Back from the paywall: a fresh premium unlocks whatever it was opened
-    /// from — the held-back result is revealed, or the locked flow starts
-    /// scanning for real. Still free: stay where we were.
+    /// Back from the paywall: a fresh premium reveals the held-back result.
+    /// Still free: stay on the offer.
     private func paywallClosed() {
-        guard PremiumGate.isPremium(settings: UserSettings.current(in: context)) else { return }
-        switch phase {
-        case .rewardOffer: revealPending()
-        case .limitReached: Task { await ensurePermission() }
-        default: break
-        }
+        guard PremiumGate.isPremium(settings: UserSettings.current(in: context)),
+              case .rewardOffer = phase
+        else { return }
+        revealPending()
     }
 }
 
 #Preview {
     ScanFlowView(
-        onLocalProduct: { _ in },
-        onPrefill: { _ in },
-        onCreateManually: { _ in }
-    )
-    .modelContainer(PreviewData.container)
-}
-
-#Preview("Limit reached") {
-    ScanFlowView(
-        startsLocked: true,
         onLocalProduct: { _ in },
         onPrefill: { _ in },
         onCreateManually: { _ in }
