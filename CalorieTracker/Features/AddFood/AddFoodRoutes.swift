@@ -35,15 +35,18 @@ struct NewProductLogSheet: View {
                            prefill: route.prefill,
                            prefillBarcode: route.barcode,
                            dayKey: dayKey,
-                           onContinue: logOnce)
+                           onContinue: { food in
+                               Self.logOnce(food, dayKey: dayKey, in: context)
+                               onLogged()
+                           })
         }
     }
 
     /// Log once: the form's values are already "what was eaten", so write them
     /// as-is — the "Per" base amount arrives via `lastQuantity` (canonical g / ml).
-    private func logOnce(_ food: LoggableFood) {
+    /// Shared with the inline lead form (AddFoodLead).
+    static func logOnce(_ food: LoggableFood, dayKey: String, in context: ModelContext) {
         Haptics.success()
         DiaryLogger.log(food, quantity: food.lastQuantity ?? 100, dayKey: dayKey, in: context)
-        onLogged()
     }
 }

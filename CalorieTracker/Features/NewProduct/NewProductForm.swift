@@ -16,6 +16,9 @@ struct NewProductForm: View {
     var prefillBarcode: String? = nil         // barcode to attach (scan flow)
     var dayKey: String? = nil                 // logging target day; nil = today
     var onContinue: (LoggableFood) -> Void = { _ in }
+    /// Logging mode only: called after Save instead of dismissing, when the
+    /// form is shown in place (lead step of the add flow) rather than as a sheet.
+    var onSaved: (() -> Void)? = nil
 
     /// "Today" as state, refreshed via `onPossibleDayChange` — the CTA copy
     /// must stay honest if the form sits open across midnight.
@@ -147,7 +150,7 @@ struct NewProductForm: View {
                                     calories: v.cals, protein: v.p, fat: v.f, carbs: v.c,
                                     micros: micros, barcode: barcode,
                                     servingAmount: fields.perAmount, in: context)
-            dismiss()
+            if let onSaved { onSaved() } else { dismiss() }
         }
     }
 

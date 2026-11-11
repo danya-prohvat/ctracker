@@ -9,24 +9,33 @@ extension AddFoodSheet {
                 // Re-scanning a product already in the user's base is free:
                 // no counter tick and no rewarded ad (user decision
                 // 2026-08-03) — the lookup never left the device.
-                pendingScan = .quantity(product.loggable)
-                showScanner = false
+                finishScan(with: .quantity(product.loggable))
             },
             onPrefill: { prefill in
                 countScan()
-                pendingScan = .newProduct(
+                finishScan(with: .newProduct(
                     NewProductRoute(prefill: loggable(from: prefill), barcode: prefill.barcode)
-                )
-                showScanner = false
+                ))
             },
             onCreateManually: { barcode in
                 // Not-found and denied paths never tick the counter: only
                 // scans that actually found a product count (user decision
                 // 2026-08-03).
-                pendingScan = .newProduct(NewProductRoute(barcode: barcode.isEmpty ? nil : barcode))
-                showScanner = false
+                finishScan(with: .newProduct(NewProductRoute(barcode: barcode.isEmpty ? nil : barcode)))
             }
         )
+    }
+
+    /// The lead scanner (opened from Today) hands over in place; the
+    /// Scan-tile cover closes first and presents the result once dismissed
+    /// (`presentPendingScan`).
+    private func finishScan(with kind: AddSheet.Kind) {
+        if lead.isScanner {
+            finishLeadScan(with: kind)
+        } else {
+            pendingScan = kind
+            showScanner = false
+        }
     }
 
     /// Scanning is never limited (user decision 2026-10-19): a free user past

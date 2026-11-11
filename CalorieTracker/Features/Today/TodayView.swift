@@ -24,6 +24,14 @@ struct TodayView: View {
                 // Identity reset: @Query/@State inside DayView are seeded from
                 // the day key in init and don't follow later param changes.
                 .id(dayKey)
+                // Pushed from the "last logged day" card (PreviousDayCard).
+                // Registered here, on the stack root: a second destination
+                // inside the pushed DayView would jam the stack.
+                // The pushed day reports its add/edit modal too, so a midnight
+                // `.id` reset never tears down a flow open on that screen.
+                .navigationDestination(for: String.self) { key in
+                    DayView(dayKey: key, isToday: key == dayKey, modalFlowActive: $modalFlowActive)
+                }
         }
         .onPossibleDayChange {
             if modalFlowActive { pendingDayKey = DayKey.today } else { dayKey = DayKey.today }

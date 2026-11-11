@@ -5,9 +5,13 @@ import SwiftData
 /// Scan cards and the "My products" list. Presented from the day screen in
 /// its own NavigationStack — full-screen cover on Today, card sheet from a
 /// calendar day detail (see AddFoodPresentation); the quantity and
-/// new-product steps are presented modally (see AddFoodRoutes).
+/// new-product steps are presented modally (see AddFoodRoutes). The Today
+/// empty state can open the flow straight in the scanner or the new-product
+/// form (`AddFoodStart`); that lead step renders in place of the list and
+/// hands over to it when done (see AddFoodLead.swift).
 struct AddFoodSheet: View {
-    // Internal (not private): AddFoodScanFlow.swift extends this type.
+    // Internal (not private): AddFoodScanFlow.swift and AddFoodLead.swift
+    // extend this type.
     @Environment(\.modelContext) var context
     @Environment(\.dismiss) private var dismiss
 
@@ -15,7 +19,7 @@ struct AddFoodSheet: View {
 
     @Query(sort: [SortDescriptor(\Product.lastLoggedAt, order: .reverse),
                   SortDescriptor(\Product.createdAt, order: .reverse)])
-    private var products: [Product]
+    var products: [Product]
     @Query private var settingsList: [UserSettings]
 
     @State private var search = ""
@@ -25,7 +29,14 @@ struct AddFoodSheet: View {
     @State var showScanner = false
     // Set by the scanner, presented once its cover finishes dismissing.
     @State var pendingScan: AddSheet.Kind?
-    @State private var addSheet: AddSheet?
+    @State var addSheet: AddSheet?
+    /// Lead step shown instead of the list until it completes.
+    @State var lead: AddFoodLead
+
+    init(dayKey: String, start: AddFoodStart = .list) {
+        self.dayKey = dayKey
+        _lead = State(initialValue: AddFoodLead(start))
+    }
 
     var settings: UserSettings? { settingsList.first }
     private var unitSystem: UnitSystem { settings?.unitSystem ?? .metric }
@@ -39,17 +50,17 @@ struct AddFoodSheet: View {
     private var recentProducts: [Product] { products.recentlyLogged }
 
     var body: some View {
-        content
+        Group {
+            switch lead {
+            case .scanner: scanFlow.transition(.opacity)
+            case .newProduct(let route): leadForm(route).transition(.opacity)
+            case .list: listPage.transition(.opacity)
+            }
+        }
             .background(AppBackground())
-            .searchable(
-                text: $search,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: Text("Search my products")
-            )
-            .detailNavBar(
-                title: Text("Add food"),
-                onBack: { dismiss() }
-            )
+            // The dark scanner draws its own header; the list and the form
+            // use the navigation bar.
+            .toolbar(lead.isScanner ? .hidden : .visible, for: .navigationBar)
             .hidesFloatingTabBar()
             .adaptiveSheet(item: $addSheet) {
                 addStep($0.kind)
@@ -68,6 +79,19 @@ struct AddFoodSheet: View {
             }
             .confirmDeleteProduct($productToDelete, onConfirm: delete)
             .task { applyDebugRoute() }
+    }
+
+    private var listPage: some View {
+        content
+            .searchable(
+                text: $search,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: Text("Search my products")
+            )
+            .detailNavBar(
+                title: Text("Add food"),
+                onBack: { dismiss() }
+            )
     }
 
     @ViewBuilder
@@ -136,7 +160,7 @@ struct AddFoodSheet: View {
     /// modal first and popping afterwards (the earlier two-step exit) kept the
     /// day screen covered long enough to hide its ring animation (user
     /// request 2026-09-17).
-    private func logFinished() {
+    func logFinished() {
         dismiss()
     }
 
@@ -155,17 +179,6 @@ struct AddFoodSheet: View {
         try? context.save()
     }
 
-    private func applyDebugRoute() {
-        #if DEBUG
-        // Launch with `-initialAddRoute new|scan|qty` to jump into a substep.
-        switch UserDefaults.standard.string(forKey: "initialAddRoute") {
-        case "new": addSheet = AddSheet(kind: .newProduct(NewProductRoute()))
-        case "scan": showScanner = true
-        case "qty": if let product = products.first { addSheet = AddSheet(kind: .quantity(product.loggable)) }
-        default: break
-        }
-        #endif
-    }
 }
 
 #Preview {

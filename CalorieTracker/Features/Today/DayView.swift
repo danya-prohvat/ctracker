@@ -22,8 +22,16 @@ struct DayView: View {
 
     @Query private var entries: [DiaryEntry]
     @Query private var settingsList: [UserSettings]
+    // Brand-new user (nothing in the base at all) → the empty state shows
+    // the scan / add CTAs; otherwise the plain "+" hint (see DiaryPresence).
+    @Query(DiaryPresence.anyProduct) private var anyProduct: [Product]
+    @Query(DiaryPresence.anyEntry) private var anyEntry: [DiaryEntry]
 
     @State var showingAdd = false
+    /// Lead step of the add flow being presented (nav-bar scan button and
+    /// the empty-state CTAs open the scanner / the new-product form directly).
+    /// Read by the presentation modifier together with `showingAdd`.
+    @State private var addStart: AddFoodStart = .list
     /// IDs of the entries on screen when the add flow opened. While set, entries
     /// logged inside the flow stay hidden, so the ring fill / row slide-in play
     /// after the cover is gone instead of behind it (user request 2026-09-17).
@@ -46,6 +54,7 @@ struct DayView: View {
     }
 
     var settings: UserSettings? { settingsList.first }
+    var isFreshUser: Bool { anyProduct.isEmpty && anyEntry.isEmpty }
     /// What the screen renders: the live query, minus entries held back while
     /// the add flow is up.
     var shownEntries: [DiaryEntry] {
@@ -76,7 +85,8 @@ struct DayView: View {
             isPresented: isPresented,
             dayLabel: dayLabel,
             subtitle: daySubtitle,
-            onBack: { dismiss() }
+            onBack: { dismiss() },
+            onScan: showsAddButton ? { startAdd(.scanner) } : nil
         )
     }
 
@@ -100,7 +110,7 @@ struct DayView: View {
             // The 640 frame pins the FAB to the content column's trailing
             // edge on iPad instead of the screen corner.
             if showsAddButton {
-                FloatingAddButton { showingAdd = true }
+                FloatingAddButton { startAdd(.list) }
                     .padding(.trailing, 26)
                     .padding(.bottom, 88)
                     .frame(maxWidth: 640, alignment: .bottomTrailing)
@@ -111,7 +121,8 @@ struct DayView: View {
         // (user request 2026-07-16). See AddFoodPresentation for the
         // own-NavigationStack rationale.
         .modifier(AddFoodPresentation(asSheet: isPresented, isActive: $showingAdd, dayKey: dayKey,
-                                      onDismiss: releaseHeldEntries))
+                                      start: addStart,
+                                      onDismiss: addFlowDismissed))
         .task {
             #if DEBUG
             // Launch with `-showAddSheet 1` to open the add flow immediately.
@@ -130,10 +141,18 @@ struct DayView: View {
         }
     }
 
+    /// Opens the add flow in the given lead step. Both state changes land in
+    /// one transaction so the cover is built with the right start.
+    func startAdd(_ start: AddFoodStart) {
+        addStart = start
+        showingAdd = true
+    }
+
     /// Cover fully dismissed: reveal what was logged. The value-driven
     /// animations on the rings, numbers and rows take it from here.
-    private func releaseHeldEntries() {
+    private func addFlowDismissed() {
         heldEntryIDs = nil
+        addStart = .list
     }
 
     @ViewBuilder
@@ -141,7 +160,7 @@ struct DayView: View {
         if !isToday && shownEntries.isEmpty {
             // Prototype: an empty past day shows only the gray empty card;
             // the add affordance stays for spec compliance.
-            DayEmptyStateCard(isToday: false, dateLabel: dayLabel) { showingAdd = true }
+            DayEmptyStateCard(isToday: false, dateLabel: dayLabel) { startAdd(.list) }
                 .padding(.top, 40)
                 .transition(.opacity.combined(with: .scale(scale: 0.97)))
         } else {
@@ -155,6 +174,12 @@ struct DayView: View {
                 }
                 loggedSection
                     .padding(.top, 26)
+                // Today root only: the last past day with entries.
+                if showsAddButton {
+                    PreviousDaySection(todayKey: dayKey, settings: settings,
+                                       unitSystem: settings?.unitSystem ?? .metric)
+                        .padding(.top, 26)
+                }
             }
         }
     }

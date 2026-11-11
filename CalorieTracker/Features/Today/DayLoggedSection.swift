@@ -21,10 +21,16 @@ extension DayView {
             .padding(.bottom, 10)
 
             if shownEntries.isEmpty {
+                // Today root, brand-new user: the two CTAs — scan, or add a
+                // food straight in the new-product form (user decision
+                // 2026-11-11). Today root with data elsewhere: the "+" hint
+                // (FAB). Pushed day detail: the inline "Add food" link.
                 DayEmptyStateCard(
                     isToday: true,
                     dateLabel: dayLabel,
-                    onAdd: isPresented ? { showingAdd = true } : nil
+                    onAdd: isPresented ? { startAdd(.list) }
+                        : (isFreshUser ? { startAdd(.newProduct) } : nil),
+                    onScan: (!isPresented && isFreshUser) ? { startAdd(.scanner) } : nil
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.97)))
             } else {
@@ -34,7 +40,7 @@ extension DayView {
                     showsAddFooter: isPresented,
                     onTap: { editing = EditingEntry(entry: $0) },
                     onDelete: { pendingDelete = $0 },
-                    onAdd: { showingAdd = true }
+                    onAdd: { startAdd(.list) }
                 )
                 if isPresented {
                     Text("Swipe a row to delete · tap to edit quantity.")

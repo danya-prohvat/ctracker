@@ -13,6 +13,8 @@ struct AddFoodPresentation: ViewModifier {
     let asSheet: Bool
     @Binding var isActive: Bool
     let dayKey: String
+    /// Lead step the flow opens in (see `AddFoodStart`).
+    var start: AddFoodStart = .list
     /// Fires once the cover/sheet has finished dismissing — DayView releases
     /// held-back entries here so their animations play on a visible screen.
     var onDismiss: () -> Void = {}
@@ -30,6 +32,6 @@ struct AddFoodPresentation: ViewModifier {
     }
 
     private var flow: some View {
-        NavigationStack { AddFoodSheet(dayKey: dayKey) }
+        NavigationStack { AddFoodSheet(dayKey: dayKey, start: start) }
     }
 }

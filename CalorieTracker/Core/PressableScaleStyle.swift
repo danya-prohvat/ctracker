@@ -9,7 +9,11 @@ struct PressableScaleStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? scale : 1)
-            .animation(.snappy(duration: 0.2), value: configuration.isPressed)
+            // Press-in is near-instant so a quick tap still shows the squeeze
+            // (a 0.2 s ease barely moved before the finger lifted — the Today
+            // CTAs looked inert, 2026-11-11); the release springs back.
+            .animation(configuration.isPressed ? .easeOut(duration: 0.06) : .snappy(duration: 0.25),
+                       value: configuration.isPressed)
     }
 }
 
