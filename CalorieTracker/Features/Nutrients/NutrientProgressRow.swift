@@ -52,7 +52,7 @@ struct NutrientProgressRow: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color(hex: 0x3C3C43).opacity(0.1))
+                            .fill(Theme.barTrack)
                         Capsule()
                             .fill(barColor)
                             .frame(width: max(3, geo.size.width * min(consumed / goal, 1)))

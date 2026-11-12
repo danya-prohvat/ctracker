@@ -15,7 +15,7 @@ extension PlanEditor {
                     progress: 1,
                     lineWidth: 13,
                     color: Theme.accent,
-                    trackColor: Color(hex: 0x3C3C43).opacity(0.1)
+                    trackColor: Theme.barTrack
                 )
                 VStack(spacing: 2) {
                     kcalValue

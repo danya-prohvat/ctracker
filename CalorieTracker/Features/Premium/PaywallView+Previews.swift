@@ -9,6 +9,15 @@ import SwiftData
         .modelContainer(PreviewData.container)
 }
 
+#Preview("Dark") {
+    Color.clear
+        .sheet(isPresented: .constant(true)) {
+            PaywallView()
+        }
+        .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
+}
+
 #Preview("RTL ar") {
     Color.clear
         .sheet(isPresented: .constant(true)) {

@@ -49,6 +49,12 @@ struct TodayView: View {
         .modelContainer(PreviewData.container)
 }
 
+#Preview("Dark") {
+    TodayView()
+        .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
+}
+
 #Preview("RTL ar") {
     TodayView()
         .modelContainer(PreviewData.container)

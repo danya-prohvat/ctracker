@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import UIKit
 
-/// "General" card: language picker row, the single reminders toggle — it
+/// "General" card: language picker row, appearance picker, the single reminders toggle — it
 /// drives both the smart meal reminders (`MealReminderScheduler`) and the
 /// re-engagement series (`ReengagementNotificationService`), user decision
 /// 2026-07-21 — and the iCloud sync toggle.
@@ -18,6 +18,8 @@ struct SettingsGeneralCard: View {
     var body: some View {
         VStack(spacing: 0) {
             languageRow
+            SettingsRowDivider()
+            SettingsAppearanceRow()
             SettingsRowDivider()
             remindersRow
             SettingsRowDivider()

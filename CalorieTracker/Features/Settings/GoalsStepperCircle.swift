@@ -51,7 +51,7 @@ struct GoalsStepperCircle: View {
     }
 
     private var glyphColor: Color {
-        direction == .decrement ? Color(hex: 0x6B6B70) : Theme.accentIcon
+        direction == .decrement ? Theme.textDim : Theme.accentIcon
     }
 }
 

@@ -10,6 +10,8 @@ struct RootView: View {
     @Environment(\.modelContext) var context
     @Environment(\.scenePhase) private var scenePhase
     @Query private var settingsList: [UserSettings]
+    /// Settings → General → Appearance; `.system` follows the device.
+    @AppStorage(AppAppearance.storageKey) private var appearance: AppAppearance = .system
 
     @State private var showOnboarding = false
     /// An onboarding question was answered — the iCloud probe keeps the flow.
@@ -56,9 +58,9 @@ struct RootView: View {
         // Every Toggle in the app (sheets included) draws as the pure-SwiftUI
         // switch — the UISwitch-backed default drops quick taps on iOS 26.
         .toggleStyle(.appSwitch)
-        // The palette is light-only for now; without this, system materials
-        // and sheets would flip dark while cards/text stay light.
-        .preferredColorScheme(.light)
+        // Dark theme (user decision 2026-11-11): nil follows the system, a
+        // picked scheme applies to the whole window, sheets and covers included.
+        .preferredColorScheme(appearance.colorScheme)
         // Scene-activation work lives in RootView+Lifecycle.swift.
         .onChange(of: scenePhase) { _, phase in handleScenePhase(phase) }
         // Follows RevenueCat's customer-info stream for the life of the root

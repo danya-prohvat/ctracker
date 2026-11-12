@@ -46,7 +46,7 @@ struct ProductInfoCard: View {
 }
 
 /// Mini segmented g / ml control from the prototype: controlFill container
-/// (radius 9, padding 2), selected segment white with a subtle shadow.
+/// (radius 9, padding 2), selected segment lifted with a subtle shadow.
 private struct BasisSegmentControl: View {
     @Binding var basis: Basis
 
@@ -75,7 +75,7 @@ private struct BasisSegmentControl: View {
                 .background {
                     if selected {
                         RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .fill(Color.white)
+                            .fill(Theme.segmentSelected)
                             .shadow(color: Color.black.opacity(0.12), radius: 1, y: 1)
                     }
                 }

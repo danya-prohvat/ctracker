@@ -19,11 +19,11 @@ struct DayEmptyStateCard: View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(isToday ? Theme.emptyCircleFill : Color(hex: 0xF4F4F6))
+                    .fill(isToday ? Theme.emptyCircleFill : Theme.emptyCircleFillMuted)
                     .frame(width: 76, height: 76)
                 Image(systemName: showsActions ? "barcode.viewfinder" : "fork.knife")
                     .font(.title2)
-                    .foregroundStyle(isToday ? Theme.emptyCircleRing : Color(hex: 0xD0D0D5))
+                    .foregroundStyle(isToday ? Theme.emptyCircleRing : Theme.emptyCircleRingMuted)
             }
 
             if isToday {

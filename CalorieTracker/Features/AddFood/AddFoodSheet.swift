@@ -188,6 +188,14 @@ struct AddFoodSheet: View {
     .modelContainer(PreviewData.container)
 }
 
+#Preview("Dark") {
+    NavigationStack {
+        AddFoodSheet(dayKey: DayKey.today)
+    }
+    .modelContainer(PreviewData.container)
+    .preferredColorScheme(.dark)
+}
+
 #Preview("RTL ar") {
     NavigationStack {
         AddFoodSheet(dayKey: DayKey.today)

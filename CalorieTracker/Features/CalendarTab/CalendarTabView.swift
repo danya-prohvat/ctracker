@@ -186,6 +186,12 @@ struct CalendarTabView: View {
         .modelContainer(PreviewData.container)
 }
 
+#Preview("Dark") {
+    CalendarTabView()
+        .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
+}
+
 #Preview("RTL ar") {
     CalendarTabView()
         .modelContainer(PreviewData.container)

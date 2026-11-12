@@ -32,9 +32,6 @@ struct CalendarDayCell: View {
     var fillDelay: TimeInterval = 0
     let onTap: () -> Void
 
-    /// Ring track from the prototype day cells (#EEEEF0).
-    private static let ringTrack = Color(hex: 0xEEEEF0)
-
     private var hasData: Bool { kcal != nil }
 
     private var ringState: CalendarRingState {
@@ -110,7 +107,7 @@ struct CalendarDayCell: View {
                     progress: progress,
                     lineWidth: 4,
                     color: ringState.color,
-                    trackColor: Self.ringTrack,
+                    trackColor: Theme.calendarRingTrack,
                     fillDelay: fillDelay
                 )
             }

@@ -31,7 +31,7 @@ struct SavedBarcodeChip: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radiusControl, style: .continuous)
-                .strokeBorder(Color(hex: 0xB4D8C0).opacity(0.6), lineWidth: 0.5)
+                .strokeBorder(Theme.accentChipBorder, lineWidth: 0.5)
         )
     }
 
@@ -39,7 +39,7 @@ struct SavedBarcodeChip: View {
         HStack(spacing: 2) {
             ForEach(barWidths.indices, id: \.self) { index in
                 Rectangle()
-                    .fill(Theme.fabShadow)
+                    .fill(Theme.barcodeGlyph)
                     .frame(width: barWidths[index])
             }
         }

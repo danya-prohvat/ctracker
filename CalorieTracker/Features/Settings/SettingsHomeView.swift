@@ -127,3 +127,9 @@ struct SettingsHomeView: View {
     SettingsHomeView()
         .modelContainer(PreviewData.container)
 }
+
+#Preview("Dark") {
+    SettingsHomeView()
+        .modelContainer(PreviewData.container)
+        .preferredColorScheme(.dark)
+}
