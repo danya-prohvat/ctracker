@@ -2,7 +2,9 @@ import SwiftUI
 import SwiftData
 
 /// Settings tab root (spec §5, §9): flat background, native collapsing large
-/// title, section captions and cards.
+/// title, section captions and cards with icon tiles (restyle 2026-11-12:
+/// no switches on the root, Units inside General, Delete in its own "Data"
+/// section, version + build in the footer). The Premium card stays as is.
 /// All behavior (gating, scheduling, delete flow) lives in the section cards.
 struct SettingsHomeView: View {
     @Environment(\.modelContext) private var context
@@ -57,10 +59,6 @@ struct SettingsHomeView: View {
                     .padding(.top, 2)
                 SettingsGoalsCard(settings: settings)
 
-                caption("Units")
-                    .padding(.top, 14)
-                SettingsUnitsPicker(settings: settings)
-
                 caption("General")
                     .padding(.top, 14)
                 SettingsGeneralCard(settings: settings)
@@ -74,8 +72,9 @@ struct SettingsHomeView: View {
                     .padding(.horizontal, 6)
                     .padding(.top, 8)
 
-                SettingsDeleteCard(settings: settings)
+                caption("Data")
                     .padding(.top, 14)
+                SettingsDeleteCard(settings: settings)
 
                 AdBannerView(settings: settings)
                     .padding(.top, 14)
@@ -109,8 +108,9 @@ struct SettingsHomeView: View {
             .padding(.bottom, 8)
     }
 
+    // Product name + numbers: nothing to translate, hence verbatim.
     private var footer: some View {
-        Text("Calorie Tracker · v\(appVersion)")
+        Text(verbatim: "Calorie Tracker \(appVersion) (\(buildNumber))")
             .font(.caption)
             .foregroundStyle(Theme.textQuaternary)
             .frame(maxWidth: .infinity)
@@ -120,6 +120,10 @@ struct SettingsHomeView: View {
     private var appVersion: String {
         (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String)
             ?? "1.0"
+    }
+
+    private var buildNumber: String {
+        (Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String) ?? "1"
     }
 }
 

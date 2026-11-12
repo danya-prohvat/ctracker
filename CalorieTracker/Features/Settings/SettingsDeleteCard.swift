@@ -1,8 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Destructive "Delete all data" card with the native confirmation alert
-/// (prototype: centered dialog with Cancel / destructive Delete).
+/// Destructive "Delete all data" row (section "Data") with the native
+/// confirmation alert (prototype: centered dialog with Cancel / Delete).
 struct SettingsDeleteCard: View {
     @Environment(\.modelContext) private var context
 
@@ -14,13 +14,12 @@ struct SettingsDeleteCard: View {
         Button {
             showConfirm = true
         } label: {
-            Text("Delete all data")
-                .font(.headline)
-                .foregroundStyle(Theme.destructive)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .padding(.horizontal, 16)
-                .contentShape(Rectangle())
+            // A row in the "Data" section like every other action (user
+            // decision 2026-11-12), red title, no chevron — it opens an alert.
+            SettingsRowLabel(
+                icon: "trash", tint: Theme.tileRed, title: "Delete all data",
+                showsChevron: false, titleColor: Theme.destructive
+            )
         }
         .buttonStyle(.plain)
         .glassCard(cornerRadius: Theme.cornerRadius)

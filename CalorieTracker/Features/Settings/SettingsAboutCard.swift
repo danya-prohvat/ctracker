@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// "About" card: rate / share / policy rows with trailing chevrons.
-/// Actions are unchanged — only the container is restyled.
+/// "About" card: rate / share / policy rows with icon tiles and trailing
+/// chevrons. Actions are unchanged — only the container is restyled.
 struct SettingsAboutCard: View {
     @Environment(\.openURL) private var openURL
 
@@ -12,13 +12,19 @@ struct SettingsAboutCard: View {
             // Deep link to the App Store review panel, not `requestReview()` —
             // the in-app dialog is throttled and can silently no-op on an
             // explicit tap.
-            row("Rate the app") { openURL(AppLinks.writeReviewURL) }
+            row("Rate the app", icon: "star", tint: Theme.tileSand) {
+                openURL(AppLinks.writeReviewURL)
+            }
             SettingsRowDivider()
             shareRow
             SettingsRowDivider()
-            row("Privacy Policy") { webLink = SettingsWebLink(url: AppLinks.privacyURL) }
+            row("Privacy Policy", icon: "lock.shield", tint: Theme.tileGray) {
+                webLink = SettingsWebLink(url: AppLinks.privacyURL)
+            }
             SettingsRowDivider()
-            row("Terms of Use") { webLink = SettingsWebLink(url: AppLinks.termsURL) }
+            row("Terms of Use", icon: "doc.text", tint: Theme.tileGray) {
+                webLink = SettingsWebLink(url: AppLinks.termsURL)
+            }
         }
         .glassCard(cornerRadius: Theme.cornerRadius)
         .adaptiveSheet(item: $webLink) { link in
@@ -30,31 +36,21 @@ struct SettingsAboutCard: View {
 
     private var shareRow: some View {
         ShareLink(item: AppLinks.appStoreURL) {
-            rowLabel("Share the app")
+            SettingsRowLabel(icon: "square.and.arrow.up", tint: Theme.tileBlue, title: "Share the app")
         }
         .buttonStyle(.plain)
     }
 
     private func row(
         _ title: LocalizedStringKey,
+        icon: String,
+        tint: Color,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            rowLabel(title)
+            SettingsRowLabel(icon: icon, tint: tint, title: title)
         }
         .buttonStyle(.plain)
-    }
-
-    private func rowLabel(_ title: LocalizedStringKey) -> some View {
-        HStack {
-            Text(title)
-                .font(.callout)
-                .foregroundStyle(Theme.textPrimary)
-            Spacer(minLength: 12)
-            SettingsRowChevron()
-        }
-        .settingsRowPadding()
-        .contentShape(Rectangle())
     }
 }
 

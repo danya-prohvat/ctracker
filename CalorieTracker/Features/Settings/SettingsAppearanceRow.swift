@@ -8,7 +8,8 @@ struct SettingsAppearanceRow: View {
     @AppStorage(AppAppearance.storageKey) private var appearance: AppAppearance = .system
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 12) {
+            SettingsRowIcon(systemName: "circle.lefthalf.filled", tint: Theme.tileGray)
             Text("Appearance")
                 .font(.callout)
                 .foregroundStyle(Theme.textPrimary)
@@ -25,7 +26,7 @@ struct SettingsAppearanceRow: View {
             // Value text reads like the Language row's value, not like a link.
             .tint(Theme.textTertiary)
         }
-        .settingsRowPadding()
+        .settingsIconRowPadding()
     }
 }
 

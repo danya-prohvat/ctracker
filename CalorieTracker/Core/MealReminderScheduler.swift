@@ -16,8 +16,9 @@ enum MealReminderScheduler {
     /// Pre-2026-07-19 user-configured meal reminders — cleaned up on every pass.
     private static let legacyIDPrefix = "settings.mealReminder."
 
-    private static let afternoonHour = 14
-    private static let eveningHour = 20
+    /// Fire hours — internal so Settings can describe the schedule.
+    static let afternoonHour = 14
+    static let eveningHour = 20
     private static let daysPlanned = 7
     private static let goalFraction = 0.8
 

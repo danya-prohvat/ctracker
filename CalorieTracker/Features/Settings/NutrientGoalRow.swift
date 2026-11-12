@@ -1,10 +1,13 @@
 import SwiftUI
 import SwiftData
 
-/// One nutrient row (prototype): name, a mini −/+ stepper editing the daily
-/// norm ("90 mg"), and a toggle that enables tracking. Overrides live in
-/// `UserSettings.nutrientGoalOverrides`; a value matching the catalog default
-/// removes the override so the default keeps applying.
+/// One nutrient row (user decision 2026-11-12): soft group-tinted circle
+/// with the nutrient's own glyph (`NutrientGlyphCircle`, lock badge while the
+/// nutrient is premium-locked), name, and a toggle that enables tracking. Switched OFF the row is one compact line ("1 300 mg ·
+/// daily goal"); switched ON it gets a tinted background, the mini −/+
+/// stepper for the daily norm, a "Limit" badge for stay-under nutrients and
+/// the catalog hint. Overrides live in `UserSettings.nutrientGoalOverrides`;
+/// a value matching the catalog default removes the override.
 struct NutrientGoalRow: View {
     @Environment(\.modelContext) private var context
 
@@ -17,17 +20,21 @@ struct NutrientGoalRow: View {
     private var effectiveGoal: Double? { settings.goal(for: def.id) }
 
     var body: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 5) {
+        HStack(spacing: 12) {
+            tile
+            VStack(alignment: .leading, spacing: 4) {
                 Text(def.nameKey)
                     .font(.callout)
                     .foregroundStyle(Theme.textPrimary)
-                stepperLine
-                targetKindCaption
-                if let hint = def.hint {
-                    Text(hint)
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
+                if isOn {
+                    stepperLine
+                    if let hint = def.hint {
+                        Text(hint)
+                            .font(.caption2)
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                } else {
+                    normCaption
                 }
             }
             Spacer(minLength: 8)
@@ -37,8 +44,33 @@ struct NutrientGoalRow: View {
             .labelsHidden()
             .tint(Theme.accent)
         }
-        .padding(.vertical, 11)
-        .padding(.horizontal, 16)
+        .settingsIconRowPadding()
+        .background(isOn ? Theme.rowActiveFill : .clear)
+    }
+
+    private var tile: some View {
+        NutrientGlyphCircle(def: def, locked: locked)
+    }
+
+    /// Compact off-state line: norm + target semantics ("reach it" vs "stay
+    /// under it" — fixed per nutrient in the catalog, not user-editable).
+    private var normCaption: some View {
+        Group {
+            if let goal = effectiveGoal {
+                let norm = Format.nutrient(goal, unit: def.unit)
+                if def.kind == .limit {
+                    Text("\(norm) · daily limit")
+                } else {
+                    Text("\(norm) · daily goal")
+                }
+            } else if def.kind == .limit {
+                Text("daily limit")
+            } else {
+                Text("daily goal")
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(Theme.textTertiary)
     }
 
     private var stepperLine: some View {
@@ -48,11 +80,14 @@ struct NutrientGoalRow: View {
             }
             normLabel
                 .font(.stat(.footnote, .semibold))
-                .foregroundStyle(Theme.textDim)
+                .foregroundStyle(Theme.textPrimary)
                 .multilineTextAlignment(.center)
                 .frame(minWidth: 58)
             GoalsStepperCircle(.increment, size: 24, glyphSize: 16) {
                 adjustGoal(by: step)
+            }
+            if def.kind == .limit {
+                limitBadge
             }
         }
     }
@@ -64,18 +99,14 @@ struct NutrientGoalRow: View {
         return Text(verbatim: "—")
     }
 
-    /// Target semantics under the value ("reach it" vs "stay under it") —
-    /// fixed per nutrient in the catalog, not user-editable.
-    private var targetKindCaption: some View {
-        Group {
-            if def.kind == .limit {
-                Text("daily limit")
-            } else {
-                Text("daily goal")
-            }
-        }
-        .font(.caption2)
-        .foregroundStyle(Theme.textTertiary)
+    private var limitBadge: some View {
+        Text("Limit")
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(Theme.warning)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Theme.warningSoft, in: Capsule())
+            .badgeFit()
     }
 
     // MARK: - Goal stepping
@@ -94,9 +125,8 @@ struct NutrientGoalRow: View {
         }
     }
 
-    /// Same override semantics as the previous editor: only positive values
-    /// that differ from the catalog default are stored; anything else falls
-    /// back to the default norm.
+    /// Only positive values that differ from the catalog default are stored;
+    /// anything else falls back to the default norm.
     private func adjustGoal(by delta: Double) {
         let raw = max(0, (effectiveGoal ?? 0) + delta)
         let value = (raw * 100).rounded() / 100

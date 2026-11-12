@@ -8,6 +8,9 @@ enum UnitSystem: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
     var label: LocalizedStringKey { self == .metric ? "Metric · g, ml" : "US · oz, fl oz" }
+    /// One-word form for the Settings menu picker (long labels stay on the
+    /// onboarding segmented control).
+    var shortLabel: LocalizedStringKey { self == .metric ? "Metric" : "US" }
 
     /// Default input unit for a given basis under this system.
     func defaultUnit(for basis: Basis) -> FoodUnit {

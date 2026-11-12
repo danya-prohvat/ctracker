@@ -1,36 +1,37 @@
 import SwiftUI
 
 /// Cards + caption of `PlanEditor`, split out to keep files small.
-/// Prototype: a calories glass card (radius 20, 150 pt full ring, line 13,
-/// 44 pt steppers) and a macro rows card (radius 14, hairline separators,
-/// 30 pt steppers, bold "130 g" values).
+/// Calories card (radius 20): 44 pt steppers around a 150 pt `MacroSplitRing`
+/// whose arcs show the P/F/C calorie split, with a dot legend under it (user
+/// decision 2026-11-12, replaces the static full ring and the "30% P · 30% F
+/// · 40% C" caption). Macro rows live in `GoalsPlanMacroRow`.
 extension PlanEditor {
     var caloriesCard: some View {
-        HStack(spacing: 18) {
-            GoalsStepperCircle(.decrement, size: 44, glyphSize: 26) {
-                adjustCalories(by: -50)
-            }
-            ZStack {
-                ProgressRing(
-                    progress: 1,
-                    lineWidth: 13,
-                    color: Theme.accent,
-                    trackColor: Theme.barTrack
-                )
-                VStack(spacing: 2) {
-                    kcalValue
-                    Text("kcal / day")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Theme.textSecondary)
+        VStack(spacing: 16) {
+            HStack(spacing: 18) {
+                GoalsStepperCircle(.decrement, size: 44, glyphSize: 26) {
+                    adjustCalories(by: -50)
+                }
+                ZStack {
+                    MacroSplitRing(protein: protein, fat: fat, carbs: carbs, lineWidth: 13)
+                    VStack(spacing: 2) {
+                        kcalValue
+                        Text("kcal / day")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                }
+                .frame(width: 150, height: 150)
+                GoalsStepperCircle(.increment, size: 44, glyphSize: 26) {
+                    adjustCalories(by: 50)
                 }
             }
-            .frame(width: 150, height: 150)
-            GoalsStepperCircle(.increment, size: 44, glyphSize: 26) {
-                adjustCalories(by: 50)
-            }
+            MacroSplitLegend(protein: protein, fat: fat, carbs: carbs)
         }
         .frame(maxWidth: .infinity)
-        .padding(22)
+        .padding(.horizontal, 22)
+        .padding(.top, 22)
+        .padding(.bottom, 18)
         .glassCard(cornerRadius: 20)
     }
 
@@ -60,79 +61,22 @@ extension PlanEditor {
     var macroRowsCard: some View {
         VStack(spacing: 0) {
             macroRow("Protein", field: .protein)
-            rowSeparator
+            SettingsRowDivider()
             macroRow("Fat", field: .fat)
-            rowSeparator
+            SettingsRowDivider()
             macroRow("Carbs", field: .carbs)
         }
-        .glassCard(cornerRadius: 14)
+        .glassCard(cornerRadius: Theme.cornerRadius)
     }
 
-    private var rowSeparator: some View {
-        Rectangle()
-            .fill(Theme.separator)
-            .frame(height: 1)
-    }
-
-    private func macroRow(_ title: LocalizedStringKey, field: Field) -> some View {
-        HStack {
-            Text(title)
-                .font(.callout)
-                .foregroundStyle(Theme.textPrimary)
-            Spacer(minLength: 8)
-            HStack(spacing: 14) {
-                GoalsStepperCircle(.decrement, size: 30, glyphSize: 20) {
-                    adjustMacro(field, by: -5)
-                }
-                macroValue(field)
-                GoalsStepperCircle(.increment, size: 30, glyphSize: 20) {
-                    adjustMacro(field, by: 5)
-                }
-            }
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-    }
-
+    /// Soft validation only: extreme plans get a delicate gray hint.
     @ViewBuilder
-    private func macroValue(_ field: Field) -> some View {
-        if focused == field {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                TextField("0", text: textBinding(field))
-                    .keyboardType(.decimalPad)
-                    .numericInputLimit(textBinding(field))
-                    .multilineTextAlignment(.trailing)
-                    .focused($focused, equals: field)
-                    .font(.stat(.callout))
-                    .foregroundStyle(Theme.textPrimary)
-                    .frame(width: 48)
-                Text("g")
-                    .font(.callout.bold())
-                    .foregroundStyle(Theme.textPrimary)
-            }
-        } else {
-            Text("\(Format.amount(value(for: field))) g")
-                .font(.stat(.callout))
-                .monospacedDigit()
-                .foregroundStyle(Theme.textPrimary)
-                .frame(minWidth: 52, alignment: .trailing)
-                .contentShape(Rectangle())
-                .onTapGesture { beginEdit(field) }
-        }
-    }
-
     var captionBlock: some View {
-        let pct = NutritionMath.macroCaloriePercents(protein: protein, fat: fat, carbs: carbs)
-        return VStack(spacing: 6) {
-            Text("\(pct.p)% P · \(pct.f)% F · \(pct.c)% C")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(Theme.textSecondary)
-            if calories < 1000 || calories > 6000 {
-                Text("Unusual plan — double-check your numbers.")
-                    .font(.caption)
-                    .foregroundStyle(Theme.textTertiary)
-            }
+        if calories < 1000 || calories > 6000 {
+            Text("Unusual plan — double-check your numbers.")
+                .font(.caption)
+                .foregroundStyle(Theme.textTertiary)
+                .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
     }
 }

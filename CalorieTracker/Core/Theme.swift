@@ -71,6 +71,31 @@ enum Theme {
     static let calendarRingTrack = Color(light: 0xEEEEF0, dark: 0x2E302F)
     static let calendarDayMuted = Color(light: 0xC4C4C9, dark: 0x5A5A60)
 
+    // Settings row icon tiles (iOS Settings style, user decision 2026-11-12):
+    // white SF Symbol on a filled rounded square. Hues echo the accent/macro
+    // palette so Settings reads as one system with the rings; dark values are
+    // a touch brighter, like the accents.
+    static let tileGreen = Color(light: 0x43A26D, dark: 0x4FB87C)
+    static let tileTeal = Color(light: 0x57A6B4, dark: 0x68B9C7)
+    static let tileBlue = Color(light: 0x558CB9, dark: 0x6DA2CF)
+    static let tileSlate = Color(light: 0x5B7FA6, dark: 0x7396BD)
+    static let tileCoral = Color(light: 0xC36E63, dark: 0xD67F74)
+    static let tileSand = Color(light: 0xC99B5A, dark: 0xD9AC6B)
+    static let tileGray = Color(light: 0x8E8E93, dark: 0x98989E)
+    static let tileRed = Color(light: 0xFF3B30, dark: 0xFF453A)
+    // Goals & nutrients page: tint behind a tracked (switched-on) nutrient
+    // row, and the soft amber behind the "Limit" badge.
+    static let rowActiveFill = Color(light: 0xF4FAF6, dark: 0x232A26)
+    static let warningSoft = Color(light: 0xFFF1DC, dark: 0x3F2F12)
+
+    // Goals & nutrients page: one hue per catalog group for the soft
+    // nutrient circles (user decision 2026-11-12). Distinct from the macro
+    // palette and the Settings tiles so the four groups read at a glance.
+    static let nutrientMacromineral = Color(light: 0x5B7FA6, dark: 0x7396BD)
+    static let nutrientMicroelement = Color(light: 0x57A6B4, dark: 0x68B9C7)
+    static let nutrientVitamin = Color(light: 0xE0955A, dark: 0xEBA66E)
+    static let nutrientOther = Color(light: 0x9B7FB8, dark: 0xAD93C9)
+
     // Barcode scanner (dark screen on both schemes — not adaptive).
     static let scanBackground = Color(hex: 0x0E100F)
     static let scanCorner = Color(hex: 0x44B879)
